@@ -7,66 +7,114 @@ import {
   LinearProgress,
 } from "@mui/material";
 import { PitchDetector } from "pitchy";
-import { useEffect, useRef, useState } from "react";
+import { MutableRefObject, useEffect, useRef, useState } from "react";
 import * as Tone from "tone";
 import Box from "@mui/material/Box";
 import { chordToVexflow, mapNullable, Nullable, randomInRange } from "../utils";
 import { Chord } from "../vexflow/chord";
 import * as Tonal from "tonal";
+import * as Math from "mathjs";
+import { LineChart, SparkLineChart } from "@mui/x-charts";
 
-function CurrentPitchComp({
+function freqRatioToCent(ratio: number) {
+  return Math.abs(1200 * Math.log2(ratio));
+}
+
+export function NoteProgress({
   analyserNode,
   detector,
   sampleRate,
+  onFinished,
 }: {
   analyserNode: AnalyserNode;
   detector: Nullable<PitchDetector<Float32Array>>;
   sampleRate: number;
+  onFinished: (finalPitch: number) => void;
 }) {
-  const [_time, setTime] = useState(Date.now());
+  const [time, setTime] = useState(Date.now());
+  const pitch = useRef<number | null>(null);
 
-  // rerender every 0.1s
-  useEffect(() => {
-    const interval = setInterval(() => setTime(Date.now()), 100);
-    return () => {
-      clearInterval(interval);
-    };
-  }, []);
+  switch (detector) {
+    case null:
+    case undefined:
+      pitch.current = null;
+      break;
+    default:
+      const input = new Float32Array(detector.inputLength);
 
-  const [pitch, clarity] = (() => {
-    switch (detector) {
-      case null:
-        return [null, null];
-      case undefined:
-        return [undefined, undefined];
-      default:
-        const input = new Float32Array(detector.inputLength);
+      analyserNode.getFloatTimeDomainData(input);
+      pitch.current = detector.findPitch(input, sampleRate)[0];
+  }
 
-        analyserNode.getFloatTimeDomainData(input);
-        return detector.findPitch(input, sampleRate);
+  const lastSwitchTime = useRef(Date.now());
+  const lastSwitchPitch = useRef(0);
+  const lastPitches = useRef<number[]>([]);
+
+  if (pitch.current) {
+    lastPitches.current.push(Math.log2(pitch.current));
+    lastPitches.current = lastPitches.current.slice(
+      lastPitches.current.length - 100,
+    );
+  }
+
+  const progress = (() => {
+    if (pitch.current === null || pitch.current === 0) {
+      return 0;
+    } else {
+      const ratio = lastSwitchPitch.current / pitch.current;
+      const offByCents = freqRatioToCent(ratio);
+      if (offByCents > 30) {
+        lastSwitchPitch.current = pitch.current;
+        lastSwitchTime.current = time;
+      }
+      // note has too be sung for 2 seconds
+      return Math.min(1, (time - lastSwitchTime.current) / 2000);
     }
   })();
 
+  // rerender every 0.1s
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const nextTime = Date.now();
+      setTime(nextTime);
+
+      if (pitch.current && nextTime - lastSwitchTime.current >= 2000) {
+        lastSwitchPitch.current = pitch.current;
+        lastSwitchTime.current = nextTime;
+        onFinished(Math.mean(lastPitches.current.map((x) => 2 ** x)));
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, [onFinished]);
+
   return (
     <>
-      <div>
-        <span id="pitch-label" className="label">
-          Pitch
-        </span>
-        <span id="pitch" aria-labelledby="pitch-label">
-          {" "}
-          {pitch ? Math.floor(pitch * 100) / 100 : "NaN"}
-        </span>
-      </div>
-      <div>
-        <span id="clarity-label" className="label">
-          Clarity
-        </span>
-        <span id="clarity" aria-labelledby="clarity-label">
-          {" "}
-          {clarity ? Math.round(clarity * 100) : "NaN"}
-        </span>
-      </div>
+      <div>{pitch.current}</div>
+      <div>{100 * progress}</div>
+      <LinearProgress
+        variant="determinate"
+        value={100 * progress}
+        sx={{
+          "& .MuiLinearProgress-bar": {
+            transition: "none",
+          },
+        }}
+      />
+      <Box sx={{ flexGrow: 1 }}>
+        {/* https://react-chartjs-2.js.org/examples/line-chart/ */}
+        {/* <LineChart
+            series={[{ curve: "linear", data: lastPitchesC }]}
+            height={200}
+            /> */}
+        <SparkLineChart
+          data={lastPitches.current}
+          height={100}
+          disableAxisListener={true}
+        />
+      </Box>
     </>
   );
 }
@@ -91,30 +139,35 @@ export function Exercise1() {
     return detector;
   });
 
-  const [open, setOpen] = useState(false);
   const [active, setActive] = useState(false);
-  const [synth, setSynth] = useState<Tone.Synth | null>(null);
   const [rootNote, setRootNote] = useState<string>("");
+  const [finalPitch, setFinalPitch] = useState<number | null>(null);
+  const synth = useRef<Tone.Synth | null>(null);
 
-  if (!rootNote)
+  if (!rootNote) {
     setRootNote(
       rootNote || Tonal.Note.fromMidi(24 + 3 * 12 + randomInRange(0, 12)),
     );
+  }
   const chord = chordToVexflow(Tonal.Chord.getChord("maj", rootNote).notes);
+  const rootNoteFreq = Tonal.Note.freq(rootNote) || NaN;
 
-  const changeActiveState = async function () {
-    await Tone.start();
+  const changeActiveState = () => {
+    // await Tone.start();
 
-    const nextSynth = synth || new Tone.Synth().toDestination();
+    synth.current = synth.current || new Tone.Synth().toDestination();
 
     if (!active) {
-      nextSynth.triggerAttack(rootNote);
+      synth.current.triggerRelease();
+      synth.current.triggerAttack(`${rootNoteFreq}`);
     } else {
-      nextSynth.triggerRelease();
+      synth.current.triggerRelease();
+      if (finalPitch) {
+        synth.current.triggerAttack(`${(rootNoteFreq * 3) / 2}`);
+      }
     }
 
     setActive(!active);
-    setSynth(nextSynth);
   };
 
   return (
@@ -132,30 +185,45 @@ export function Exercise1() {
             {active ? <Pause /> : <PlayArrow />}
           </IconButton>
           <Chord chordNotes={chord} />
-          <LinearProgress variant="determinate" value={50} />
-          {/* TODO: https://mui.com/x/react-charts/sparkline/ */}
-        </div>
-
-        <div style={{ textAlign: "center" }}>
-          <Divider />
-          <Button
-            onClick={() => {
-              setOpen(!open);
+          <NoteProgress
+            analyserNode={analyserNode}
+            detector={detector}
+            sampleRate={audioContext.sampleRate}
+            onFinished={(x) => {
+              changeActiveState();
+              setFinalPitch(x);
             }}
-          >
-            Debug {open ? <ExpandLess /> : <ExpandMore />}
-          </Button>
-          <Collapse in={open}>
-            <CurrentPitchComp
-              analyserNode={analyserNode}
-              detector={detector}
-              sampleRate={audioContext.sampleRate}
-            />
-            <div>
-              <button id="resume-button">Resume audio context</button>
-            </div>
-          </Collapse>
+          />
         </div>
+        {finalPitch ? (
+          <>
+            <p>Final Pitch: {finalPitch}</p>
+            <p>Ratio: {finalPitch / rootNoteFreq}</p>
+            <p>
+              Quint off by: {freqRatioToCent(finalPitch / (1.5 * rootNoteFreq))}{" "}
+              Cents
+            </p>
+          </>
+        ) : (
+          <> </>
+        )}
+
+        {/* <div style={{ textAlign: "center" }}>
+            <Divider />
+            <Button
+            onClick={() => {
+            setOpen(!open);
+            }}
+            >
+            Debug {open ? <ExpandLess /> : <ExpandMore />}
+            </Button>
+            <Collapse in={open}>
+            <CurrentPitchComp pitch={pitch} clarity={pitchClarity} />
+            <div>
+            <button id="resume-button">Resume audio context</button>
+            </div>
+            </Collapse>
+            </div> */}
       </div>
     </Box>
   );
