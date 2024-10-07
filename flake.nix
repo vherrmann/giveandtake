@@ -25,7 +25,7 @@
       backend,
       ...
     }@inputs:
-    flake-utils.lib.eachSystem
+    (flake-utils.lib.eachSystem
       [
         "x86_64-linux"
         "x86_64-darwin"
@@ -53,5 +53,22 @@
             flakePkgs = pkgs; # FIXME: ideally a consument of the nixos module would just use his own pkgs (or maybe not?)
           };
         }
-      );
+      )
+    )
+    // {
+      # FIXME: hack to make nixos-containers work
+      nixosConfigurations.container = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        modules = [
+          self.nixosModules.x86_64-linux.default
+          ({
+            services.giveandtake = {
+              enable = true;
+              host = "localhost:8090";
+            };
+            system.stateVersion = "24.05";
+          })
+        ];
+      };
+    };
 }

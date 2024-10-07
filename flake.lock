@@ -1,5 +1,26 @@
 {
   "nodes": {
+    "backend": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ],
+        "servant-openapi3": "servant-openapi3"
+      },
+      "locked": {
+        "lastModified": 1,
+        "narHash": "sha256-1unY401Y3cXeGJcePe5yDpC65F7E5vxtFgTIyqfttcA=",
+        "path": "./server",
+        "type": "path"
+      },
+      "original": {
+        "path": "./server",
+        "type": "path"
+      }
+    },
     "flake-utils": {
       "inputs": {
         "systems": "systems"
@@ -56,9 +77,23 @@
     },
     "root": {
       "inputs": {
+        "backend": "backend",
         "flake-utils": "flake-utils",
         "gitignore": "gitignore",
         "nixpkgs": "nixpkgs"
+      }
+    },
+    "servant-openapi3": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1728139079,
+        "narHash": "sha256-41M/aCqHELC0EVwuMIkQUs6Efc5ATrcr9bdfg2560OI=",
+        "path": "/home/vherrmann/repos/servant-openapi3",
+        "type": "path"
+      },
+      "original": {
+        "path": "/home/vherrmann/repos/servant-openapi3",
+        "type": "path"
       }
     },
     "systems": {

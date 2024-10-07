@@ -7,10 +7,7 @@
 }:
 with lib;
 let
-  # Shorter name to access final settings a
-  # user of hello.nix module HAS ACTUALLY SET.
-  # cfg is a typical convention.
-  cfg = config.services.hello;
+  cfg = config.services.giveandtake;
 in
 {
   imports = [
@@ -19,7 +16,7 @@ in
   ];
   options.services.giveandtake = {
     enable = mkEnableOption "Enable Give'n'take service";
-    host = mkOption { type = types.string; };
+    host = mkOption { type = types.str; };
     postgres = {
       # USEME
       port = mkOption {
@@ -38,21 +35,17 @@ in
     };
   };
 
-  config = {
+  config = mkIf cfg.enable {
     services.nginx = {
       enable = true;
 
       virtualHosts = {
         "${cfg.host}" = {
-          listen = [
-            {
-              addr = "127.0.0.1";
-              port = 8090;
-            }
-          ];
           locations."/" = {
-            root = "${flakePkgs.frontend}";
+            root = "${flakePkgs.giveandtake-frontend}";
             extraConfig = ''
+              # don't interpret url paths as file paths
+              try_files $uri /index.html;
               proxy_http_version 1.1;
               proxy_set_header Connection "upgrade";
               proxy_set_header Upgrade $http_upgrade;
@@ -71,8 +64,10 @@ in
             '';
           };
           locations."/docs" = {
-            root = "${flakePkgs.docs}";
+            root = "${flakePkgs.giveandtake-docs}";
             extraConfig = ''
+              # don't interpret url paths as file paths
+              try_files $uri /index.html;
               proxy_http_version 1.1;
               proxy_set_header Connection "upgrade";
               proxy_set_header Upgrade $http_upgrade;
