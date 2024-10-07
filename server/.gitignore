@@ -1,0 +1,12 @@
+.ghc.environment*
+.hie
+.direnv
+.devenv
+.ccls-cache
+cabal.project.local
+dist-newstyle
+result*
+TAGS
+*~
+conf.yaml
+/swagger.json

@@ -1,0 +1,3 @@
+packages: *.cabal
+
+-- allow-newer: servant-aeson-generics-typescript:base, aeson-generics-typescript:base

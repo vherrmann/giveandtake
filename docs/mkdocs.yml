@@ -1,0 +1,20 @@
+site_name: "Give'n'take documentation"
+site_url: http://localhost:8090/docs
+extra:
+  base_url: /docs/
+nav:
+  - Home: index.md
+  - Feed: feed.md
+theme:
+  name: material
+  features:
+    - navigation.tabs # Enable tabbed navigation, for example
+  favicon: images/favicon.png
+  logo: images/logo.png
+extra_css:
+  - stylesheets/extra.css
+markdown_extensions:
+  - attr_list
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg

@@ -1,0 +1,155 @@
+name: giveandtake
+version: 0.1.0.0
+license: GPL-3
+copyright: 2024 Valentin Herrmann
+maintainer: plus+hackage@valentin-herrmann.de
+author: Valentin Herrmann
+category: web
+
+dependencies:
+  - base >= 4.7 && < 5
+  - text
+  - uuid
+  - either
+  # - text-show
+  - bytestring
+  # - containers
+  # - unordered-containers
+  - mtl
+  - exceptions
+  - transformers
+  - monad-logger
+  - lens
+  - data-default
+  - PyF
+  # - async
+  - servant
+  - servant-server
+  - servant-client
+  - servant-auth
+  - servant-auth-server
+  - servant-multipart
+  - wai
+  # - wai-cors
+  - wai-extra
+  - wai-app-static
+  - warp
+  - persistent
+  - persistent-postgresql
+  - resource-pool
+  - path-pieces
+  - resourcet
+  - aeson
+  - jose
+  - HsYAML
+  - HsYAML-aeson
+  - unliftio-core
+  - directory
+  - time
+  - crypton
+  - base64
+  - smtp-mail
+  - mime-mail
+  - typed-process
+  - temporary
+  - http-types
+  - http-media
+  - filepath
+  - feed
+  - xml-conduit
+  - xml-types
+
+library:
+  source-dirs: src
+
+executables:
+  giveandtake:
+    main: Main.hs
+    source-dirs: bin/GAT
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - giveandtake
+      - optparse-applicative
+  giveandtake-cmd:
+    main: Main.hs
+    source-dirs: bin/GATCMD
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - giveandtake
+      - optparse-applicative
+  giveandtake-generate-typescript:
+    main: Main.hs
+    source-dirs: bin/GATGenTS
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - giveandtake
+      - servant-openapi3
+      # - servant-auth-swagger
+      - openapi3
+      - aeson-pretty
+      - insert-ordered-containers
+      - optparse-applicative
+      # - servant-typescript or servant-aeson-generics-typescript
+
+default-extensions:
+  - ApplicativeDo
+  - BlockArguments
+  - BinaryLiterals
+  - ConstraintKinds
+  - DataKinds
+  - DefaultSignatures
+  - DeriveAnyClass
+  - DerivingStrategies
+  - DerivingVia
+  - DuplicateRecordFields
+  - ExtendedDefaultRules
+  - FunctionalDependencies
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - InstanceSigs
+  - ImportQualifiedPost
+  - MultiWayIf
+  - NamedFieldPuns
+  - NumericUnderscores
+  - LambdaCase
+  - OverloadedLabels
+  - OverloadedLists
+  - OverloadedStrings
+  - OverloadedRecordDot
+  - PartialTypeSignatures
+  - TypeFamilies
+  - TypeOperators
+  - ViewPatterns
+  - RecordWildCards
+  - NoImplicitPrelude
+  - QuasiQuotes
+
+language: GHC2021
+
+ghc-options:
+  - -Weverything
+  - -Wno-missing-exported-signatures # missing-exported-signatures turns off the more strict -Wmissing-signatures.
+  - -Wno-missing-import-lists # Requires explicit imports of _every_ function (e.g. ‘$’); too strict
+  - -Wno-missed-specialisations # When GHC can’t specialize a polymorphic function.
+  - -Wno-all-missed-specialisations # See missed-specialisations
+  - -Wno-unsafe # Don’t use Safe Haskell warnings
+  - -Wno-safe # Don’t use Safe Haskell warnings
+  - -Wno-missing-local-signatures # Warning for polymorphic local bindings; nothing wrong with those.
+  - -Wno-monomorphism-restriction # Don’t warn if the monomorphism restriction is used
+  - -Wno-missing-export-lists # Don't warn if export list is missing
+  - -Wno-missing-home-modules # Don't warn in GHCi when loading modules (this is a bogus warning)
+  - -Wno-missing-safe-haskell-mode
+  - -Wno-prepositive-qualified-module
+  - -Wno-unused-packages
+  - -Wno-missing-kind-signatures
+  - -Wunticked-promoted-constructors
+  # - -O2

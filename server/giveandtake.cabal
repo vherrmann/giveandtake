@@ -1,0 +1,394 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.36.1.
+--
+-- see: https://github.com/sol/hpack
+
+name:           giveandtake
+version:        0.1.0.0
+category:       web
+author:         Valentin Herrmann
+maintainer:     plus+hackage@valentin-herrmann.de
+copyright:      2024 Valentin Herrmann
+license:        GPL-3
+build-type:     Simple
+
+library
+  exposed-modules:
+      GiveAndTake.Api
+      GiveAndTake.App
+      GiveAndTake.DB
+      GiveAndTake.Email
+      GiveAndTake.Fixes
+      GiveAndTake.Handlers
+      GiveAndTake.Handlers.Auth
+      GiveAndTake.Handlers.Feed
+      GiveAndTake.Handlers.Friends
+      GiveAndTake.Handlers.Media
+      GiveAndTake.Handlers.Notif
+      GiveAndTake.Handlers.Posts
+      GiveAndTake.Handlers.Users
+      GiveAndTake.Handlers.Utils
+      GiveAndTake.Logging
+      GiveAndTake.Notify
+      GiveAndTake.Prelude
+      GiveAndTake.Servant.XML
+      GiveAndTake.Types
+      GiveAndTake.Utils
+  other-modules:
+      Paths_giveandtake
+  hs-source-dirs:
+      src
+  default-extensions:
+      ApplicativeDo
+      BlockArguments
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      ExtendedDefaultRules
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      ImportQualifiedPost
+      MultiWayIf
+      NamedFieldPuns
+      NumericUnderscores
+      LambdaCase
+      OverloadedLabels
+      OverloadedLists
+      OverloadedStrings
+      OverloadedRecordDot
+      PartialTypeSignatures
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      RecordWildCards
+      NoImplicitPrelude
+      QuasiQuotes
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors
+  build-depends:
+      HsYAML
+    , HsYAML-aeson
+    , PyF
+    , aeson
+    , base >=4.7 && <5
+    , base64
+    , bytestring
+    , crypton
+    , data-default
+    , directory
+    , either
+    , exceptions
+    , feed
+    , filepath
+    , http-media
+    , http-types
+    , jose
+    , lens
+    , mime-mail
+    , monad-logger
+    , mtl
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , resourcet
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-client
+    , servant-multipart
+    , servant-server
+    , smtp-mail
+    , temporary
+    , text
+    , time
+    , transformers
+    , typed-process
+    , unliftio-core
+    , uuid
+    , wai
+    , wai-app-static
+    , wai-extra
+    , warp
+    , xml-conduit
+    , xml-types
+  default-language: GHC2021
+
+executable giveandtake
+  main-is: Main.hs
+  other-modules:
+      Paths_giveandtake
+  hs-source-dirs:
+      bin/GAT
+  default-extensions:
+      ApplicativeDo
+      BlockArguments
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      ExtendedDefaultRules
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      ImportQualifiedPost
+      MultiWayIf
+      NamedFieldPuns
+      NumericUnderscores
+      LambdaCase
+      OverloadedLabels
+      OverloadedLists
+      OverloadedStrings
+      OverloadedRecordDot
+      PartialTypeSignatures
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      RecordWildCards
+      NoImplicitPrelude
+      QuasiQuotes
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HsYAML
+    , HsYAML-aeson
+    , PyF
+    , aeson
+    , base >=4.7 && <5
+    , base64
+    , bytestring
+    , crypton
+    , data-default
+    , directory
+    , either
+    , exceptions
+    , feed
+    , filepath
+    , giveandtake
+    , http-media
+    , http-types
+    , jose
+    , lens
+    , mime-mail
+    , monad-logger
+    , mtl
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , resourcet
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-client
+    , servant-multipart
+    , servant-server
+    , smtp-mail
+    , temporary
+    , text
+    , time
+    , transformers
+    , typed-process
+    , unliftio-core
+    , uuid
+    , wai
+    , wai-app-static
+    , wai-extra
+    , warp
+    , xml-conduit
+    , xml-types
+  default-language: GHC2021
+
+executable giveandtake-cmd
+  main-is: Main.hs
+  other-modules:
+      Paths_giveandtake
+  hs-source-dirs:
+      bin/GATCMD
+  default-extensions:
+      ApplicativeDo
+      BlockArguments
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      ExtendedDefaultRules
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      ImportQualifiedPost
+      MultiWayIf
+      NamedFieldPuns
+      NumericUnderscores
+      LambdaCase
+      OverloadedLabels
+      OverloadedLists
+      OverloadedStrings
+      OverloadedRecordDot
+      PartialTypeSignatures
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      RecordWildCards
+      NoImplicitPrelude
+      QuasiQuotes
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HsYAML
+    , HsYAML-aeson
+    , PyF
+    , aeson
+    , base >=4.7 && <5
+    , base64
+    , bytestring
+    , crypton
+    , data-default
+    , directory
+    , either
+    , exceptions
+    , feed
+    , filepath
+    , giveandtake
+    , http-media
+    , http-types
+    , jose
+    , lens
+    , mime-mail
+    , monad-logger
+    , mtl
+    , optparse-applicative
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , resourcet
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-client
+    , servant-multipart
+    , servant-server
+    , smtp-mail
+    , temporary
+    , text
+    , time
+    , transformers
+    , typed-process
+    , unliftio-core
+    , uuid
+    , wai
+    , wai-app-static
+    , wai-extra
+    , warp
+    , xml-conduit
+    , xml-types
+  default-language: GHC2021
+
+executable giveandtake-generate-typescript
+  main-is: Main.hs
+  other-modules:
+      Paths_giveandtake
+  hs-source-dirs:
+      bin/GATGenTS
+  default-extensions:
+      ApplicativeDo
+      BlockArguments
+      BinaryLiterals
+      ConstraintKinds
+      DataKinds
+      DefaultSignatures
+      DeriveAnyClass
+      DerivingStrategies
+      DerivingVia
+      DuplicateRecordFields
+      ExtendedDefaultRules
+      FunctionalDependencies
+      GADTs
+      GeneralizedNewtypeDeriving
+      InstanceSigs
+      ImportQualifiedPost
+      MultiWayIf
+      NamedFieldPuns
+      NumericUnderscores
+      LambdaCase
+      OverloadedLabels
+      OverloadedLists
+      OverloadedStrings
+      OverloadedRecordDot
+      PartialTypeSignatures
+      TypeFamilies
+      TypeOperators
+      ViewPatterns
+      RecordWildCards
+      NoImplicitPrelude
+      QuasiQuotes
+  ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      HsYAML
+    , HsYAML-aeson
+    , PyF
+    , aeson
+    , aeson-pretty
+    , base >=4.7 && <5
+    , base64
+    , bytestring
+    , crypton
+    , data-default
+    , directory
+    , either
+    , exceptions
+    , feed
+    , filepath
+    , giveandtake
+    , http-media
+    , http-types
+    , insert-ordered-containers
+    , jose
+    , lens
+    , mime-mail
+    , monad-logger
+    , mtl
+    , openapi3
+    , path-pieces
+    , persistent
+    , persistent-postgresql
+    , resource-pool
+    , resourcet
+    , servant
+    , servant-auth
+    , servant-auth-server
+    , servant-client
+    , servant-multipart
+    , servant-openapi3
+    , servant-server
+    , smtp-mail
+    , temporary
+    , text
+    , time
+    , transformers
+    , typed-process
+    , unliftio-core
+    , uuid
+    , wai
+    , wai-app-static
+    , wai-extra
+    , warp
+    , xml-conduit
+    , xml-types
+  default-language: GHC2021

@@ -1,0 +1,22 @@
+cradle:
+  cabal:
+    - path: "src"
+      component: "lib:giveandtake"
+
+    - path: "bin/GAT/Main.hs"
+      component: "giveandtake:exe:giveandtake"
+
+    - path: "bin/GAT/Paths_giveandtake.hs"
+      component: "giveandtake:exe:giveandtake"
+
+    - path: "bin/GATCMD/Main.hs"
+      component: "giveandtake:exe:giveandtake-cmd"
+
+    - path: "bin/GATCMD/Paths_giveandtake.hs"
+      component: "giveandtake:exe:giveandtake-cmd"
+
+    - path: "bin/GATGenTS/Main.hs"
+      component: "giveandtake:exe:giveandtake-generate-typescript"
+
+    - path: "bin/GATGenTS/Paths_giveandtake.hs"
+      component: "giveandtake:exe:giveandtake-generate-typescript"
