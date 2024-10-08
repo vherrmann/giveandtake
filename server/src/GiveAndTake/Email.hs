@@ -27,7 +27,8 @@ data Mail a = Mail
 
 sendMail :: (HasHandler m, IsMailAddress a) => Mail a -> m ()
 sendMail mail = do
-  uconfig :: UConfig <- askM
+  uconfig <- askM @UConfig
+  dynuconfig <- askM @DynUConfig
   let
     emailConfig = uconfig.emailConfig
     from = MS.Address (Just uconfig.serviceName) emailConfig.smtpFrom
@@ -44,5 +45,5 @@ sendMail mail = do
       (T.unpack emailConfig.smtpHost)
       (fromInteger emailConfig.smtpPort)
       (T.unpack emailConfig.smtpUser)
-      (T.unpack emailConfig.smtpPass)
+      (T.unpack dynuconfig.smtpPass)
       newMail

@@ -1,6 +1,5 @@
 module GiveAndTake.Handlers.Feed where
 
-import Control.Monad.Except (MonadError (..))
 import Data.Text qualified as T
 import Data.Time (UTCTime)
 import Data.Time qualified as C

@@ -12,7 +12,6 @@ import GiveAndTake.Prelude
 import GiveAndTake.Types
 import GiveAndTake.Utils
 import Servant (type (:<|>) (..))
-import Servant qualified as S
 import System.Directory qualified as D
 
 postsHandler :: Entity User -> RServer m PostsApi

@@ -1,6 +1,5 @@
 module Main where
 
-import Data.Text.IO qualified as T
 import Database.Persist qualified as P
 import GiveAndTake.App (runSomeApp)
 import GiveAndTake.DB
@@ -10,11 +9,11 @@ import GiveAndTake.Utils
 import Options.Applicative hiding (command)
 import Options.Applicative qualified as O
 
-sendNotif :: IO ()
-sendNotif = do
-    text <- T.getLine
-    prio <- T.getLine
-    todo
+-- sendNotif :: IO ()
+-- sendNotif = do
+--     text <- T.getLine
+--     prio <- T.getLine
+--     todo
 
 -- notifCmd :: Parser NewNotif
 -- notifCmd =

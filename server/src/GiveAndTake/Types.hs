@@ -6,7 +6,6 @@ module GiveAndTake.Types where
 
 import Control.Monad.Catch (MonadCatch (..), MonadMask (..), MonadThrow (..))
 import Control.Monad.Error.Class (MonadError (..))
-import Control.Monad.IO.Unlift (MonadUnliftIO, withRunInIO)
 import Control.Monad.Logger.CallStack qualified as L
 import Data.Pool (Pool)
 import Data.UUID
@@ -14,32 +13,41 @@ import Database.Persist.Sql qualified as PS
 import GHC.Stack (HasCallStack)
 import GiveAndTake.Prelude
 import Servant
-import Servant qualified as S
+import System.IO (FilePath)
 
 data EmailConfig = EmailConfig
   { smtpHost :: Text
   , smtpPort :: Integer
   , smtpUser :: Text
-  , smtpPass :: Text
+  , smtpPassFile :: FilePath
   , smtpFrom :: Text
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON)
+
+data DBConfig = DBConfig
+  { connections :: Int
+  , connectionString :: Text
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
 -- UserConfig
 data UConfig = UConfig
-  { dbPath :: Text
-  , dbConnections :: Int
-  , mediaDir :: Text
-  , host :: Text -- FIXME: unused
-  , port :: Int -- FIXME: unused
+  { mediaDir :: Text
+  , host :: Text
+  , port :: Int
   , authority :: Text
   , serviceName :: Text
   , emailConfig :: EmailConfig
+  , dbConfig :: DBConfig
   , timeout :: Int -- Timeout of requests in seconds
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
+
+data DynUConfig = DynUConfig {smtpPass :: Text}
+  deriving stock (Show, Generic)
 
 data WithUUID a = WithUUID
   { uuid :: UUID
@@ -48,7 +56,7 @@ data WithUUID a = WithUUID
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-type HasUConfig m = (MonadReaderM UConfig m)
+type HasUConfig m = (MonadReaderM UConfig m, MonadReaderM DynUConfig m)
 type HasDBPool m = (MonadReaderM (Pool PS.SqlBackend) m)
 
 type HasHandler m =
@@ -79,6 +87,11 @@ instance Monad (RHandler m) where
   (RHandler a) >>= f = RHandler (a >>= \x -> unRHandler (f x))
 
 instance MonadReaderM UConfig (RHandler m) where
+  askM = RHandler askM
+  localM f r = RHandler $ localM f $ unRHandler r
+  readerM g = RHandler $ readerM g
+
+instance MonadReaderM DynUConfig (RHandler m) where
   askM = RHandler askM
   localM f r = RHandler $ localM f $ unRHandler r
   readerM g = RHandler $ readerM g

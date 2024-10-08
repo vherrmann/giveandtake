@@ -1,6 +1,5 @@
 module GiveAndTake.Handlers.Friends where
 
-import Control.Monad.Except (MonadError (..))
 import Database.Persist qualified as P
 import GiveAndTake.Api
 import GiveAndTake.DB

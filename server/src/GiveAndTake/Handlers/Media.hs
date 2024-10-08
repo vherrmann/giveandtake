@@ -2,11 +2,10 @@ module GiveAndTake.Handlers.Media where
 
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
-import Data.UUID (UUID)
 import Data.UUID qualified as U
 import GiveAndTake.Api
 import GiveAndTake.DB
-import GiveAndTake.Handlers.Utils (areFriends, checkIsFriendOrEq, isFriendOrEq)
+import GiveAndTake.Handlers.Utils (checkIsFriendOrEq)
 import GiveAndTake.Prelude
 import GiveAndTake.Types
 import GiveAndTake.Utils

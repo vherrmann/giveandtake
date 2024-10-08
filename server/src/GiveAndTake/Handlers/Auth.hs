@@ -1,6 +1,5 @@
 module GiveAndTake.Handlers.Auth where
 
-import Control.Monad.Except (MonadError (..))
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.String (String)
 import Data.Text qualified as T
