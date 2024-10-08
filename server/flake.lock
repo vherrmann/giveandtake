@@ -44,14 +44,18 @@
     "servant-openapi3": {
       "flake": false,
       "locked": {
-        "lastModified": 1728139079,
-        "narHash": "sha256-41M/aCqHELC0EVwuMIkQUs6Efc5ATrcr9bdfg2560OI=",
-        "path": "/home/vherrmann/repos/servant-openapi3",
-        "type": "path"
+        "lastModified": 1728138783,
+        "narHash": "sha256-iKMWd+qm8hHhKepa13VWXDPCpTMXxoOwWyoCk4lLlIY=",
+        "owner": "vherrmann",
+        "repo": "servant-openapi3",
+        "rev": "c4d1a57dc84ad2727d1272ce185743e7edc43d39",
+        "type": "github"
       },
       "original": {
-        "path": "/home/vherrmann/repos/servant-openapi3",
-        "type": "path"
+        "owner": "vherrmann",
+        "ref": "required-request-bodies",
+        "repo": "servant-openapi3",
+        "type": "github"
       }
     },
     "systems": {

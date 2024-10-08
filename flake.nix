@@ -9,7 +9,8 @@
 
     flake-utils.url = "github:numtide/flake-utils";
     backend = {
-      url = "path:./server";
+      # FIXME:
+      url = "github:vherrmann/giveandtake?dir=server";
       inputs = {
         nixpkgs.follows = "nixpkgs";
         flake-utils.follows = "flake-utils";

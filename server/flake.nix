@@ -3,7 +3,7 @@
   inputs = {
     flake-utils.url = "github:numtide/flake-utils";
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
-    servant-openapi3.url = "/home/vherrmann/repos/servant-openapi3?ref=required-request-bodies"; # "github:vherrmann/servant-openapi3";
+    servant-openapi3.url = "github:vherrmann/servant-openapi3?ref=required-request-bodies"; # "github:vherrmann/servant-openapi3";
     servant-openapi3.flake = false;
   };
   outputs =
@@ -28,10 +28,8 @@
           pkgs = import nixpkgs { inherit system overlays; };
           compilerVersion = "ghc96";
           compiler = pkgs.haskell.packages."${compilerVersion}";
-          # fixme: remove development dependencies
-          nativeBuildInputsHs =
+          developInputs =
             (with compiler; [
-              cabal-install
               hlint
               haskell-language-server
               fourmolu
@@ -44,6 +42,8 @@
               openapi-generator-cli # for giveandtake-generate-typescript
               devenv
             ]);
+          # fixme: remove development dependencies
+          nativeBuildInputsHs = (with compiler; [ cabal-install ]);
           buildInputsHs = with pkgs; [
             ffmpeg
             imagemagick
@@ -66,18 +66,13 @@
                       doCheck = false;
                     })
                   );
-                  # "servant-aeson-generics-typescript" = (
-                  #   pkgs.haskell.lib.overrideCabal super.aeson-generics-typescript (old: {
-                  #     jailbreak = true;
-                  #     broken = false;
-                  #     doCheck = false;
-                  #   })
-                  # );
                 };
               withHoogle = true;
               modifier =
                 drv:
-                pkgs.haskell.lib.addExtraLibraries (pkgs.haskell.lib.addBuildTools drv nativeBuildInputsHs) buildInputsHs;
+                pkgs.haskell.lib.addExtraLibraries (pkgs.haskell.lib.addBuildTools drv (
+                  (if returnShellEnv then developInputs else [ ]) ++ nativeBuildInputsHs
+                )) buildInputsHs;
             };
         in
         {

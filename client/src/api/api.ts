@@ -19,7 +19,7 @@ export class Api extends DefaultApi {
     ) {
         const newConfigParams: runtime.ConfigurationParameters = {
             ...configuration["configuration"],
-            basePath: "http://localhost:8090", // FIXME: basePath hardcoded
+            basePath: window.location.origin,
         };
         const newConfiguration = new runtime.Configuration(newConfigParams);
         super(newConfiguration);
