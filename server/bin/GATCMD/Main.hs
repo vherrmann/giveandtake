@@ -45,7 +45,7 @@ cmdApp :: forall m. (HasUConfig m, HasDBPool m, MonadLoggerIO m) => Command -> m
 cmdApp (NewAuthCode codeType) = do
     createdAt <- getUTCTime
     secret <- randomUrlToken
-    runDB $ P.insert_ $ AuthCode{authType = codeType, secret, used = False, createdAt}
+    runDB $ P.insert_ AuthCode{authType = codeType, secret, used = False, createdAt}
     uconfig <- askM @UConfig
     let url :: Text = case codeType of
             ACTSignup -> authUrl uconfig ["signup"]

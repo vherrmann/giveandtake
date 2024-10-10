@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Api } from "../api";
+import { showApiErr } from "../utils";
 
 export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
@@ -19,12 +20,8 @@ export const VerifyEmail = () => {
       await api.apiAuthVerifyemailPost({ verifyEmail: { user, secret } });
       setLoading(false);
       setError(null);
-    } catch (error: any) {
-      if (error.response) {
-        setError(await error.response.text());
-      } else {
-        setError(error.message);
-      }
+    } catch (e: any) {
+      showApiErr(e, setError);
       setLoading(false);
     }
   };

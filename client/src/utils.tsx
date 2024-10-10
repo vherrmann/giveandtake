@@ -89,3 +89,14 @@ export const HardRedirect = ({ to }: { to: string }) => {
 
   return null;
 };
+
+export const showApiErr = async (
+  error: any,
+  setError: React.Dispatch<React.SetStateAction<any>>,
+) => {
+  if (error.response) {
+    setError(await error.response.text());
+  } else {
+    setError(error.message);
+  }
+};

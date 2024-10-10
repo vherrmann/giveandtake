@@ -26,7 +26,7 @@
         let
           overlays = [ ];
           pkgs = import nixpkgs { inherit system overlays; };
-          compilerVersion = "ghc96";
+          compilerVersion = "ghc98";
           compiler = pkgs.haskell.packages."${compilerVersion}";
           developInputs =
             (with compiler; [
@@ -68,6 +68,8 @@
                   );
                 };
               withHoogle = true;
+              # FIXME: haddock build breaks on server
+              cabal2nixOptions = "--no-haddock";
               modifier =
                 drv:
                 pkgs.haskell.lib.addExtraLibraries (pkgs.haskell.lib.addBuildTools drv (

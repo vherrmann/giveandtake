@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button, Stack, TextField, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router";
-import { Api } from "../api";
+import { Api, JobStatus } from "../api";
 import { useSearchParams } from "react-router-dom";
+import { showApiErr } from "../utils";
 
 interface SignupData {
   name: string;
@@ -21,7 +22,7 @@ export const Signup = (): JSX.Element => {
 
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
-  const [loadin, setLoadin] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const api = new Api();
   const [searchParams, setSearchParams] = useSearchParams();
   const secret = searchParams.get("secret");
@@ -57,22 +58,18 @@ export const Signup = (): JSX.Element => {
     // https://www.npmjs.com/package/yup
     try {
       setInfo("Sending signup request.... Sending verification email....");
-      setLoadin(true);
-      await api.apiAuthSignupPost({ signupData: { ...signupData, secret } });
-      setInfo("Verification email send!");
+      setLoading(true);
+      const jobId = await api.apiAuthSignupPost({
+        signupData: { ...signupData, secret },
+      });
+      setInfo("Sending verification email!");
       setError("");
-      navigate("/login");
-    } catch (error: any) {
-      if (error.response) {
-        const msg = await (error.response as Response).text();
-        setError(msg);
-        return;
-      } else {
-        setError(error.message);
-        return;
-      }
+
+      /* setupVEmailPolling(jobId); */
+    } catch (e: any) {
+      showApiErr(e, setError);
     } finally {
-      setLoadin(false);
+      setLoading(false);
     }
   };
 
@@ -127,7 +124,7 @@ export const Signup = (): JSX.Element => {
           placeholder="Confirm password"
           required
         />
-        <Button type="submit" variant="contained" disabled={loadin}>
+        <Button type="submit" variant="contained" disabled={loading}>
           Sign up
         </Button>
         {error && <p style={{ color: "red" }}>Error: {error}</p>}

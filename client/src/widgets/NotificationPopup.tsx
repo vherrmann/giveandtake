@@ -47,6 +47,12 @@ Welcome! Your individual feed can be accessed as an rss feed under this [url](${
       await api.apiNotifReadPost({
         requestBody: notifications.map((n) => n.uuid),
       });
+      setNotifications(
+        notifications.map((n) => ({
+          ...n,
+          value: { ...n.value, read: true },
+        })),
+      );
     } catch (e) {
       console.log(e);
       // FIXME

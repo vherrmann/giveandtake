@@ -6,7 +6,7 @@ module GiveAndTake.Api where
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import Database.Persist
-import GiveAndTake.DB (FeedType, Notification, Post, User (..))
+import GiveAndTake.DB (FeedType, JobStatus, Notification, Post, User (..))
 import GiveAndTake.Prelude
 import GiveAndTake.Servant.XML
 import GiveAndTake.Types
@@ -27,6 +27,7 @@ type PostUUID = UUID
 type MediaUUID = UUID
 type FeedUUID = UUID
 type NotifUUID = UUID
+type JobUUID = UUID
 
 data LoginData = LoginData
   { email :: Text
@@ -131,7 +132,7 @@ type MediaApi =
   "media"
     :> ( ( "upload"
             :> MultipartForm SM.Tmp UploadMedia
-            :> S.Post '[JSON] UploadMediaResponse
+            :> S.Post '[JSON] JobUUID
          )
           :<|> (S.Capture "id" MediaUUID :> S.RawM) -- Should always be the last route (RawM catches everything)
        )
@@ -161,6 +162,18 @@ type NotifApi =
           :<|> ("read" :> S.ReqBody '[JSON] [NotifUUID] :> S.Post '[JSON] ())
        )
 
+type JobApi =
+  "job"
+    :> ( S.Capture "id" JobUUID :> "status" :> S.Get '[JSON] JobStatus
+          :<|> ( S.Capture "id" JobUUID
+                  :> "result"
+                  :> ( ("verifyEmail" :> S.Get '[JSON] ())
+                        :<|> ("mediaCompress" :> S.Get '[JSON] UploadMediaResponse)
+                     )
+               )
+               -- :<|> S.Capture "id" JobUUID :> "cancel" :> S.Post '[JSON] ()
+       )
+
 type ProtectedApi =
   PostsApi
     :<|> UsersApi
@@ -168,6 +181,7 @@ type ProtectedApi =
     :<|> FriendsApi
     :<|> ProtectedFeedApi
     :<|> NotifApi
+    :<|> JobApi
 
 type AuthApi =
   "auth"
@@ -198,7 +212,7 @@ type AuthApi =
                )
           :<|> ( "signup"
                   :> S.ReqBody '[JSON] SignupData
-                  :> S.Post '[JSON] ()
+                  :> S.Post '[JSON] JobUUID
                )
           :<|> ( "verifyemail"
                   :> S.ReqBody '[JSON] VerifyEmail

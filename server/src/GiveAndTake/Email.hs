@@ -23,9 +23,9 @@ data Mail a = Mail
   , plainBody :: Text
   , htmlBody :: Maybe Text
   }
-  deriving stock (Show)
+  deriving stock (Show, Generic)
 
-sendMail :: (HasHandler m, IsMailAddress a) => Mail a -> m ()
+sendMail :: (HasUConfig m, IsMailAddress a, MonadIO m) => Mail a -> m ()
 sendMail mail = do
   uconfig <- askM @UConfig
   dynuconfig <- askM @DynUConfig

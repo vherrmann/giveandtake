@@ -14,6 +14,7 @@ in
     # Paths to other modules.
     # Compose this module out of smaller ones.
   ];
+
   # FIXME: add doc to options
   options.services.giveandtake = {
     enable = mkEnableOption "Enable Give'n'take service";
@@ -143,6 +144,8 @@ in
         group = "${cfg.group}";
         isSystemUser = true;
       };
+
+      environment.systemPackages = [ flakePkgs.giveandtake-backend ];
 
       systemd.services.giveandtake = {
         enable = true;

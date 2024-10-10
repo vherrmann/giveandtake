@@ -1,7 +1,6 @@
 module GiveAndTake.Handlers.Auth where
 
 import Data.ByteString.Lazy.Char8 qualified as BL
-import Data.String (String)
 import Data.Text qualified as T
 import Data.Time (addUTCTime)
 import Data.UUID (UUID)
@@ -9,13 +8,12 @@ import Database.Persist ((+=.), (=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
 import GiveAndTake.DB
-import GiveAndTake.Email (Mail (..), sendMail)
 import GiveAndTake.Handlers.Feed
+import GiveAndTake.Job (createJob)
 import GiveAndTake.Notify
 import GiveAndTake.Prelude
 import GiveAndTake.Types
 import GiveAndTake.Utils
-import Network.Mail.SMTP qualified as MS
 import Servant (ServerError (..), err404, err406, err409, err500, type (:<|>) (..))
 import Servant qualified as S
 import Servant.Auth.Server qualified as SA
@@ -70,12 +68,10 @@ logoutHandler cookieSettings = do
   -- Email adresses are defined to be unique, so we can just select the first member
   pure $ SA.clearSession cookieSettings S.NoContent
 
-signupHandler :: (HasHandler m) => SignupData -> m ()
+signupHandler :: (HasHandler m) => SignupData -> m JobUUID
 signupHandler signupData = do
-  mSecret <- runDB $ updateGetBy (UniqueAuthCode signupData.secret) [AuthCodeUsed =. True]
-  if fromMaybe False $ mSecret <&> (not . (.val.used))
-    then runDB $ P.deleteBy (UniqueAuthCode signupData.secret)
-    else throwError S.err403{errBody = "Wrong secret"}
+  -- just check, so that users don't fill in all the information without proper secret
+  checkSecretWithUpdate []
 
   when (T.length signupData.name == 0) $
     throwError err409{errBody = "Name cannot be empty."}
@@ -86,6 +82,10 @@ signupHandler signupData = do
   emailExists <- runDB $ P.existsBy (UniqueUserEmail signupData.email)
   when emailExists $
     throwError err409{errBody = "Email already exists."}
+
+  -- check secret again (so that it can't be used twice), update it as used
+  checkSecretWithUpdate [AuthCodeUsed =. True]
+
   hash <- hashToken 12 signupData.password
   ct <- getUTCTime
 
@@ -99,14 +99,19 @@ signupHandler signupData = do
           , createdAt = ct
           , fullyAuthenticated = False
           }
-  sendVerificationEmail uuid signupData
-  pure ()
+  startVerifEmailjob uuid signupData
+ where
+  checkSecretWithUpdate updates = do
+    mSecret <- runDB $ updateGetBy (UniqueAuthCode signupData.secret) updates
 
--- FIXME: inform user about email verification
-sendVerificationEmail :: (HasHandler m) => UUID -> SignupData -> m ()
-sendVerificationEmail userUuid signupData = do
+    case mSecret of
+      Nothing -> throwError S.err403{errBody = "Wrong secret"}
+      Just secret -> when secret.val.used $ throwError S.err401{errBody = "Secret already used."}
+
+startVerifEmailjob :: (HasHandler m) => UUID -> SignupData -> m JobUUID
+startVerifEmailjob userId signupData = do
   -- check if email is already confirmed and if limit has been reached
-  mEmailConf <- runDB $ P.getBy $ UniqueEmailConfirmUser userUuid
+  mEmailConf <- runDB $ P.getBy $ UniqueEmailConfirmUser userId
   case mEmailConf of
     Just emailConf -> do
       if emailConf.val.isConfirmed
@@ -118,38 +123,29 @@ sendVerificationEmail userUuid signupData = do
 
   -- send email
   secret <- randomUrlToken
-  uconfig :: UConfig <- askM
-  let authority = uconfig.authority -- FIXME: Get from config
-      url = [fmt|https://{authority}/verifyemail?secret={secret}&userId={userUuid}|] :: Text
-      emailPlainText =
-        [fmtTrim|
-             Hello {signupData.name}!
-
-             Please verify your email address for {uconfig.serviceName} by clicking on the following link:
-             Do not click this link if you have not created an account at {uconfig.serviceName}.
-             {url}
-             |]
-  sendMail
-    Mail
-      { to = [MS.Address (Just signupData.name) signupData.email]
-      , subject = "Verify your email"
-      , plainBody = emailPlainText
-      , htmlBody = Nothing
-      }
+  jobId <-
+    createJob $
+      GATJobVerifyEmail
+        GATJobVerifyEmailData
+          { secret
+          , userId
+          , userName = signupData.name
+          , userEmail = signupData.email
+          }
   curtime <- getUTCTime
   hash <- hashToken 12 secret
   runDB $
     P.upsert
       EmailConfirm
-        { user = userUuid
+        { user = userId
         , isConfirmed = False
         , secretHash = hash
         , confirmedAt = Nothing
-        , count = 0 -- FIXME: Use this to limit the number of tries
+        , count = 0
         , sentAt = curtime
         }
       [EmailConfirmCount +=. 1, EmailConfirmSentAt =. curtime]
-  pure ()
+  pure jobId
 
 finishSignup :: (HasHandler m) => WithUUID User -> m ()
 finishSignup user = do
@@ -185,8 +181,6 @@ updateFullyAuthenticated userId = do
 
 verifyEmailHandler :: (HasHandler m) => VerifyEmail -> m ()
 verifyEmailHandler (VerifyEmail{user = userId, secret = secret}) = do
-  putStrLn @String "verify"
-
   -- we don't want two seperate calls too succeed
   let getEmailConf updatep =
         maybeToMErr err404{errBody = "Email confirmation not found."} =<< runDB do

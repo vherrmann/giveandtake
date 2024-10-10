@@ -5,6 +5,7 @@ import {
   Divider,
   IconButton,
   Stack,
+  Typography,
 } from "@mui/material";
 import { Api, UserPublic } from "../api";
 import { PostList } from "../widgets/PostListWidget";
@@ -12,7 +13,7 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { AvatarWidget } from "../widgets/AvatarWidget";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { formatDate } from "../utils";
+import { formatDate, showApiErr } from "../utils";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { useAuthedState } from "../ProtectedRoute";
@@ -24,13 +25,14 @@ const UserWidget = ({ userId }: { userId: string }) => {
   const [userPublic, setUserPublic] = useState<UserPublic | null>(null);
   const { userId: myUserId } = useAuthedState();
   const [myFriendp, setMyFriendp] = useState<boolean | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchInfo = async () => {
     try {
       const response = await api.apiUsersIdGet({ id: userId });
       setUserPublic(response);
     } catch (e) {
-      // FIXME: inform user
+      showApiErr(e, setError);
     }
   };
 
@@ -39,7 +41,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
       const friends = await api.apiFriendsGet();
       setMyFriendp(friends.some(({ uuid: friendId }) => friendId === userId));
     } catch (e) {
-      // FIXME: inform user
+      showApiErr(e, setError);
     }
   };
 
@@ -55,7 +57,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
       });
       setMyFriendp(false);
     } catch (e) {
-      // FIXME: inform user
+      showApiErr(e, setError);
     }
   };
 
@@ -67,7 +69,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
       });
       setMyFriendp(true);
     } catch (e) {
-      // FIXME: inform user
+      showApiErr(e, setError);
     }
   };
 
@@ -121,6 +123,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
           userPublic ? "Joined on " + formatDate(userPublic.createdAt) : "…"
         }
       />
+      <Typography color="red">{error}</Typography>
       <CardActions disableSpacing>{friendAction}</CardActions>
     </StandardCard>
   );

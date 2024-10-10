@@ -30,8 +30,8 @@ export class Api extends DefaultApi {
      * @deprecated The method should not be used
      */
     async apiMediaUploadPost(
-        _initOverrides?: RequestInit | runtime.InitOverrideFunction,
-    ): Promise<auto.UploadMediaResponse> {
+        initOverrides?: RequestInit | runtime.InitOverrideFunction,
+    ): Promise<string> {
         throw new Error(
             "The method should not be used. Use apiMediaUploadPostR instead.",
         );
@@ -51,7 +51,7 @@ export class Api extends DefaultApi {
     async apiMediaUploadPostRRaw(
         requestParameters: ApiMediaUploadPostRRequest,
         initOverrides?: RequestInit | runtime.InitOverrideFunction,
-    ): Promise<runtime.ApiResponse<auto.UploadMediaResponse>> {
+    ): Promise<runtime.ApiResponse<string>> {
         if (requestParameters["body"] == null) {
             throw new runtime.RequiredError(
                 "body",
@@ -80,15 +80,20 @@ export class Api extends DefaultApi {
             initOverrides,
         );
 
-        return new runtime.JSONApiResponse(response, (jsonValue) =>
-            auto.UploadMediaResponseFromJSON(jsonValue),
-        );
+        // return new runtime.JSONApiResponse(response, (jsonValue) =>
+        //     auto.UploadMediaResponseFromJSON(jsonValue),
+        // );
+        if (this.isJsonMime(response.headers.get("content-type"))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     async apiMediaUploadPostR(
         requestParameters: ApiMediaUploadPostRRequest,
         initOverrides?: RequestInit | runtime.InitOverrideFunction,
-    ): Promise<auto.UploadMediaResponse> {
+    ): Promise<string> {
         const response = await this.apiMediaUploadPostRRaw(
             requestParameters,
             initOverrides,

@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.1.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -24,12 +24,16 @@ library
       GiveAndTake.Handlers.Auth
       GiveAndTake.Handlers.Feed
       GiveAndTake.Handlers.Friends
+      GiveAndTake.Handlers.Job
       GiveAndTake.Handlers.Media
       GiveAndTake.Handlers.Notif
       GiveAndTake.Handlers.Posts
       GiveAndTake.Handlers.Users
       GiveAndTake.Handlers.Utils
+      GiveAndTake.Job
+      GiveAndTake.JobCon
       GiveAndTake.Logging
+      GiveAndTake.Media
       GiveAndTake.Notify
       GiveAndTake.Prelude
       GiveAndTake.Servant.XML
@@ -71,12 +75,14 @@ library
       RecordWildCards
       NoImplicitPrelude
       QuasiQuotes
+      StrictData
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors
   build-depends:
       HsYAML
     , HsYAML-aeson
     , PyF
     , aeson
+    , async
     , base >=4.7 && <5
     , base64
     , bytestring
@@ -111,6 +117,7 @@ library
     , time
     , transformers
     , typed-process
+    , unliftio
     , unliftio-core
     , uuid
     , wai
@@ -159,12 +166,14 @@ executable giveandtake
       RecordWildCards
       NoImplicitPrelude
       QuasiQuotes
+      StrictData
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML
     , HsYAML-aeson
     , PyF
     , aeson
+    , async
     , base >=4.7 && <5
     , base64
     , bytestring
@@ -183,6 +192,7 @@ executable giveandtake
     , mime-mail
     , monad-logger
     , mtl
+    , optparse-applicative
     , path-pieces
     , persistent
     , persistent-postgresql
@@ -200,6 +210,7 @@ executable giveandtake
     , time
     , transformers
     , typed-process
+    , unliftio
     , unliftio-core
     , uuid
     , wai
@@ -248,12 +259,14 @@ executable giveandtake-cmd
       RecordWildCards
       NoImplicitPrelude
       QuasiQuotes
+      StrictData
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML
     , HsYAML-aeson
     , PyF
     , aeson
+    , async
     , base >=4.7 && <5
     , base64
     , bytestring
@@ -290,6 +303,7 @@ executable giveandtake-cmd
     , time
     , transformers
     , typed-process
+    , unliftio
     , unliftio-core
     , uuid
     , wai
@@ -338,6 +352,7 @@ executable giveandtake-generate-typescript
       RecordWildCards
       NoImplicitPrelude
       QuasiQuotes
+      StrictData
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML
@@ -345,6 +360,7 @@ executable giveandtake-generate-typescript
     , PyF
     , aeson
     , aeson-pretty
+    , async
     , base >=4.7 && <5
     , base64
     , bytestring
@@ -365,6 +381,7 @@ executable giveandtake-generate-typescript
     , monad-logger
     , mtl
     , openapi3
+    , optparse-applicative
     , path-pieces
     , persistent
     , persistent-postgresql
@@ -383,6 +400,7 @@ executable giveandtake-generate-typescript
     , time
     , transformers
     , typed-process
+    , unliftio
     , unliftio-core
     , uuid
     , wai

@@ -5,6 +5,7 @@ models/CheckResponse.ts
 models/FeedType.ts
 models/FeedUrlPostResponse.ts
 models/FriendsRequestGetResponse.ts
+models/JobStatus.ts
 models/LoginData.ts
 models/NewPost.ts
 models/NotifContent.ts

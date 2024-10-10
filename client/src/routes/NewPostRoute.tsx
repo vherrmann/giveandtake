@@ -1,12 +1,12 @@
 import styled from "@emotion/styled";
-import { Button, Grid, Stack, TextField } from "@mui/material";
+import { Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ChangeEvent, useState } from "react";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 // import styles
-import { getCurrDate, useLocalStorage } from "../utils";
+import { getCurrDate, showApiErr, useLocalStorage } from "../utils";
 import { PostWidget } from "../widgets/PostWidget";
-import { Api, Post } from "../api";
+import { Api, JobStatus, Post } from "../api";
 import { useAuthedState } from "../ProtectedRoute";
 
 const VisuallyHiddenInput = styled("input")({
@@ -32,9 +32,12 @@ export default function NewPostRoute() {
     body: string;
     fileIds: string[];
   }>("newPostState", emptyState);
-  const [loadingMedia, setLoadingMedia] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const api = new Api();
   const { userId } = useAuthedState();
+  const mediaUploadPollId = useRef<NodeJS.Timeout | undefined>(undefined);
+  const [error, setError] = useState<string>("");
+  const [info, setInfo] = useState<string>("");
 
   const handleChangeState = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState({
@@ -43,29 +46,61 @@ export default function NewPostRoute() {
     });
   };
 
+  const setupMediaUpPolling = (jobId: string) => {
+    // Poll every 5 seconds
+    mediaUploadPollId.current = setInterval(async () => {
+      try {
+        const response = await api.apiJobIdStatusGet({ id: jobId });
+
+        if (JobStatus.JobFinished === response) {
+          clearInterval(mediaUploadPollId.current);
+          setUploadingMedia(false);
+          setInfo("Finished compressing files.");
+          const response = await api.apiJobIdResultMediaCompressGet({
+            id: jobId,
+          });
+
+          setState((state) => ({
+            ...state,
+            fileIds: response.mediaIds,
+          }));
+        } else if (JobStatus.JobFailed === response) {
+          clearInterval(mediaUploadPollId.current);
+          setError("File upload failed.");
+          setUploadingMedia(false);
+        } else if (JobStatus.JobRunning === response) {
+          setInfo("Compressing files...");
+        } else if (JobStatus.JobPending === response) {
+          setInfo("Starting file compression...");
+        }
+      } catch (error) {
+        showApiErr(error, setError);
+        console.error("Error while checking API:", error);
+      }
+    }, 5000);
+  };
+
+  useEffect(() => {
+    return () => clearInterval(mediaUploadPollId.current);
+  }, []);
+
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     /* setMediaList(e.target.files); // FIXME: merge lists */
 
     const files = e.target.files;
     if (!files) return;
-    // Inform user of upload progress
-    setLoadingMedia(true);
+    setUploadingMedia(true);
+    setInfo("Uploading media");
+    setError("");
     try {
-      const response = await api.apiMediaUploadPostR({
+      const jobId = await api.apiMediaUploadPostR({
         body: files,
       });
-
-      // update state with the new media ids
-      setState((state) => ({
-        ...state,
-        fileIds: response.mediaIds,
-      }));
-    } catch (err) {
-      // FIXME: more information
-      // FIXME: inform user
-      console.error(err);
+      setupMediaUpPolling(jobId);
+    } catch (e) {
+      showApiErr(e, setError);
     }
-    setLoadingMedia(false);
+    setUploadingMedia(false);
   };
 
   const createPost = async (event: any) => {
@@ -85,7 +120,7 @@ export default function NewPostRoute() {
 
   const date = getCurrDate();
   const post: Post = {
-    user: userId, // FIXME
+    user: userId,
     title: state.title || "Title",
     body: state.body ? state.body : "Body",
     media: state.fileIds,
@@ -117,7 +152,8 @@ export default function NewPostRoute() {
                 multiple
               />
             </Button>
-            {loadingMedia && <i>Sending Media</i>}
+            <Typography>{info}</Typography>
+            <Typography color="red">{error}</Typography>
             <TextField
               name="body"
               label="Body"
@@ -129,19 +165,22 @@ export default function NewPostRoute() {
               fullWidth // Makes the input take up the full width of its container
               variant="outlined" // You can use "filled" or "standard" variant too
             />
-            <Button variant="contained" type="submit" disabled={loadingMedia}>
+            <Button variant="contained" type="submit" disabled={uploadingMedia}>
               Create post
             </Button>
           </Stack>
         </form>
       </Grid>
       <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
-        <PostWidget
-          post={post}
-          key={"NewPost"}
-          postId={null}
-          postActions={{ deletePost: async (_postId) => {} }}
-        />
+        <Box // without the Box the postwidget is fitted to the grid
+        >
+          <PostWidget
+            post={post}
+            key={"NewPost"}
+            postId={null}
+            postActions={{ deletePost: async (_postId) => {} }}
+          />
+        </Box>
       </Grid>
     </Grid>
   );

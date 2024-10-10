@@ -1,4 +1,5 @@
 {-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE StrictData #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
@@ -8,6 +9,7 @@
 
 module GiveAndTake.DB (module GiveAndTake.DB, Entity (..)) where
 
+import Control.Lens (Lens')
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
@@ -101,6 +103,49 @@ data AuthCodeType = ACTSignup
   deriving anyclass (FromJSON, ToJSON)
 derivePersistField "AuthCodeType"
 
+--- Job data types
+-- Email verification
+data GATJobVerifyEmailData = GATJobVerifyEmailData {secret :: Text, userId :: UUID, userName :: Text, userEmail :: Text}
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "GATJobVerifyEmailData"
+
+-- Media
+data AllowedMediaTopTypes = MimeImage | MimeVideo
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data MediaUploadFile = MediaUploadFile {name :: Text, mediaId :: UUID, cType :: AllowedMediaTopTypes}
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data GATJobMediaUploadData = GATJobMediaUploadData {files :: [MediaUploadFile], userId :: UUID}
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+--- JOB Queue
+data GATJob
+  = GATJobVerifyEmail GATJobVerifyEmailData
+  | GATJobMediaUpload GATJobMediaUploadData
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "GATJob"
+
+data JobResult
+  = GATJobResultVerifyEmail ()
+  | GATJobResultMediaUpload [UUID]
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "JobResult"
+
+data JobStatus = JobPending | JobRunning | JobFinished | JobFailed
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "JobStatus"
+
+jobEnded :: [JobStatus]
+jobEnded = [JobFinished, JobFailed]
+
 share
   [ mkPersist
       ( sqlSettings
@@ -165,6 +210,7 @@ Media
     user UUID
     mimeType Text
     isDraft Bool
+    isCompressed Bool
     createdAt UTCTime
     deriving Generic
 
@@ -196,6 +242,17 @@ AuthCode
     UniqueAuthCode secret
     deriving Generic
 
+Job
+    Id UUID primary unique
+    payload GATJob
+    status JobStatus
+    createdAt UTCTime
+    startedAt (Maybe UTCTime)
+    endedAt (Maybe UTCTime)
+    jobError (Maybe Text)
+    result (Maybe JobResult)
+    deriving Generic
+
 -- SessionConfig
 SConfig
     cookieKey JWK
@@ -216,26 +273,36 @@ class ToKeyConstr (a :: Type) where
 entityUKey :: (ToKeyConstr a, KeyType a ~ b) => Entity a -> b
 entityUKey = unpackKey . entityKey
 
+entityUKeyLens :: (ToKeyConstr a, KeyType a ~ b) => Lens' (Entity a) b
+entityUKeyLens f (Entity key val) = (\key -> Entity (packKey key) val) <$> f (unpackKey key)
+
+entityValLens :: Lens' (Entity a) a
+entityValLens f (Entity key val) = Entity key <$> f val
+
 instance ToKeyConstr User where
   type KeyType User = UUID
   packKey = UserKey
-  unpackKey = unUserKey
+  unpackKey (UserKey x) = x
 instance ToKeyConstr Post where
   type KeyType Post = UUID
   packKey = PostKey
-  unpackKey = unPostKey
+  unpackKey (PostKey x) = x
 instance ToKeyConstr Media where
   type KeyType Media = UUID
   packKey = MediaKey
-  unpackKey = unMediaKey
+  unpackKey (MediaKey x) = x
 instance ToKeyConstr Feed where
   type KeyType Feed = UUID
   packKey = FeedKey
-  unpackKey = unFeedKey
+  unpackKey (FeedKey x) = x
 instance ToKeyConstr Notification where
   type KeyType Notification = UUID
   packKey = NotificationKey
-  unpackKey = unNotificationKey
+  unpackKey (NotificationKey x) = x
+instance ToKeyConstr Job where
+  type KeyType Job = UUID
+  packKey = JobKey
+  unpackKey (JobKey x) = x
 
 entityToWithUUID :: (ToKeyConstr a, KeyType a ~ UUID) => Entity a -> WithUUID a
 entityToWithUUID (Entity k v) = WithUUID (unpackKey k) v
@@ -247,8 +314,9 @@ runDB a = do
   pool <- askM
 
   liftIO $
-    runCTStderrLoggingT $ -- FIXME: use global logger
-      runResourceT $
+    runCTStderrLoggingT $
+      runResourceT $ -- FIXME: use global logger
+
         -- FIXME: replace retryOnBusy by a proper locking mechanism
         PS.runSqlPool a pool
 
@@ -256,24 +324,40 @@ doMigration :: (HasDBPool m, MonadUnliftIO m) => m ()
 doMigration = do
   pool <- askM
 
-  runCTStderrLoggingT $ -- FIXME: use global logger
-    runResourceT $
+  runCTStderrLoggingT $
+    runResourceT $ -- FIXME: use global logger
       PS.runSqlPool (PS.runMigration migrateAll) pool
+
+updateSelect ::
+  forall backend record (m :: Type -> Type).
+  ( P.PersistRecordBackend record backend
+  , MonadIO m
+  , PS.PersistQueryWrite backend
+  ) =>
+  [P.Filter record] ->
+  [P.SelectOpt record] ->
+  [P.Update record] ->
+  ReaderT backend m [Entity record]
+updateSelect filter opts updates = do
+  entities <- P.selectList filter opts
+  P.updateWhere filter updates
+  pure entities
 
 updateGetBy ::
   forall backend record (m :: Type -> Type).
   ( P.PersistUniqueRead backend
-  , MonadIO m
   , P.PersistRecordBackend record backend
   , P.PersistStoreWrite backend
+  , MonadIO m
   ) =>
   P.Unique record ->
   [P.Update record] ->
   ReaderT backend m (Maybe (Entity record))
 updateGetBy unique updates = do
   mEntity <- P.getBy unique
-  for_ mEntity \entity -> P.updateGet (entityKey entity) updates
+  for_ mEntity \entity -> P.update (entityKey entity) updates
   pure mEntity
+
 insertUUID ::
   ( P.PersistEntityBackend record ~ P.BaseBackend backend
   , P.PersistStoreWrite backend
@@ -351,8 +435,15 @@ assureByKeySE ::
 assureByKeySE uuid = void $ getByKeySE @record @m uuid
 
 -- shorthands
+
 instance (ToKeyConstr a, KeyType a ~ b) => HasField "key" (Entity a) b where
   getField = entityUKey
 
 instance HasField "val" (Entity a) a where
   getField = entityVal
+
+-- instance {-# OVERLAPPING #-} (ToKeyConstr a, KeyType a ~ b) => HasField' "key" (Entity a) b where
+--   field' = entityUKeyLens
+
+-- instance {-# OVERLAPPING #-} HasField' "val" (Entity a) a where
+--   field' = entityValLens

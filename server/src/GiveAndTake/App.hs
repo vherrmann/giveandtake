@@ -2,11 +2,14 @@
 
 module GiveAndTake.App where
 
+import Control.Monad.Catch
+import Control.Monad.IO.Unlift (MonadUnliftIO)
+import Data.ByteString qualified as B
+import Data.ByteString.Char8 qualified as B
 import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.Pool (Pool)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
-import Data.Text.IO qualified as T
 import Data.Text.IO qualified as TIO
 import Data.YAML (prettyPosWithSource)
 import Data.YAML.Aeson qualified as Y
@@ -16,6 +19,8 @@ import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Fixes ()
 import GiveAndTake.Handlers
+import GiveAndTake.Job (jobRunner)
+import GiveAndTake.JobCon (createJobCon)
 import GiveAndTake.Logging
 import GiveAndTake.Prelude
 import GiveAndTake.Types
@@ -28,6 +33,7 @@ import Servant.Auth.Server qualified as SA
 import Servant.Server (Context ((:.)))
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
+import UnliftIO (concurrently_)
 
 getSConfig :: (HasDBPool m, MonadIO m) => m SConfig
 getSConfig = runDB do
@@ -53,14 +59,18 @@ getUConfig configPath = do
 
 getDynUConfig :: (MonadIO m) => UConfig -> m DynUConfig
 getDynUConfig uconfig = do
-  smtpPass <- liftIO $ T.readFile uconfig.emailConfig.smtpPassFile
+  smtpPass <- liftIO . fmap (T.decodeUtf8 . B.strip) . B.readFile $ uconfig.emailConfig.smtpPassFile
   pure $ DynUConfig{..}
 
-app :: (HasUConfig m, HasDBPool m, MonadLoggerIO m) => m ()
+type HasServer m = (HasUConfig m, HasDBPool m, MonadLoggerIO m, MonadUnliftIO m, MonadMask m, MonadCatch m)
+
+app :: (HasServer m) => m ()
 app = do
   sconfig <- getSConfig
   uconfig <- askM @UConfig
   dynuconfig <- askM @DynUConfig
+  jobCon <- createJobCon
+
   pool :: Pool PS.SqlBackend <- askM
   --   -- Adding some configurations. 'Cookie' requires, in addition to
   --   -- CookieSettings, JWTSettings (for signing), so everything is just as before
@@ -73,22 +83,26 @@ app = do
           & W.setOnException (\_ e -> TIO.hPutStrLn stderr $ show e)
           & W.setPort uconfig.port
           & W.setHost (fromString $ T.unpack uconfig.host)
-  liftIO $
-    W.runSettings settings $
-      W.logStdoutDev $ -- FIXME: remove logStdoutDev
-        W.timeout uconfig.timeout $
-          S.serveWithContextT
-            (Proxy @Api)
-            cfg
-            ( runStderrLoggingT
-                . flip runReaderT uconfig
-                . flip runReaderT dynuconfig
-                . flip runReaderT pool
-                . unRHandler
-            )
-            (server def jwtCfg)
+      webServer =
+        liftIO $
+          W.runSettings settings $
+            W.logStdoutDev $ -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev
+            -- FIXME: remove logStdoutDev
+              W.timeout uconfig.timeout $
+                S.serveWithContextT
+                  (Proxy @Api)
+                  cfg
+                  ( runStderrLoggingT
+                      . flip runReaderT uconfig
+                      . flip runReaderT dynuconfig
+                      . flip runReaderT jobCon
+                      . flip runReaderT pool
+                      . unRHandler
+                  )
+                  (server def jwtCfg)
+  concurrently_ webServer (runReaderT (jobRunner 50) jobCon)
 
-runSomeApp :: [Char] -> (forall m. (HasUConfig m, HasDBPool m, MonadLoggerIO m) => m ()) -> IO ()
+runSomeApp :: [Char] -> (forall m. (HasServer m) => m ()) -> IO ()
 runSomeApp uconfigPath m = do
   uconfig <- getUConfig uconfigPath
   dynuconfig <- getDynUConfig uconfig

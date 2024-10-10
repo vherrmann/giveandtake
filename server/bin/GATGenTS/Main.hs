@@ -11,14 +11,12 @@ import Data.ByteString.Lazy.Char8 qualified as BL
 import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Prelude
-import Servant ((:>), (:<|>))
+import Servant ((:>))
 import Servant qualified as S
 import Servant.Multipart qualified as SM
 import Servant.OpenApi qualified as SO
 import System.Directory qualified as D
 import System.Environment (getArgs)
-import Data.UUID (UUID)
-import Data.Typeable (Typeable)
 import GiveAndTake.Types (WithUUID)
 import qualified Text.Feed.Types as F
 import Data.OpenApi.Lens
@@ -28,14 +26,13 @@ import Servant.Auth qualified as SA
 import qualified Data.Text as T
 import Data.OpenApi (OpenApi (..), Components (..), ToSchema)
 import qualified Data.HashMap.Strict.InsOrd as HM
-import GHC.TypeLits (Symbol)
 
 --- https://github.com/biocad/servant-openapi3/issues/42
 
 instance (HasOpenApi api) => HasOpenApi (SA.Auth '[] a :> api) where
   toOpenApi Proxy = SO.toOpenApi $ Proxy @api
 
-instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.BasicAuth : auths) a :> api) where
+instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.BasicAuth ': auths) a :> api) where
   toOpenApi Proxy = addSecurity $ SO.toOpenApi $ Proxy @(SA.Auth auths a :> api)
    where
     addSecurity = addSecurityRequirement identifier . addSecurityScheme identifier securityScheme
@@ -46,7 +43,7 @@ instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.BasicA
         , _securitySchemeDescription = Just "Basic Authentication"
         }
 
-instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.JWT : auths) a :> api) where
+instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.JWT ': auths) a :> api) where
   toOpenApi Proxy = addSecurity $ SO.toOpenApi $ Proxy @(SA.Auth auths a :> api)
    where
     addSecurity = addSecurityRequirement identifier . addSecurityScheme identifier securityScheme
@@ -57,7 +54,7 @@ instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.JWT : 
         , _securitySchemeDescription = Just "Bearer Authentication"
         }
 
-instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.Cookie : auths) a :> api) where
+instance (HasOpenApi (SA.Auth auths a :> api)) => HasOpenApi (SA.Auth (SA.Cookie ': auths) a :> api) where
   toOpenApi Proxy = addSecurity $ SO.toOpenApi $ Proxy @(SA.Auth auths a :> api)
    where
     addSecurity = addSecurityRequirement identifier . addSecurityScheme identifier securityScheme
@@ -120,6 +117,7 @@ instance ToSchema NotifWelcomeMsg
 instance ToSchema NotifContent
 instance ToSchema Notification
 instance ToSchema a => ToSchema (WithUUID a)
+instance ToSchema JobStatus
 
 main :: IO ()
 main =

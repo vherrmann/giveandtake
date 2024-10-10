@@ -22,7 +22,7 @@ dependencies:
   - lens
   - data-default
   - PyF
-  # - async
+  - async
   - servant
   - servant-server
   - servant-client
@@ -44,6 +44,7 @@ dependencies:
   - HsYAML
   - HsYAML-aeson
   - unliftio-core
+  - unliftio
   - directory
   - time
   - crypton
@@ -58,6 +59,11 @@ dependencies:
   - feed
   - xml-conduit
   - xml-types
+  # - row-types
+  # - row-types-aeson
+  # - generic-lens
+  - lens
+  # - odd-jobs
 
 library:
   source-dirs: src
@@ -83,6 +89,17 @@ executables:
     dependencies:
       - giveandtake
       - optparse-applicative
+  # giveandtake-job-runner:
+  #   main: Main.hs
+  #   source-dirs: bin/GATJOB
+  #   ghc-options:
+  #     - -threaded
+  #     - -rtsopts
+  #     - -with-rtsopts=-N
+  #   dependencies:
+  #     - giveandtake
+  #     - optparse-applicative
+  #     - fast-logger
   giveandtake-generate-typescript:
     main: Main.hs
     source-dirs: bin/GATGenTS
@@ -132,6 +149,10 @@ default-extensions:
   - RecordWildCards
   - NoImplicitPrelude
   - QuasiQuotes
+  - StrictData
+  # - RebindableSyntax
+  # - OverloadedRecordDot
+  # - NoFieldSelectors
 
 language: GHC2021
 

@@ -202,7 +202,7 @@ export const PostWidget = ({
         subheader={formatDate(post.createdAt)}
       />
       {files.length != 0 && <MediaPostWidget files={files} />}
-      <CardContent>
+      <CardContent sx={{ pl: 2, pr: 2, pt: 0, pb: 0 }}>
         <Box
           sx={{
             color: "text.secondary",

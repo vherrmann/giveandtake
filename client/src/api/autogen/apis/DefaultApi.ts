@@ -19,6 +19,7 @@ import type {
   FeedType,
   FeedUrlPostResponse,
   FriendsRequestGetResponse,
+  JobStatus,
   LoginData,
   NewPost,
   Post,
@@ -40,6 +41,8 @@ import {
     FeedUrlPostResponseToJSON,
     FriendsRequestGetResponseFromJSON,
     FriendsRequestGetResponseToJSON,
+    JobStatusFromJSON,
+    JobStatusToJSON,
     LoginDataFromJSON,
     LoginDataToJSON,
     NewPostFromJSON,
@@ -100,6 +103,18 @@ export interface ApiFriendsRequestFriendIdPostRequest {
 
 export interface ApiFriendsRequestFriendIdRejectPostRequest {
     friendId: string;
+}
+
+export interface ApiJobIdResultMediaCompressGetRequest {
+    id: string;
+}
+
+export interface ApiJobIdResultVerifyEmailGetRequest {
+    id: string;
+}
+
+export interface ApiJobIdStatusGetRequest {
+    id: string;
 }
 
 export interface ApiNotifReadPostRequest {
@@ -222,7 +237,7 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiAuthSignupPostRaw(requestParameters: ApiAuthSignupPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<any>>> {
+    async apiAuthSignupPostRaw(requestParameters: ApiAuthSignupPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         if (requestParameters['signupData'] == null) {
             throw new runtime.RequiredError(
                 'signupData',
@@ -244,12 +259,16 @@ export class DefaultApi extends runtime.BaseAPI {
             body: SignupDataToJSON(requestParameters['signupData']),
         }, initOverrides);
 
-        return new runtime.JSONApiResponse<any>(response);
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      */
-    async apiAuthSignupPost(requestParameters: ApiAuthSignupPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<any>> {
+    async apiAuthSignupPost(requestParameters: ApiAuthSignupPostRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.apiAuthSignupPostRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -598,7 +617,124 @@ export class DefaultApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiMediaUploadPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UploadMediaResponse>> {
+    async apiJobIdResultMediaCompressGetRaw(requestParameters: ApiJobIdResultMediaCompressGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<UploadMediaResponse>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling apiJobIdResultMediaCompressGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Cookie", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/job/{id}/result/mediaCompress`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => UploadMediaResponseFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiJobIdResultMediaCompressGet(requestParameters: ApiJobIdResultMediaCompressGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UploadMediaResponse> {
+        const response = await this.apiJobIdResultMediaCompressGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiJobIdResultVerifyEmailGetRaw(requestParameters: ApiJobIdResultVerifyEmailGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<any>>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling apiJobIdResultVerifyEmailGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Cookie", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/job/{id}/result/verifyEmail`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse<any>(response);
+    }
+
+    /**
+     */
+    async apiJobIdResultVerifyEmailGet(requestParameters: ApiJobIdResultVerifyEmailGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<any>> {
+        const response = await this.apiJobIdResultVerifyEmailGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiJobIdStatusGetRaw(requestParameters: ApiJobIdStatusGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<JobStatus>> {
+        if (requestParameters['id'] == null) {
+            throw new runtime.RequiredError(
+                'id',
+                'Required parameter "id" was null or undefined when calling apiJobIdStatusGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("Cookie", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/api/job/{id}/status`.replace(`{${"id"}}`, encodeURIComponent(String(requestParameters['id']))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => JobStatusFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiJobIdStatusGet(requestParameters: ApiJobIdStatusGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<JobStatus> {
+        const response = await this.apiJobIdStatusGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiMediaUploadPostRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<string>> {
         const queryParameters: any = {};
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -618,12 +754,16 @@ export class DefaultApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => UploadMediaResponseFromJSON(jsonValue));
+        if (this.isJsonMime(response.headers.get('content-type'))) {
+            return new runtime.JSONApiResponse<string>(response);
+        } else {
+            return new runtime.TextApiResponse(response) as any;
+        }
     }
 
     /**
      */
-    async apiMediaUploadPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<UploadMediaResponse> {
+    async apiMediaUploadPost(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<string> {
         const response = await this.apiMediaUploadPostRaw(initOverrides);
         return await response.value();
     }

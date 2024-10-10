@@ -4,6 +4,7 @@ export * from './CheckResponse';
 export * from './FeedType';
 export * from './FeedUrlPostResponse';
 export * from './FriendsRequestGetResponse';
+export * from './JobStatus';
 export * from './LoginData';
 export * from './NewPost';
 export * from './NotifContent';
