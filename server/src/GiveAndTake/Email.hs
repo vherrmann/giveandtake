@@ -39,9 +39,13 @@ sendMail mail = do
     body = MM.plainPart $ TL.fromStrict mail.plainBody
     mHtml = MM.htmlPart . TL.fromStrict <$> mail.htmlBody
     newMail = MS.simpleMail from to cc bcc subject $ [body] <> maybeToList mHtml
+    mailMethod = case emailConfig.smtpMethod of
+      SmtpStartTLS -> MS.sendMailWithLoginSTARTTLS'
+      SmtpSSL -> MS.sendMailWithLoginTLS'
+      SmtpPlain -> MS.sendMailWithLogin'
   liftIO $
     -- FIXME: better error messages on wrong user credentials
-    MS.sendMailWithLoginTLS'
+    mailMethod
       (T.unpack emailConfig.smtpHost)
       (fromInteger emailConfig.smtpPort)
       (T.unpack emailConfig.smtpUser)

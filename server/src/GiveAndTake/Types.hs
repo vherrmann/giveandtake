@@ -7,6 +7,7 @@ module GiveAndTake.Types where
 import Control.Monad.Catch (Exception)
 import Control.Monad.Error.Class (MonadError (..))
 import Control.Monad.Logger.CallStack qualified as L
+import Data.Aeson qualified as A
 import Data.Pool (Pool)
 import Data.UUID
 import Database.Persist.Sql qualified as PS
@@ -16,12 +17,23 @@ import GiveAndTake.Prelude
 import Servant
 import System.IO (FilePath)
 
+data SmtpMethod = SmtpStartTLS | SmtpSSL | SmtpPlain
+  deriving stock (Show, Generic)
+
+-- remove smtp prefix
+smtpAesonOptions :: A.Options
+smtpAesonOptions = A.defaultOptions{A.constructorTagModifier = drop 4}
+
+instance FromJSON SmtpMethod where
+  parseJSON = A.genericParseJSON smtpAesonOptions
+
 data EmailConfig = EmailConfig
   { smtpHost :: Text
   , smtpPort :: Integer
   , smtpUser :: Text
   , smtpPassFile :: FilePath
   , smtpFrom :: Text
+  , smtpMethod :: SmtpMethod
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)

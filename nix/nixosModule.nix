@@ -67,6 +67,13 @@ in
           type = types.str;
           default = cfg.backend.emailConfig.smtpUser;
         };
+        smtpMethod = mkOption {
+          type = types.enum [
+            "StartTLS"
+            "SSL"
+            "Plain"
+          ];
+        };
         smtpPassFile = mkOption { type = types.str; };
       };
       timeout = mkOption { type = types.int; };
