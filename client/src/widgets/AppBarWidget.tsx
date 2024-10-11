@@ -62,7 +62,9 @@ export const AppBarWidget = () => {
         </LinkWidget>
         <Box sx={{ flexGrow: 1 }} />
 
-        <Tooltip title="Open documentation">
+        <Tooltip
+          title="Open documentation" // FIXME: leads to wrong page
+        >
           <IconButton onClick={() => redirect("/docs")} aria-label="help">
             <HelpIcon />
           </IconButton>

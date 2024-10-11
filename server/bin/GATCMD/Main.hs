@@ -3,11 +3,13 @@ module Main where
 import Database.Persist qualified as P
 import GiveAndTake.App (runSomeApp)
 import GiveAndTake.DB
+import GiveAndTake.Media (runProcessWOStdout)
 import GiveAndTake.Prelude
 import GiveAndTake.Types
 import GiveAndTake.Utils
 import Options.Applicative hiding (command)
 import Options.Applicative qualified as O
+import System.Process.Typed qualified as P
 
 -- sendNotif :: IO ()
 -- sendNotif = do

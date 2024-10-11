@@ -26,7 +26,7 @@
         let
           overlays = [ ];
           pkgs = import nixpkgs { inherit system overlays; };
-          compilerVersion = "ghc98";
+          compilerVersion = "ghc96";
           compiler = pkgs.haskell.packages."${compilerVersion}";
           developInputs =
             (with compiler; [
@@ -43,8 +43,8 @@
               devenv
             ]);
           # fixme: remove development dependencies
-          nativeBuildInputsHs = (with compiler; [ cabal-install ]);
-          buildInputsHs = with pkgs; [
+          nativeBuildInputs = with compiler; [ cabal-install ];
+          runtimeInputs = with pkgs; [
             ffmpeg
             imagemagick
           ];
@@ -72,14 +72,24 @@
               cabal2nixOptions = "--no-haddock";
               modifier =
                 drv:
-                pkgs.haskell.lib.addExtraLibraries (pkgs.haskell.lib.addBuildTools drv (
-                  (if returnShellEnv then developInputs else [ ]) ++ nativeBuildInputsHs
-                )) buildInputsHs;
+                pkgs.haskell.lib.addBuildTools drv (
+                  (if returnShellEnv then developInputs ++ runtimeInputs else [ ]) ++ nativeBuildInputs
+                );
+            };
+          wrapBinWithDeps =
+            binary: dependencies: pkg:
+            pkgs.symlinkJoin {
+              name = pkg.name;
+              paths = [ pkg ];
+              buildInputs = [ pkgs.makeWrapper ];
+              postBuild = ''
+                wrapProgram $out/bin/${binary} $wrapperfile --prefix PATH : ${pkgs.lib.makeBinPath dependencies}
+              '';
             };
         in
         {
           # Used by `nix build` & `nix run` (prod exe)
-          defaultPackage = projectHs false;
+          defaultPackage = wrapBinWithDeps "giveandtake" runtimeInputs (projectHs false);
 
           # `nix develop`
           devShell = projectHs true;

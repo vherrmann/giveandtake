@@ -104,7 +104,7 @@ getFeedH :: (HasHandler m) => Maybe Text -> UserUUID -> Text -> m F.Feed
 getFeedH accHeader userId token = do
   uconfig <- askM @UConfig
   when (maybe False ("text/html" `T.isInfixOf`) accHeader) do
-    redirect303 $ authUrl uconfig ["docs", "feed"]
+    redirect303 $ docsUrl uconfig ["feed"]
   logInfo $ show accHeader
   user <- getByKeySE @User userId
   feedEntity <-

@@ -31,30 +31,9 @@
         "x86_64-linux"
         "x86_64-darwin"
       ]
-      (
-        system:
-        let
-          overlays = [
-            (final: prev: {
-              giveandtake-frontend = final.callPackage (import ./nix/frontend.nix inputs) { };
-              giveandtake-docs = final.callPackage (import ./nix/docs.nix inputs) { };
-              giveandtake-backend = backend.defaultPackage."${system}";
-            })
-          ];
-          pkgs = import nixpkgs { inherit overlays system; };
-        in
-        {
-          packages = {
-            frontend = pkgs.giveandtake-frontend;
-            docs = pkgs.giveandtake-docs;
-            backend = pkgs.giveandtake-backend;
-          };
-          nixosModules.default = import ./nix/nixosModule.nix {
-            inherit inputs;
-            flakePkgs = pkgs; # FIXME: ideally a consument of the nixos module would just use his own pkgs (or maybe not?)
-          };
-        }
-      )
+      (system: {
+        nixosModules.default = import ./nix/nixosModule.nix { inherit inputs system; };
+      })
     )
     // {
       # FIXME: hack to make nixos-containers work
@@ -63,6 +42,7 @@
         modules = [
           self.nixosModules.x86_64-linux.default
           ({
+            # FIXME: extend doc
             services.giveandtake = {
               enable = true;
               host = "localhost:8090";

@@ -24,7 +24,15 @@ isMedia :: SM.FileData a -> Bool
 isMedia file = hasTopTypeOf (SM.fdFileCType file) ["image", "video"]
 
 runProcessWOStdout :: (MonadIO m) => P.ProcessConfig stdin stdout stderr -> m P.ExitCode
-runProcessWOStdout = P.runProcess . P.setStdout P.nullStream
+runProcessWOStdout conf = do
+  P.runProcess . P.setStdout P.nullStream $ conf
+
+-- hacky, but /dev/null doesn't work due to some weird reasons in the system service
+-- runProcessWOStdout conf = do
+--   (exitC, out) <- P.readProcessStdout . P.setStdout P.byteStringOutput $ conf
+--   -- force result
+--   evaluate (BL.length out)
+--   pure exitC
 
 mediaPath :: UConfig -> MediaUUID -> FilePath
 mediaPath uconfig uuid = [fmt|{uconfig.mediaDir}/{U.toText uuid}|]

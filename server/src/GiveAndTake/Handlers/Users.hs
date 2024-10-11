@@ -23,6 +23,6 @@ getUserPublicH userId = do
 
 getUserPostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID Post]
 getUserPostsH userEnt requestedUserId = do
-  checkIsEqUser userEnt.key requestedUserId
+  checkIsFriendOrEq userEnt.key requestedUserId
   postList <- runDB $ P.selectList [PostUser ==. requestedUserId] [P.Desc PostCreatedAt]
   pure $ entityToWithUUID <$> postList

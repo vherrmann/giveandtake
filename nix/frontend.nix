@@ -1,4 +1,4 @@
-{ gitignore, ... }:
+{ inputs, ... }:
 {
   pkgs,
   lib,
@@ -6,7 +6,7 @@
   ...
 }:
 let
-  inherit (gitignore.lib) gitignoreSource;
+  inherit (inputs.gitignore.lib) gitignoreSource;
 in
 (pkgs.buildNpmPackage {
   name = "giveandtake";

@@ -1,4 +1,4 @@
-{ gitignore, ... }:
+{ inputs, baseUrl, ... }:
 {
   pkgs,
   lib,
@@ -7,7 +7,7 @@
 }:
 
 let
-  inherit (gitignore.lib) gitignoreSource;
+  inherit (inputs.gitignore.lib) gitignoreSource;
   myMkdocs = pkgs.python3.withPackages (
     ps: with ps; [
       mkdocs
@@ -21,6 +21,7 @@ stdenv.mkDerivation rec {
   src = gitignoreSource ../docs;
 
   buildPhase = ''
+    ${pkgs.yq-go}/bin/yq eval '.site_url = "https://${baseUrl}/docs"' -i mkdocs.yml
     ${myMkdocs}/bin/mkdocs build
   '';
 

@@ -1,4 +1,4 @@
-{ flakePkgs, ... }:
+{ inputs, system, ... }:
 {
   config,
   pkgs,
@@ -8,6 +8,14 @@
 with lib;
 let
   cfg = config.services.giveandtake;
+  gatPkgs = {
+    frontend = pkgs.callPackage (import ./frontend.nix { inherit inputs; }) { };
+    docs = pkgs.callPackage (import ./docs.nix {
+      inherit inputs;
+      baseUrl = cfg.docsBaseUrl;
+    }) { };
+    backend = inputs.backend.defaultPackage."${system}";
+  };
 in
 {
   imports = [
@@ -18,7 +26,11 @@ in
   # FIXME: add doc to options
   options.services.giveandtake = {
     enable = mkEnableOption "Enable Give'n'take service";
-    listenAddress = mkOption { type = types.str; };
+
+    baseUrl = mkOption {
+      type = types.str;
+      default = cfg.host;
+    };
     postgres = {
       # USEME
       port = mkOption {
@@ -36,6 +48,7 @@ in
     };
     docs = { };
     frontend = { };
+    docsBaseUrl = mkOption { type = types.str; };
     backend = {
       # USEME
       port = mkOption {
@@ -46,10 +59,6 @@ in
       mediaDir = mkOption {
         type = types.str;
         default = "/var/lib/giveandtake/media";
-      };
-      baseUrl = mkOption {
-        type = types.str;
-        default = cfg.host;
       };
       serviceName = mkOption {
         type = types.str;
@@ -91,13 +100,15 @@ in
         name = "config.yaml";
         text = builtins.toJSON {
           host = "localhost";
-          port = cfg.backend.port;
-          dbConfig = cfg.backend.dbConfig;
-          mediaDir = cfg.backend.mediaDir;
-          authority = cfg.backend.baseUrl;
-          serviceName = cfg.backend.serviceName;
-          timeout = cfg.backend.timeout;
-          emailConfig = cfg.backend.emailConfig;
+          inherit (cfg.backend)
+            port
+            dbConfig
+            mediaDir
+            serviceName
+            emailConfig
+            timeout
+            ;
+          inherit (cfg) docsBaseUrl baseUrl;
         };
       };
     in
@@ -108,9 +119,10 @@ in
         enable = true;
 
         virtualHosts = {
-          "${cfg.listenAddress}" = {
+          # nginx apparently can't have more than one try_files, we therefore use static-web-server to serve the frontend
+          "${cfg.baseUrl}" = {
             locations."/" = {
-              root = "${flakePkgs.giveandtake-frontend}";
+              root = "${gatPkgs.frontend}";
               extraConfig = ''
                 # don't interpret url paths as file paths
                 try_files $uri /index.html;
@@ -124,6 +136,9 @@ in
             locations."/api" = {
               proxyPass = "http://localhost:${toString cfg.backend.port}";
               extraConfig = ''
+                # FIXME: add option for this (and the option in the server)
+                client_max_body_size 100M;
+
                 proxy_http_version 1.1;
                 proxy_set_header Connection "upgrade";
                 proxy_set_header Upgrade $http_upgrade;
@@ -131,11 +146,12 @@ in
                 proxy_set_header X-Forwarded-Proto $scheme;
               '';
             };
-            locations."/docs" = {
-              root = "${flakePkgs.giveandtake-docs}";
+          };
+          "${cfg.docsBaseUrl}" = {
+            locations."/" = {
+              root = "${gatPkgs.docs}";
               extraConfig = ''
                 # don't interpret url paths as file paths
-                try_files $uri /index.html;
                 proxy_http_version 1.1;
                 proxy_set_header Connection "upgrade";
                 proxy_set_header Upgrade $http_upgrade;
@@ -145,6 +161,7 @@ in
             };
           };
         };
+
       };
 
       users.groups = {
@@ -157,7 +174,7 @@ in
         isSystemUser = true;
       };
 
-      environment.systemPackages = [ flakePkgs.giveandtake-backend ];
+      environment.systemPackages = [ gatPkgs.backend ];
 
       systemd.services.giveandtake = {
         enable = true;
@@ -170,7 +187,7 @@ in
         after = [ "postgresql.service" ];
         requires = [ "postgresql.service" ];
         script = ''
-          ${flakePkgs.giveandtake-backend}/bin/giveandtake ${configFile}
+          ${gatPkgs.backend}/bin/giveandtake ${configFile}
         '';
       };
 

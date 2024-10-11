@@ -3,6 +3,7 @@ import { Button, Stack, TextField } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../providers/auth";
 import { Link } from "react-router-dom";
+import { PasswordInput } from "../widgets/PasswordInput";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -47,9 +48,8 @@ export const Login = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Email"
           />
-          <TextField
+          <PasswordInput
             required
-            type="password"
             value={password}
             variant="standard"
             onChange={(e) => setPassword(e.target.value)}

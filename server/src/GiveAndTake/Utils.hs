@@ -45,7 +45,10 @@ ensureDirOfPath = liftIO . D.createDirectoryIfMissing True . F.takeDirectory
 
 authUrl :: UConfig -> [Text] -> Text
 -- FIXME: replace http by https in production
-authUrl uconfig path = [fmt|http://{uconfig.authority}/{T.intercalate "/" path}|]
+authUrl uconfig path = [fmt|http://{uconfig.baseUrl}/{T.intercalate "/" path}|]
+
+docsUrl :: UConfig -> [Text] -> Text
+docsUrl uconfig path = [fmt|http://{uconfig.docsBaseUrl}/{T.intercalate "/" path}|]
 
 type instance PyFClassify UUID = 'PyFString
 instance PyFToString UUID where

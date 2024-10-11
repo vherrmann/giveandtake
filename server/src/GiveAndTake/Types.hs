@@ -50,7 +50,8 @@ data UConfig = UConfig
   { mediaDir :: Text
   , host :: Text
   , port :: Int
-  , authority :: Text
+  , baseUrl :: Text
+  , docsBaseUrl :: Text
   , serviceName :: Text
   , emailConfig :: EmailConfig
   , dbConfig :: DBConfig
