@@ -61,7 +61,10 @@ in
       };
       emailConfig = {
         smtpHost = mkOption { type = types.str; };
-        smtpPort = mkOption { type = types.int; };
+        smtpPort = mkOption {
+          type = types.int;
+          default = 465;
+        };
         smtpUser = mkOption { type = types.str; };
         smtpFrom = mkOption {
           type = types.str;
@@ -73,6 +76,8 @@ in
             "SSL"
             "Plain"
           ];
+          default = "SSL";
+          description = "You should always use SSL unless this service runs on the same host as the smtp server";
         };
         smtpPassFile = mkOption { type = types.str; };
       };

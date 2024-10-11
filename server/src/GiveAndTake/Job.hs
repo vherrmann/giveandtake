@@ -2,7 +2,6 @@
 
 module GiveAndTake.Job where
 
-import Data.Text.IO qualified as T
 import Database.Persist ((=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
@@ -73,7 +72,7 @@ runJob (GATJobVerifyEmail val) = do
 runJob (GATJobMediaUpload info) = runMediaJob info
 
 -- FIXME: give jobs time to finish before shutting down
-jobRunner :: (HasJob m, HasMediaJob m, MonadUnliftIO m) => Int -> m ()
+jobRunner :: (HasJob m, HasMediaJob m, MonadUnliftIO m, MonadLogger m) => Int -> m ()
 jobRunner jobLimit = runJobLoop
  where
   runJobLoop = do
@@ -87,7 +86,10 @@ jobRunner jobLimit = runJobLoop
     forM_ pendingJobEnts \jobEnt -> do
       UC.forkIO $
         let
+          onStart = do
+            logInfoN [fmt|Starting job {show @Text jobEnt.val.payload}|]
           onSuccess result = do
+            logInfoN [fmt|Finished job {show @Text jobEnt.val.payload} successfully|]
             ct <- getUTCTime
             runDB $
               P.update
@@ -98,7 +100,7 @@ jobRunner jobLimit = runJobLoop
                 ]
           onFailure (e :: SomeException) = do
             -- FIXME: use monadlogger
-            liftIO $ T.hPutStrLn stderr [fmt|Error running job {show @Text jobEnt.val.payload}: {show @Text e}|]
+            logWarnN [fmt|Error running job {show @Text jobEnt.val.payload}: {show @Text e}|]
             ct <- getUTCTime
             runDB $
               P.update
@@ -109,6 +111,7 @@ jobRunner jobLimit = runJobLoop
                 ]
             throwIO e
          in
-          catch (runJob jobEnt.val.payload >>= onSuccess) onFailure
+          onStart
+            >> catch (runJob jobEnt.val.payload >>= onSuccess) onFailure
     waitForNudge
     runJobLoop
