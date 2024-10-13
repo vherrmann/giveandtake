@@ -117,6 +117,8 @@ in
 
       services.nginx = {
         enable = true;
+        recommendedProxySettings = true;
+        recommendedOptimisation = true;
 
         virtualHosts = {
           # nginx apparently can't have more than one try_files, we therefore use static-web-server to serve the frontend
@@ -126,38 +128,22 @@ in
               extraConfig = ''
                 # don't interpret url paths as file paths
                 try_files $uri /index.html;
-                proxy_http_version 1.1;
-                proxy_set_header Connection "upgrade";
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header X-Forwarded-For $remote_addr;
-                proxy_set_header X-Forwarded-Proto $scheme;
               '';
+              proxyWebsockets = true; # FIXME: remove this?
             };
             locations."/api" = {
               proxyPass = "http://localhost:${toString cfg.backend.port}";
               extraConfig = ''
                 # FIXME: add option for this (and the option in the server)
-                client_max_body_size 100M;
-
-                proxy_http_version 1.1;
-                proxy_set_header Connection "upgrade";
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header X-Forwarded-For $remote_addr;
-                proxy_set_header X-Forwarded-Proto $scheme;
+                client_max_body_size 500M;
               '';
+              proxyWebsockets = true; # FIXME: remove this?
             };
           };
           "${cfg.docsBaseUrl}" = {
             locations."/" = {
               root = "${gatPkgs.docs}";
-              extraConfig = ''
-                # don't interpret url paths as file paths
-                proxy_http_version 1.1;
-                proxy_set_header Connection "upgrade";
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header X-Forwarded-For $remote_addr;
-                proxy_set_header X-Forwarded-Proto $scheme;
-              '';
+              proxyWebsockets = true; # FIXME: remove this?
             };
           };
         };
