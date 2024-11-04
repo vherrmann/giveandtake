@@ -45,7 +45,12 @@ createPostH :: (HasHandler m) => Entity User -> NewPost -> m UUID
 createPostH user newpost = do
   uconf :: UConfig <- askM
   media <- traverse (getByKeySE @Media) newpost.media
-  unless (all ((.isCompressed)) media) $ throwError S.err400{S.errBody = "Some media aren't completely compressed yet."}
+
+  when (T.length newpost.title > 24) $
+    throwError S.err409{S.errBody = "Title cannot be longer than 24 characters."}
+
+  unless (all ((.isCompressed)) media) $
+    throwError S.err400{S.errBody = "Some media aren't completely compressed yet."}
 
   mediaIds <- for (zip media newpost.media) \(medium, mediaId) -> do
     -- Check if draft, if the medium is not a draft, it is already used by another post

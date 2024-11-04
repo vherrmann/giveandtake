@@ -76,6 +76,9 @@ signupHandler signupData = do
   when (T.length signupData.name == 0) $
     throwError err409{errBody = "Name cannot be empty."}
 
+  when (T.length signupData.name > 20) $
+    throwError err409{errBody = "Name cannot be longer than 20 characters."}
+
   nameExists <- runDB $ P.existsBy (UniqueUserName signupData.name)
   when nameExists $
     throwError err409{errBody = "Name already exists."}
