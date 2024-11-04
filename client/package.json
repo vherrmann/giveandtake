@@ -19,6 +19,7 @@
     "lightgallery": "^2.7.2",
     "material-ui-popup-state": "^5.3.1",
     "mathjs": "^12.3.1",
+    "qrcode.react": "^4.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-infinite-scroll-component": "^6.1.0",

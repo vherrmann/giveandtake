@@ -1,4 +1,11 @@
-import { Box, Button, IconButton, Tooltip } from "@mui/material";
+import {
+  Box,
+  Button,
+  IconButton,
+  Popover,
+  Tooltip,
+  useTheme,
+} from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
@@ -8,10 +15,13 @@ import { redirect } from "../utils";
 import { LinkWidget } from "./LinkWidget";
 
 import HelpIcon from "@mui/icons-material/Help";
+import QrCodeIcon from "@mui/icons-material/QrCode";
 import { FeedWidget } from "./FeedIconWidget";
 import { NotificationPopup } from "./NotificationPopup";
 import { AvatarMenu } from "./AvatarMenu";
 import logo from "../assets/logo.png";
+import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
+import { QRCodeSVG } from "qrcode.react";
 
 // see https://mui.com/material-ui/react-app-bar/
 // see https://mui.com/material-ui/react-app-bar/#fixed-placement about placement
@@ -20,6 +30,7 @@ export const AppBarWidget = () => {
   const { isAuthenticated, user, userId } = useAuthState();
   const location = useLocation();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   const navToLogin = () => {
     navigate("/login", {
@@ -57,9 +68,13 @@ export const AppBarWidget = () => {
         <LinkWidget to={"/"}>
           <img src={logo} alt="Logo" style={{ height: 40, marginRight: 16 }} />
         </LinkWidget>
-        <LinkWidget to={"/"}>
+        {
+          undefined
+          // Takes too much space
+          /* <LinkWidget to={"/"}>
           <Typography variant="h6">Give'n'take</Typography>
-        </LinkWidget>
+        </LinkWidget> */
+        }
         <Box sx={{ flexGrow: 1 }} />
 
         <Tooltip
@@ -69,6 +84,21 @@ export const AppBarWidget = () => {
             <HelpIcon />
           </IconButton>
         </Tooltip>
+        <PopupState variant="popover" popupId="qrcode-popover">
+          {(popupState) => (
+            <>
+              <IconButton {...bindTrigger(popupState)} aria-label="qrcode">
+                <QrCodeIcon />
+              </IconButton>
+              <Popover {...bindPopover(popupState)}>
+                <QRCodeSVG
+                  value={window.location.href}
+                  fgColor={theme.palette.primary.main}
+                />
+              </Popover>
+            </>
+          )}
+        </PopupState>
         {isAuthenticated ? loggedinBarActions() : loginButton}
       </Toolbar>
     </AppBar>
