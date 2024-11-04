@@ -35,10 +35,60 @@ areFriends user1 user2 = do
 isFriendOrEq :: (HasDBPool m, MonadIO m) => UserUUID -> UserUUID -> m Bool
 isFriendOrEq user1 user2 = if user1 == user2 then pure True else areFriends user1 user2
 
+isGroupMember :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupMember userId groupId = runDB $ P.existsBy (UniqueGroupMember groupId userId)
+
+isGroupOwner :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupOwner userId groupId = do
+  memberp <- isGroupMember userId groupId
+  groupM <- runDB (P.get $ packKey @Group groupId)
+  pure $ case groupM of
+    Nothing -> False
+    Just group -> memberp && (userId == group.owner)
+
 checkIsFriendOrEq :: (HasHandler m) => UserUUID -> UserUUID -> m ()
 checkIsFriendOrEq user1 user2 =
   unlessM (isFriendOrEq user1 user2) $
     throwError S.err401{S.errBody = "Users are not friends or the same user."}
+
+checkIsGroupMember :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupMember userId groupId =
+  unlessM (isGroupMember userId groupId) $
+    throwError S.err401{S.errBody = "User is not a member of the group."}
+
+isGroupHigher :: (MonadIO m, HasDBPool m) => UserUUID -> UserUUID -> GroupUUID -> m Bool
+isGroupHigher user1Id user2Id groupId = runDB do
+  groupMemb1M <- P.getBy (UniqueGroupMember groupId user1Id)
+  groupMemb2M <- P.getBy (UniqueGroupMember groupId user2Id)
+  groupM <- P.get $ packKey @Group groupId
+  pure $ case (groupMemb1M, groupMemb2M, groupM) of
+    (Just groupMemb1, Just groupMemb2, Just group) ->
+      (groupMemb1.val.user == group.owner)
+        || (groupMemb1.val.role >= groupMemb2.val.role)
+    _ -> False
+
+checkIsGroupHigher :: (HasHandler m) => UserUUID -> UserUUID -> GroupUUID -> m ()
+checkIsGroupHigher user1Id user2Id groupId =
+  unlessM (isGroupHigher user1Id user2Id groupId) $
+    throwError S.err401{S.errBody = "User is not higher in the group hierarchy."}
+
+isGroupAdmin :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupAdmin userId groupId = runDB do
+  groupMembM <- P.getBy (UniqueGroupMember groupId userId)
+  groupM <- P.get $ packKey @Group groupId
+  pure $ case (groupMembM, groupM) of
+    (Just groupMemb, Just group) -> groupMemb.val.role == GroupRoleAdmin
+    _ -> False
+
+checkIsGroupAdmin :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupAdmin userId groupId =
+  unlessM (isGroupAdmin userId groupId) $
+    throwError S.err401{S.errBody = "User is not an admin of the group."}
+
+checkIsGroupOwner :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupOwner userId groupId =
+  unlessM (isGroupOwner userId groupId) $
+    throwError S.err401{S.errBody = "User is not the owner of the group."}
 
 checkIsFriend :: (HasHandler m) => UserUUID -> UserUUID -> m ()
 checkIsFriend user1 user2 =

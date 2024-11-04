@@ -25,6 +25,8 @@ import CommunityRoute from "./routes/CommunityRoute";
 import HomeRoute from "./routes/HomeRoute";
 import { HardRedirect } from "./utils";
 import { SettingsRoute } from "./routes/SettingsRoute";
+import NewGroupRoute from "./routes/NewGroupRoute";
+import GroupRoute from "./routes/GroupRoute";
 
 // Rickroll banner
 const banner = `
@@ -105,11 +107,8 @@ const router = createBrowserRouter([
           { path: "user/:userId", element: <UserRoute /> },
           { path: "community", element: <CommunityRoute /> },
           { path: "settings", element: <SettingsRoute /> },
-          // user
-          // notifications
-          // post
-          // people
-          // settings
+          { path: "newgroup", element: <NewGroupRoute /> },
+          { path: "group/:groupId", element: <GroupRoute /> },
         ],
       }),
       { path: "login", element: <Login /> },

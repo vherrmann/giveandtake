@@ -28,6 +28,7 @@ type MediaUUID = UUID
 type FeedUUID = UUID
 type NotifUUID = UUID
 type JobUUID = UUID
+type GroupUUID = UUID
 
 data LoginData = LoginData
   { email :: Text
@@ -141,6 +142,36 @@ data UnhiddenPostData = UnhiddenPostData
 data ApiPost = HiddenPost HiddenPostData | UnhiddenPost UnhiddenPostData
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
+
+data GroupPublic = GroupPublic
+  { name :: Text
+  , createdAt :: UTCTime
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data NewGroup = NewGroup
+  { name :: Text
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ChangeGroupRole = ChangeGroupRole
+  { group :: GroupUUID
+  , user :: UserUUID
+  , role :: DB.GroupRole
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ApiGroup = ApiGroup
+  { group :: DB.Group
+  , members :: [WithUUID UserPublic]
+  , admins :: [WithUUID UserPublic]
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
 --- Api Types
 
 type PostsApi =
@@ -205,6 +236,29 @@ type JobApi =
                -- :<|> S.Capture "id" JobUUID :> "cancel" :> S.Post '[JSON] ()
        )
 
+type GroupsApi =
+  "groups"
+    :> ( S.Get '[JSON] [WithUUID DB.Group]
+          :<|> (S.Capture "id" GroupUUID :> "public" :> S.Get '[JSON] GroupPublic)
+          :<|> (S.Capture "id" GroupUUID :> S.Get '[JSON] ApiGroup)
+          :<|> (S.Capture "id" GroupUUID :> S.Delete '[JSON] ())
+          :<|> (S.ReqBody '[JSON] NewGroup :> S.Post '[JSON] GroupUUID)
+          :<|> ( "request"
+                  :> ( S.Get '[JSON] [GroupUUID]
+                        :<|> (S.Capture "id" GroupUUID :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupUUID :> "cancel" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupUUID :> S.Capture "userId" UserUUID :> "accept" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupUUID :> S.Capture "userId" UserUUID :> "reject" :> S.Post '[JSON] ())
+                     )
+               )
+          :<|> ("roles" :> (S.ReqBody '[JSON] ChangeGroupRole :> S.Post '[JSON] ()))
+          :<|> ( "member"
+                  :> ( (S.Capture "id" GroupUUID :> "add" :> S.Capture "userId" UserUUID :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupUUID :> "remove" :> S.Capture "userId" UserUUID :> S.Delete '[JSON] ())
+                     )
+               )
+       )
+
 type ProtectedApi =
   PostsApi
     :<|> UsersApi
@@ -213,6 +267,7 @@ type ProtectedApi =
     :<|> ProtectedFeedApi
     :<|> NotifApi
     :<|> JobApi
+    :<|> GroupsApi
 
 type AuthApi =
   "auth"

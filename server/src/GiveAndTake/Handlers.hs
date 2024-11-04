@@ -6,6 +6,7 @@ import GiveAndTake.DB
 import GiveAndTake.Handlers.Auth
 import GiveAndTake.Handlers.Feed
 import GiveAndTake.Handlers.Friends
+import GiveAndTake.Handlers.Groups (groupsHandler)
 import GiveAndTake.Handlers.Job
 import GiveAndTake.Handlers.Media
 import GiveAndTake.Handlers.Notif (notifHandler)
@@ -28,6 +29,7 @@ protectApi (SA.Authenticated userEnt) =
     :<|> getFeedUrlH userEnt
     :<|> notifHandler userEnt
     :<|> jobHandler userEnt
+    :<|> groupsHandler userEnt
 -- Otherwise, we return a 401.
 protectApi failure = SA.throwAll err401{errBody = "Cookie authentication failed: " <> BL.pack (show failure)}
 

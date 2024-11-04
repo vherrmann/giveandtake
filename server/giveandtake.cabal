@@ -26,6 +26,7 @@ library
       GiveAndTake.Handlers.Auth
       GiveAndTake.Handlers.Feed
       GiveAndTake.Handlers.Friends
+      GiveAndTake.Handlers.Groups
       GiveAndTake.Handlers.Job
       GiveAndTake.Handlers.Media
       GiveAndTake.Handlers.Notif

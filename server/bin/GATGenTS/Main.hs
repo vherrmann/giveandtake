@@ -124,6 +124,12 @@ instance ToSchema DB.Notification
 instance ToSchema a => ToSchema (WithUUID a)
 instance ToSchema DB.JobStatus
 instance ToSchema UnlockedHiddenPostData
+instance ToSchema DB.Group
+instance ToSchema NewGroup
+instance ToSchema GroupPublic
+instance ToSchema DB.GroupRole
+instance ToSchema ChangeGroupRole
+instance ToSchema ApiGroup
 
 main :: IO ()
 main =
@@ -144,5 +150,5 @@ main =
                 then putStrLn @Text "File already exists"
                 else BL.writeFile file spec
 
--- rm swagger.json && cabal run giveandtake-generate-typescript -- swagger.json && openapi-generator-cli generate -i swagger.json -g typescript-fetch -o ~/repos/giveandtake/client/src/api/autogen/
+-- rm swagger.json; cabal run giveandtake-generate-typescript -- swagger.json && openapi-generator-cli generate -i swagger.json -g typescript-axios -o ~/repos/giveandtake/client/src/api/autogen
 -- watchexec --restart -e hs --watch src/GiveAndTake/Api.hs -- bash -c '"rm swagger.json && cabal run giveandtake-generate-typescript -- swagger.json && openapi-generator-cli generate -i swagger.json -g typescript-fetch -o ~/repos/giveandtake/client/src/api/autogen/"'
