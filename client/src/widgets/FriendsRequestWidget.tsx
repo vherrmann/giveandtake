@@ -22,18 +22,18 @@ import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
 
-export const FriendsRequestWidgets = ({ userId }: { userId: string }) => {
+export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
   const [friendReqs, setFriendReqs] =
     useState<FriendsRequestGetResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const api = new Api();
+  const api = Api();
   const fetchFriendRequests = async () => {
     try {
       setLoading(true);
       const response = await api.apiFriendsRequestGet();
-      setFriendReqs(response);
+      setFriendReqs(response.data);
       setLoading(false);
     } catch (err) {
       // FIXME: more detailed information
@@ -63,7 +63,7 @@ export const FriendsRequestWidgets = ({ userId }: { userId: string }) => {
 
   const acceptRequest = (friendId: string) => async () => {
     try {
-      await api.apiFriendsRequestFriendIdAcceptPost({ friendId });
+      await api.apiFriendsRequestFriendIdAcceptPost(friendId);
       fetchFriendRequests();
       // FIXME: update friend list
     } catch (err) {
@@ -73,7 +73,7 @@ export const FriendsRequestWidgets = ({ userId }: { userId: string }) => {
 
   const rejectRequest = (friendId: string) => async () => {
     try {
-      await api.apiFriendsRequestFriendIdRejectPost({ friendId });
+      await api.apiFriendsRequestFriendIdRejectPost(friendId);
       fetchFriendRequests();
     } catch (err) {
       // FIXME: inform user

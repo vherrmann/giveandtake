@@ -1,13 +1,15 @@
 module GiveAndTake.Handlers.Posts where
 
-import Data.List (zip)
+import Data.List (zip, (\\))
 import Data.String (String)
+import Data.Text qualified as T
 import Data.UUID (UUID)
 import Data.UUID qualified as U
 import Database.Persist ((=.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
 import GiveAndTake.DB
+import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Handlers.Utils
 import GiveAndTake.Prelude
 import GiveAndTake.Types
@@ -21,16 +23,18 @@ postsHandler userEnt =
   getPostH userEnt
     :<|> deletePostH userEnt
     :<|> createPostH userEnt
+    :<|> getTradeablePostsH userEnt
+    :<|> postTradePostsH userEnt
     :<|> getPostsFeedH userEnt
 
-getPostsFeedH :: Entity User -> RHandler m [WithUUID Post]
-getPostsFeedH userEntity = fmap entityToWithUUID <$> getFeedPosts (entityUKey userEntity)
+getPostsFeedH :: (HasHandler m) => Entity User -> m [WithUUID ApiPost]
+getPostsFeedH userEntity = traverse (dbPostToApiPost userEntity.key) =<< getFeedPosts userEntity.key
 
-getPostH :: (HasHandler m) => Entity User -> PostUUID -> m Post
+getPostH :: (HasHandler m) => Entity User -> PostUUID -> m ApiPost
 getPostH userEnt postId = do
-  post <- getByKeySE @Post postId
-  checkIsFriendOrEq userEnt.key post.user
-  pure post
+  postEnt <- getByKeySEEnt @DB.Post postId
+  checkIsFriendOrEq userEnt.key postEnt.val.user
+  dbPostToApiPost userEnt.key postEnt <&> (.value)
 
 -- selectPosts :: Handler [Post]
 -- selectPosts = do
@@ -97,3 +101,35 @@ deletePostH userEnt postId = do
           else -- FIXME: proper logging system
             putStrLn @String [fmt|"File {mediaPath} does not exist when trying to delete it."|]
         runDB $ P.delete $ MediaKey mediaUuid
+
+getTradeablePostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID DB.Post]
+getTradeablePostsH userEnt postUser = do
+  checkIsFriendOrEq userEnt.key postUser
+  postList <- getUserPosts userEnt.key
+  apiPostList <- zip postList <$> traverse (dbPostToApiPost postUser) postList
+  let tradeablePostEnts =
+        [ postEnt
+        | (postEnt, WithUUID id (HiddenPost (LockedHiddenPost _))) <- apiPostList
+        ]
+  pure $ entityToWithUUID <$> tradeablePostEnts
+
+postTradePostsH :: (HasHandler m) => Entity User -> PostUUID -> PostUUID -> m ()
+postTradePostsH userEnt post1Id post2Id = do
+  post1 <- getByKeySE @DB.Post post1Id
+  post2 <- getByKeySE @DB.Post post2Id
+  checkIsEqUser userEnt.key post1.user
+  checkIsFriend userEnt.key post2.user
+  -- check if post2 was already traded for some post of UserEnt
+  whenM (postWasTradedWith post2Id userEnt.key) $ throwError S.err409{S.errBody = "Post was already traded with some post of yours."}
+  unlessM (hiddenPostP (packKey post2Id) post2.user) $ throwError S.err409{S.errBody = "Post is not hidden."}
+
+  ct <- getUTCTime
+  runDB $
+    P.insert_ $
+      TradedPost
+        { post1 = post1Id
+        , user1 = post1.user
+        , post2 = post2Id
+        , user2 = post2.user
+        , createdAt = ct
+        }

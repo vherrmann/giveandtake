@@ -3,10 +3,15 @@ import { Api } from "../api";
 import { PostList } from "../widgets/PostListWidget";
 
 export const HomeRoute = () => {
-  const api = new Api();
+  const api = Api();
   return (
     <Stack spacing={2} alignItems="center">
-      <PostList postsFetcher={async () => await api.apiPostsFeedGet()} />
+      <PostList
+        postsFetcher={async () =>
+          // FIXME: add error handling
+          (await api.apiPostsFeedGet()).data
+        }
+      />
     </Stack>
   );
 };

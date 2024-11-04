@@ -3,27 +3,28 @@ import { useEffect, useState } from "react";
 import { PostWidget } from "../widgets/PostWidget";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useScroll } from "../providers/scroll";
-import { Api, WithUUIDPost } from "../api";
+import { Api, WithUUIDApiPost } from "../api";
+import { handleApiErr } from "../utils";
 
 export const PostList = ({
   postsFetcher,
 }: {
-  postsFetcher: () => Promise<WithUUIDPost[]>;
+  postsFetcher: () => Promise<WithUUIDApiPost[]>;
 }) => {
-  const [posts, setPosts] = useState<WithUUIDPost[]>([]);
+  const [posts, setPosts] = useState<WithUUIDApiPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { scrollRef } = useScroll();
-  const api = new Api();
+  const api = Api();
 
   const fetchPosts = async () => {
     try {
       const posts = await postsFetcher();
       setPosts(posts);
       setLoading(false);
-    } catch (err) {
+    } catch (e) {
       // FIXME: more information
-      setError("Failed to fetch posts");
+      setError("Failed to fetch posts: " + handleApiErr(e));
       setLoading(false);
     }
   };
@@ -33,7 +34,7 @@ export const PostList = ({
   }, []);
 
   const chunkSize = 4;
-  const [shownPosts, setShownPosts] = useState<WithUUIDPost[]>([]);
+  const [shownPosts, setShownPosts] = useState<WithUUIDApiPost[]>([]);
 
   // FIXME: I don't see a better way to do this
   useEffect(() => {
@@ -93,7 +94,7 @@ export const PostList = ({
                     deletePost: async (postId) => {
                       if (postId) {
                         try {
-                          await api.apiPostsIdDelete({ id: postId });
+                          await api.apiPostsIdDelete(postId);
                           setPosts(posts.filter(({ uuid }) => uuid !== postId));
                         } catch (err) {
                           // FIXME: more information

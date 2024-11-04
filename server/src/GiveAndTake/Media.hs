@@ -113,5 +113,4 @@ runMediaJob (GATJobMediaUploadData{files}) = do
       ensureDirOfPath comprPath -- move this to the beginning of the program?
       liftIO $ D.renameFile newTmpPath comprPath
       liftIO $ D.removeFile origPath
-      pure uuid
   pure $ GATJobResultMediaUpload (files <&> (.mediaId))

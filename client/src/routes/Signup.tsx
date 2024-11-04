@@ -3,7 +3,7 @@ import { Button, Stack, TextField, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router";
 import { Api, JobStatus } from "../api";
 import { useSearchParams } from "react-router-dom";
-import { showApiErr } from "../utils";
+import { handleApiErr } from "../utils";
 
 interface SignupData {
   name: string;
@@ -23,11 +23,15 @@ export const Signup = (): JSX.Element => {
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const api = new Api();
+  const api = Api();
   const [searchParams, setSearchParams] = useSearchParams();
   const secret = searchParams.get("secret");
 
   const handleChangeSD = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // limit size of username to 24 characters
+    if (e.target.name === "name" && e.target.value.length > 20) {
+      return;
+    }
     setSignupData({
       ...signupData,
       [e.target.name]: e.target.value,
@@ -59,15 +63,13 @@ export const Signup = (): JSX.Element => {
     try {
       setInfo("Sending signup request.... Sending verification email....");
       setLoading(true);
-      const jobId = await api.apiAuthSignupPost({
-        signupData: { ...signupData, secret },
-      });
+      const jobId = await api.apiAuthSignupPost({ ...signupData, secret });
       setInfo("Sending verification email!");
       setError("");
 
       /* setupVEmailPolling(jobId); */
     } catch (e: any) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
     } finally {
       setLoading(false);
     }

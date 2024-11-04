@@ -9,7 +9,6 @@ import Control.Lens
 import Data.Aeson.Encode.Pretty qualified as A
 import Data.ByteString.Lazy.Char8 qualified as BL
 import GiveAndTake.Api
-import GiveAndTake.DB
 import GiveAndTake.Prelude
 import Servant ((:>))
 import Servant qualified as S
@@ -26,6 +25,8 @@ import Servant.Auth qualified as SA
 import qualified Data.Text as T
 import Data.OpenApi (OpenApi (..), Components (..), ToSchema)
 import qualified Data.HashMap.Strict.InsOrd as HM
+import qualified GiveAndTake.DB.Types as DB
+import GiveAndTake.Api (UnlockedHiddenPostData)
 
 --- https://github.com/biocad/servant-openapi3/issues/42
 
@@ -94,11 +95,15 @@ instance HasOpenApi S.RawM where
 
 --- data type instances
 
-instance ToSchema Post
+instance ToSchema DB.Post
+instance ToSchema LockedHiddenPostData
+instance ToSchema HiddenPostData
+instance ToSchema UnhiddenPostData
+instance ToSchema ApiPost
 instance ToSchema NewPost
 instance ToSchema UploadMediaResponse
 instance ToSchema LoginData
-instance ToSchema User
+instance ToSchema DB.User
 instance ToSchema SuccessLoginResponse
 instance ToSchema SignupData
 instance ToSchema VerifyEmail
@@ -106,18 +111,19 @@ instance ToSchema UserPublic
 instance ToSchema CheckResponse
 instance ToSchema FriendsRequestGetResponse
 instance ToSchema FeedUrlPostResponse
-instance ToSchema Feed
+instance ToSchema DB.Feed
 instance ToSchema F.Feed where
     declareNamedSchema _ = do
         -- FIXME: return proper spec
         pure $ SO.NamedSchema (Just "Feed") mempty
-instance ToSchema FeedType
-instance ToSchema NotifPrio
-instance ToSchema NotifWelcomeMsg
-instance ToSchema NotifContent
-instance ToSchema Notification
+instance ToSchema DB.FeedType
+instance ToSchema DB.NotifPrio
+instance ToSchema DB.NotifWelcomeMsg
+instance ToSchema DB.NotifContent
+instance ToSchema DB.Notification
 instance ToSchema a => ToSchema (WithUUID a)
-instance ToSchema JobStatus
+instance ToSchema DB.JobStatus
+instance ToSchema UnlockedHiddenPostData
 
 main :: IO ()
 main =

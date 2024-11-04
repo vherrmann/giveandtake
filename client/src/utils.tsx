@@ -90,13 +90,33 @@ export const HardRedirect = ({ to }: { to: string }) => {
   return null;
 };
 
-export const showApiErr = async (
-  error: any,
-  setError: React.Dispatch<React.SetStateAction<any>>,
-) => {
+export const handleApiErr = (error: any): string => {
+  console.log(error);
+
+  var errMsg;
+
   if (error.response) {
-    setError(await error.response.text());
+    // The request was made and the server responded with a status code
+    // that falls out of the range of 2xx
+    console.log(error.response.data);
+    console.log(error.response.status);
+    console.log(error.response.headers);
+    errMsg = "Error:" + error.response.data;
+  } else if (error.request) {
+    // The request was made but no response was received
+    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
+    // http.ClientRequest in node.js
+    console.log(error.request);
+    errMsg = "Error: No response received: " + error.request;
+  } else if (error.message) {
+    // Something happened in setting up the request that triggered an Error
+    console.log(error.message);
+    errMsg = "Error: " + error.message;
   } else {
-    setError(error.message);
+    console.log("Error: Unkown Error");
+    return "Error: Unkown Error";
   }
+
+  console.log(error.config);
+  return errMsg;
 };

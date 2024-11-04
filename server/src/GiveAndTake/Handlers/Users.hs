@@ -3,6 +3,7 @@ module GiveAndTake.Handlers.Users where
 import Database.Persist ((==.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
+import GiveAndTake.Api qualified as Api
 import GiveAndTake.DB
 import GiveAndTake.Handlers.Utils
 import GiveAndTake.Prelude
@@ -21,8 +22,7 @@ getUserPublicH userId = do
       , createdAt = user.createdAt
       }
 
-getUserPostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID Post]
+getUserPostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID ApiPost]
 getUserPostsH userEnt requestedUserId = do
   checkIsFriendOrEq userEnt.key requestedUserId
-  postList <- runDB $ P.selectList [PostUser ==. requestedUserId] [P.Desc PostCreatedAt]
-  pure $ entityToWithUUID <$> postList
+  getUserApiPosts requestedUserId

@@ -17,13 +17,14 @@ import Markdown from "react-markdown";
 import { popupBarStyle } from "../style";
 
 export const NotificationPopup = () => {
-  const api = new Api();
+  const api = Api();
   const [notifications, setNotifications] = useState<
     WithUUIDNotification[] | null
   >(null);
   const fetchNotifications = async () => {
     try {
-      const newNotifications = await api.apiNotifGet();
+      const response = await api.apiNotifGet();
+      const newNotifications = response.data;
       setNotifications(newNotifications);
     } catch (e) {
       console.log(e);
@@ -44,9 +45,7 @@ Welcome! Your individual feed can be accessed as an rss feed under this [url](${
   const markAllasRead = async () => {
     if (!notifications) return;
     try {
-      await api.apiNotifReadPost({
-        requestBody: notifications.map((n) => n.uuid),
-      });
+      await api.apiNotifReadPost(notifications.map((n) => n.uuid));
       setNotifications(
         notifications.map((n) => ({
           ...n,

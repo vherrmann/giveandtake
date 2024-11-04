@@ -135,6 +135,7 @@ in
               proxyPass = "http://localhost:${toString cfg.backend.port}";
               extraConfig = ''
                 # FIXME: add option for this (and the option in the server)
+                # FIXME: localize to the file upload endpoint
                 client_max_body_size 500M;
               '';
               proxyWebsockets = true; # FIXME: remove this?

@@ -13,11 +13,11 @@ export const FeedWidget = () => {
   const [fUrl, setFUrl] = useState<string | null>("test");
   const [replaced, setReplaced] = useState<boolean>(false);
   const location = useLocation();
-  const api = new Api();
+  const api = Api();
 
   const locToFUrl = (location: router.Location<any>) => {
     if (location.pathname === "/") {
-      return api.apiFeedUrlPost({ body: "MainFeed" });
+      return api.apiFeedUrlPost("MainFeed");
     } else {
       return null;
     }
@@ -32,7 +32,7 @@ export const FeedWidget = () => {
       }
       try {
         const response = await fUrlPromise;
-        setFUrl(response.feedUrl);
+        setFUrl(response.data.feedUrl);
       } catch (e) {
         // FIXME
         console.log(e);

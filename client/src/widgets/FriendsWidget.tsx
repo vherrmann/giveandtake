@@ -17,24 +17,24 @@ import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
+import { handleApiErr } from "../utils";
 
-export const FriendsWidgets = ({ userId }: { userId: string }) => {
+export const FriendsWidget = ({ userId }: { userId: string }) => {
   const [friends, setFriends] = useState<WithUUIDUserPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const api = new Api();
+  const api = Api();
   const fetchFriends = async () => {
     try {
       setLoading(true);
-      const friends = await api.apiFriendsGet();
+      const response = await api.apiFriendsGet();
+      const friends = response.data;
       setFriends(friends);
-      setLoading(false);
-    } catch (err) {
-      // FIXME: more detailed information
-      setError("Failed to fetch posts");
-      setLoading(false);
+    } catch (e) {
+      setError("Failed to fetch friends: " + handleApiErr(e));
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -47,28 +47,15 @@ export const FriendsWidgets = ({ userId }: { userId: string }) => {
         return;
       }
       try {
-        await api.apiFriendsFriendIdDelete({
-          friendId: friendId,
-        });
+        await api.apiFriendsFriendIdDelete(friendId);
         setFriends(friends.filter(({ uuid }) => uuid !== friendId));
-      } catch (err) {
+      } catch (e) {
         // FIXME: more detailed information
-        setError("Failed to delete friend");
+        setError("Failed to remove friend" + handleApiErr(e));
       }
     };
   return (
-    <StandardCard
-      sx={{
-        width: {
-          xs: "100vw",
-          sm: "75vw",
-          md: "50vw",
-          lg: "33vw",
-          xl: "25vw",
-        },
-        height: "auto",
-      }}
-    >
+    <StandardCard>
       <CardHeader
         title={
           <Typography gutterBottom variant="h5" align="center">

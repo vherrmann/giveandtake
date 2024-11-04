@@ -4,10 +4,11 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 // import styles
-import { getCurrDate, showApiErr, useLocalStorage } from "../utils";
+import { getCurrDate, handleApiErr, useLocalStorage } from "../utils";
 import { PostWidget } from "../widgets/PostWidget";
-import { Api, JobStatus, Post } from "../api";
+import { Api, ApiPost, JobStatus, Post, UnhiddenPostTagEnum } from "../api";
 import { useAuthedState } from "../ProtectedRoute";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
 const VisuallyHiddenInput = styled("input")({
   clip: "rect(0 0 0 0)",
@@ -33,13 +34,22 @@ export default function NewPostRoute() {
     fileIds: string[];
   }>("newPostState", emptyState);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const api = new Api();
+  const api = Api();
   const { userId } = useAuthedState();
   const mediaUploadPollId = useRef<NodeJS.Timeout | undefined>(undefined);
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
 
+  const [searchParams] = useSearchParams();
+  const tradeFor = searchParams.get("tradeFor");
+  const { state: locState } = useLocation();
+  const navigate = useNavigate();
+
   const handleChangeState = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // limit length of title to 24 characters
+    if (e.target.name === "title" && e.target.value.length > 24) {
+      return;
+    }
     setState({
       ...state,
       [e.target.name]: e.target.value,
@@ -50,32 +60,31 @@ export default function NewPostRoute() {
     // Poll every 5 seconds
     mediaUploadPollId.current = setInterval(async () => {
       try {
-        const response = await api.apiJobIdStatusGet({ id: jobId });
+        const response = await api.apiJobIdStatusGet(jobId);
+        const jobStatus = response.data;
 
-        if (JobStatus.JobFinished === response) {
+        if (JobStatus.JobFinished === jobStatus) {
           clearInterval(mediaUploadPollId.current);
           setUploadingMedia(false);
           setInfo("Finished compressing files.");
-          const response = await api.apiJobIdResultMediaCompressGet({
-            id: jobId,
-          });
+          const response = await api.apiJobIdResultMediaCompressGet(jobId);
+          const jobRes = response.data;
 
           setState((state) => ({
             ...state,
-            fileIds: response.mediaIds,
+            fileIds: jobRes.mediaIds,
           }));
-        } else if (JobStatus.JobFailed === response) {
+        } else if (JobStatus.JobFailed === jobStatus) {
           clearInterval(mediaUploadPollId.current);
           setError("File upload failed.");
           setUploadingMedia(false);
-        } else if (JobStatus.JobRunning === response) {
+        } else if (JobStatus.JobRunning === jobStatus) {
           setInfo("Compressing files...");
-        } else if (JobStatus.JobPending === response) {
+        } else if (JobStatus.JobPending === jobStatus) {
           setInfo("Starting file compression...");
         }
-      } catch (error) {
-        showApiErr(error, setError);
-        console.error("Error while checking API:", error);
+      } catch (e) {
+        setError(handleApiErr(e));
       }
     }, 5000);
   };
@@ -93,38 +102,60 @@ export default function NewPostRoute() {
     setInfo("Uploading media");
     setError("");
     try {
-      const jobId = await api.apiMediaUploadPostR({
-        body: files,
-      });
+      const jobId = (await api.apiMediaUploadPost({ files })).data;
       setupMediaUpPolling(jobId);
     } catch (e) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
+      setUploadingMedia(false);
     }
-    setUploadingMedia(false);
   };
 
   const createPost = async (event: any) => {
     event.preventDefault();
-    const uuid = await api.apiPostsPost({
-      newPost: {
+    try {
+      const response = await api.apiPostsPost({
         title: state.title,
         media: state.fileIds,
         body: state.body,
-      },
-    });
+      });
+      setInfo("Post created successfully");
 
-    setState(emptyState); // the file ids get invalidated by the post request
-    event.target.reset();
+      const newPostId = response.data;
+      setState(emptyState); // the file ids get invalidated by the post request
+      event.target.reset();
+
+      if (tradeFor) {
+        try {
+          await api.apiPostsTradeWithPostForPostPost(newPostId, tradeFor);
+        } catch (e) {
+          setError(handleApiErr(e));
+        }
+        setInfo("Traded post successfully");
+      }
+
+      if (locState) {
+        navigate(locState.path);
+      }
+    } catch (e) {
+      setError(handleApiErr(e));
+    }
     /* navigate("/post/" + uuid); */
   };
 
   const date = getCurrDate();
-  const post: Post = {
-    user: userId,
-    title: state.title || "Title",
-    body: state.body ? state.body : "Body",
-    media: state.fileIds,
-    createdAt: date,
+  const post: ApiPost = {
+    tag: "UnhiddenPost",
+    contents: {
+      post: {
+        user: userId,
+        title: state.title || "Title",
+        body: state.body ? state.body : "Body",
+        media: state.fileIds,
+        createdAt: date,
+        deleted: false,
+      },
+      usedToUnlock: [],
+    },
   };
   return (
     <Grid container spacing={2}>

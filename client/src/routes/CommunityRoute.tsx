@@ -1,6 +1,6 @@
-import { FriendsWidgets } from "../widgets/FriendsWidget";
+import { FriendsWidget } from "../widgets/FriendsWidget";
 import { useAuthedState } from "../ProtectedRoute";
-import { FriendsRequestWidgets } from "../widgets/FriendsRequestWidgets";
+import { FriendsRequestWidget } from "../widgets/FriendsRequestWidget";
 import { Stack } from "@mui/material";
 
 export default function CommunityRoute() {
@@ -9,8 +9,8 @@ export default function CommunityRoute() {
   return (
     <Stack spacing={2}>
       {" "}
-      <FriendsWidgets userId={userId} />
-      <FriendsRequestWidgets userId={userId} />
+      <FriendsWidget userId={userId} />
+      <FriendsRequestWidget userId={userId} />
     </Stack>
   );
 }

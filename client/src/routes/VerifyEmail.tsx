@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Api } from "../api";
-import { showApiErr } from "../utils";
+import { handleApiErr } from "../utils";
 
 export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const secret = searchParams.get("secret");
   const user = searchParams.get("userId");
-  const api = new Api();
+  const api = Api();
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,11 +17,11 @@ export const VerifyEmail = () => {
       if (!secret || !user) {
         throw new Error("Invalid verification link");
       }
-      await api.apiAuthVerifyemailPost({ verifyEmail: { user, secret } });
+      await api.apiAuthVerifyemailPost({ user, secret });
       setLoading(false);
       setError(null);
     } catch (e: any) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
       setLoading(false);
     }
   };

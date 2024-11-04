@@ -7,6 +7,7 @@ import Data.Time.Format.ISO8601 qualified as C
 import Database.Persist qualified as P
 import GiveAndTake.Api
 import GiveAndTake.DB
+import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Handlers.Utils
 import GiveAndTake.Prelude
 import GiveAndTake.Types
@@ -19,7 +20,7 @@ import Text.Feed.Types qualified as F
 import Text.RSS.Syntax (RSS (..), RSSChannel (..), RSSItem (..))
 import Text.RSS.Syntax qualified as RSS
 
-postToAtomEntry :: UConfig -> P.Entity Post -> User -> Atom.Entry
+postToAtomEntry :: UConfig -> P.Entity DB.Post -> User -> Atom.Entry
 postToAtomEntry uconfig postEntity user =
   let post = P.entityVal postEntity
       postId = entityUKey postEntity
@@ -39,7 +40,7 @@ postToAtomEntry uconfig postEntity user =
 fUrl :: UConfig -> UserUUID -> Text -> Text
 fUrl uconfig userId token = authUrl uconfig ["api", "feed", show userId, token]
 
-generateAtomFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity Post] -> m Atom.Feed
+generateAtomFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity DB.Post] -> m Atom.Feed
 generateAtomFeed user token posts = do
   uconfig :: UConfig <- askM
   ct <- getUTCTime
@@ -62,7 +63,7 @@ generateAtomFeed user token posts = do
 toRSSDate :: UTCTime -> T.Text
 toRSSDate = T.pack . C.formatTime C.defaultTimeLocale C.rfc822DateFormat
 
-postToRSSItem :: UConfig -> P.Entity Post -> User -> RSSItem
+postToRSSItem :: UConfig -> P.Entity DB.Post -> User -> RSSItem
 postToRSSItem uconfig postEntity user =
   let post = P.entityVal postEntity
       postId = entityUKey postEntity
@@ -74,7 +75,7 @@ postToRSSItem uconfig postEntity user =
         , rssItemPubDate = Just date
         }
 
-generateRSSFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity Post] -> m RSS
+generateRSSFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity DB.Post] -> m RSS
 generateRSSFeed user token posts = do
   uconfig :: UConfig <- askM
   ct <- getUTCTime

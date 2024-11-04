@@ -18,11 +18,11 @@ export const AvatarWidget = ({
   sx?: SxProps<Theme>;
 }) => {
   const [userPublicHere, setUserPublicHere] = useState<UserPublic | null>(null);
-  const api = new Api();
+  const api = Api();
 
   const fetchUserPublic = async () => {
-    const response = await api.apiUsersIdGet({ id: userId });
-    setUserPublicHere(response);
+    const response = await api.apiUsersIdGet(userId);
+    setUserPublicHere(response.data);
   };
 
   useEffect(() => {

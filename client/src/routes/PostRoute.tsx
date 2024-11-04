@@ -1,23 +1,23 @@
 import { useNavigate, useParams } from "react-router";
 import { PostWidget } from "../widgets/PostWidget";
 import { useEffect, useState } from "react";
-import { Api, Post } from "../api";
+import { Api, ApiPost, Post } from "../api";
 
 export default function PostRoute() {
   const { postId } = useParams<{ postId: string }>();
-  const [post, setPost] = useState<Post | null>(null);
+  const [post, setPost] = useState<ApiPost | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const api = new Api();
+  const api = Api();
 
   const fetchPosts = async () => {
     if (!postId) {
       throw new Error("No postId provided for useParams");
     }
     try {
-      const post = await api.apiPostsIdGet({ id: postId });
-      setPost(post);
+      const post = await api.apiPostsIdGet(postId);
+      setPost(post.data);
       setLoading(false);
     } catch (err) {
       setError("Failed to fetch posts");
@@ -47,7 +47,7 @@ export default function PostRoute() {
           deletePost: async (postId) => {
             if (postId) {
               try {
-                await api.apiPostsIdDelete({ id: postId });
+                await api.apiPostsIdDelete(postId);
                 navigate("/");
               } catch (err) {
                 setError("Failed to delete post"); // FIXME: use notification

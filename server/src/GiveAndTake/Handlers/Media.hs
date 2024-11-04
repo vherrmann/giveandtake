@@ -65,6 +65,7 @@ uploadMediaH userEnt umedia = do
 -- compress & convert files
 
 -- FIXME: Use octetstream instead of abused static file server (or implement proper file server as wai application)
+-- FIXME: check if user has access to post (hiddenpost)
 getMediaH :: Entity User -> MediaUUID -> RServer m S.RawM
 getMediaH userEnt uuid req onResponse = do
   uconfig :: UConfig <- askM

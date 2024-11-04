@@ -6,7 +6,7 @@ module GiveAndTake.Api where
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import Database.Persist
-import GiveAndTake.DB (FeedType, JobStatus, Notification, Post, User (..))
+import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Prelude
 import GiveAndTake.Servant.XML
 import GiveAndTake.Types
@@ -76,7 +76,7 @@ data UploadMediaResponse = UploadMediaResponse
 
 data SuccessLoginResponse = SuccessLoginResponse
   { userId :: UserUUID
-  , user :: User
+  , user :: DB.User
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -89,11 +89,11 @@ data UserPublic = UserPublic
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-userToPublic :: User -> UserPublic
-userToPublic User{..} = UserPublic{name, createdAt}
+userToPublic :: DB.User -> UserPublic
+userToPublic DB.User{..} = UserPublic{name, createdAt}
 
 data CheckResponse = CheckResponse
-  { user :: User
+  { user :: DB.User
   , userId :: UserUUID
   }
   deriving stock (Show, Generic)
@@ -112,20 +112,51 @@ data FriendsRequestGetResponse = FriendsRequestGetResponse
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
+data LockedHiddenPostData = LockedHiddenPostData
+  { title :: Text
+  , user :: UUID
+  , createdAt :: UTCTime
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data UnlockedHiddenPostData = UnlockedHiddenPostData
+  { post :: DB.Post
+  , unlockedWithPost :: WithUUID DB.Post
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data HiddenPostData = LockedHiddenPost LockedHiddenPostData | UnlockedHiddenPost UnlockedHiddenPostData
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data UnhiddenPostData = UnhiddenPostData
+  { post :: DB.Post
+  , usedToUnlock :: [WithUUID DB.Post] -- should only be nonempty if the post is requested by the posts owner
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ApiPost = HiddenPost HiddenPostData | UnhiddenPost UnhiddenPostData
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
 --- Api Types
 
 type PostsApi =
   "posts"
-    :> ( (S.Capture "id" PostUUID :> S.Get '[JSON] Post)
+    :> ( (S.Capture "id" PostUUID :> S.Get '[JSON] ApiPost)
           :<|> (S.Capture "id" PostUUID :> S.Delete '[JSON] ())
           :<|> (S.ReqBody '[JSON] NewPost :> S.Post '[JSON] PostUUID)
-          :<|> ("feed" :> S.Get '[JSON] [WithUUID Post])
+          :<|> ("tradeables" :> S.Capture "user" UserUUID :> S.Get '[JSON] [WithUUID DB.Post])
+          :<|> ("trade" :> S.Capture "withPost" PostUUID :> S.Capture "forPost" PostUUID :> S.Post '[JSON] ())
+          :<|> ("feed" :> S.Get '[JSON] [WithUUID ApiPost])
        )
 
 type UsersApi =
   "users"
     :> ( (S.Capture "id" UserUUID :> S.Get '[JSON] UserPublic)
-          :<|> (S.Capture "id" UserUUID :> "posts" :> S.Get '[JSON] [WithUUID Post])
+          :<|> (S.Capture "id" UserUUID :> "posts" :> S.Get '[JSON] [WithUUID ApiPost])
        )
 
 type MediaApi =
@@ -153,18 +184,18 @@ type FriendsApi =
 type ProtectedFeedApi =
   "feed"
     :> "url"
-    :> S.ReqBody '[JSON] FeedType
+    :> S.ReqBody '[JSON] DB.FeedType
     :> S.Post '[JSON] FeedUrlPostResponse -- Returns the feed url, creates feed if it didn't exist
 
 type NotifApi =
   "notif"
-    :> ( S.Get '[JSON] [WithUUID Notification]
+    :> ( S.Get '[JSON] [WithUUID DB.Notification]
           :<|> ("read" :> S.ReqBody '[JSON] [NotifUUID] :> S.Post '[JSON] ())
        )
 
 type JobApi =
   "job"
-    :> ( S.Capture "id" JobUUID :> "status" :> S.Get '[JSON] JobStatus
+    :> ( S.Capture "id" JobUUID :> "status" :> S.Get '[JSON] DB.JobStatus
           :<|> ( S.Capture "id" JobUUID
                   :> "result"
                   :> ( ("verifyEmail" :> S.Get '[JSON] ())
@@ -218,7 +249,7 @@ type AuthApi =
                   :> S.ReqBody '[JSON] VerifyEmail
                   :> S.Post '[JSON] ()
                )
-          :<|> ("check" :> Auth '[Cookie] (Entity User) :> S.Get '[JSON] CheckResponse)
+          :<|> ("check" :> Auth '[Cookie] (Entity DB.User) :> S.Get '[JSON] CheckResponse)
        )
 
 -- FIXME: add stuff to recreate link
@@ -232,4 +263,4 @@ type UnprotectedFeedApi =
 
 type UnprotectedApi = AuthApi :<|> UnprotectedFeedApi
 
-type Api = "api" :> ((Auth '[Cookie] (Entity User) :> ProtectedApi) :<|> UnprotectedApi)
+type Api = "api" :> ((Auth '[Cookie] (Entity DB.User) :> ProtectedApi) :<|> UnprotectedApi)

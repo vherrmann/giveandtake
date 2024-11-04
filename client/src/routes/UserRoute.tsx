@@ -13,7 +13,7 @@ import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import { AvatarWidget } from "../widgets/AvatarWidget";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { formatDate, showApiErr } from "../utils";
+import { formatDate, handleApiErr } from "../utils";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { useAuthedState } from "../ProtectedRoute";
@@ -21,7 +21,7 @@ import { LinkWidget } from "../widgets/LinkWidget";
 import { StandardCard } from "../widgets/StandardCard";
 
 const UserWidget = ({ userId }: { userId: string }) => {
-  const api = new Api();
+  const api = Api();
   const [userPublic, setUserPublic] = useState<UserPublic | null>(null);
   const { userId: myUserId } = useAuthedState();
   const [myFriendp, setMyFriendp] = useState<boolean | null>(null);
@@ -29,19 +29,20 @@ const UserWidget = ({ userId }: { userId: string }) => {
 
   const fetchInfo = async () => {
     try {
-      const response = await api.apiUsersIdGet({ id: userId });
-      setUserPublic(response);
+      const response = await api.apiUsersIdGet(userId);
+      setUserPublic(response.data);
     } catch (e) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
     }
   };
 
   const fetchMyFriendp = async () => {
     try {
-      const friends = await api.apiFriendsGet();
+      const response = await api.apiFriendsGet();
+      const friends = response.data;
       setMyFriendp(friends.some(({ uuid: friendId }) => friendId === userId));
     } catch (e) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
     }
   };
 
@@ -52,24 +53,20 @@ const UserWidget = ({ userId }: { userId: string }) => {
 
   const handleRemoveFriend = async (_event: React.MouseEvent<HTMLElement>) => {
     try {
-      await api.apiFriendsFriendIdDelete({
-        friendId: userId,
-      });
+      await api.apiFriendsFriendIdDelete(userId);
       setMyFriendp(false);
     } catch (e) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
     }
   };
 
   // TODO:
   const handleAddFriend = async (_event: React.MouseEvent<HTMLElement>) => {
     try {
-      await api.apiFriendsRequestFriendIdPost({
-        friendId: userId,
-      });
+      await api.apiFriendsRequestFriendIdPost(userId);
       setMyFriendp(true);
     } catch (e) {
-      showApiErr(e, setError);
+      setError(handleApiErr(e));
     }
   };
 
@@ -134,13 +131,16 @@ export const UserRoute = () => {
   if (!userId) {
     throw new Error("No userId provided for useParams");
   }
-  const api = new Api();
+  const api = Api();
   return (
     <Stack spacing={2} alignItems="center">
       <UserWidget userId={userId} />
       <Divider flexItem />
       <PostList
-        postsFetcher={async () => await api.apiUsersIdPostsGet({ id: userId })}
+        postsFetcher={async () =>
+          // FIXME: add error handling?
+          (await api.apiUsersIdPostsGet(userId)).data
+        }
       />
     </Stack>
   );

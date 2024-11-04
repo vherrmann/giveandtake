@@ -18,6 +18,8 @@ library
       GiveAndTake.Api
       GiveAndTake.App
       GiveAndTake.DB
+      GiveAndTake.DB.Types
+      GiveAndTake.DB.Utils
       GiveAndTake.Email
       GiveAndTake.Fixes
       GiveAndTake.Handlers
@@ -76,6 +78,7 @@ library
       NoImplicitPrelude
       QuasiQuotes
       StrictData
+      NoFieldSelectors
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors
   build-depends:
       HsYAML
@@ -167,6 +170,7 @@ executable giveandtake
       NoImplicitPrelude
       QuasiQuotes
       StrictData
+      NoFieldSelectors
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML
@@ -260,6 +264,7 @@ executable giveandtake-cmd
       NoImplicitPrelude
       QuasiQuotes
       StrictData
+      NoFieldSelectors
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML
@@ -353,6 +358,7 @@ executable giveandtake-generate-typescript
       NoImplicitPrelude
       QuasiQuotes
       StrictData
+      NoFieldSelectors
   ghc-options: -Weverything -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missed-specialisations -Wno-all-missed-specialisations -Wno-unsafe -Wno-safe -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-missing-export-lists -Wno-missing-home-modules -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module -Wno-unused-packages -Wno-missing-kind-signatures -Wunticked-promoted-constructors -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       HsYAML

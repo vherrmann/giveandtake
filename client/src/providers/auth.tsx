@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode, useEffect } from "react";
 import { useLocalStorage } from "../utils";
-import { Api, BaseAPI, Configuration, LoginData, User } from "../api";
+import { Api, Configuration, LoginData, User } from "../api";
 
 export interface AuthProps {
   isAuthenticated: true;
@@ -22,7 +22,7 @@ export type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const api = new Api();
+  const api = Api();
   // FIXME: check if cookie is still there and fetch information
   const [authState, setAuthState] = useLocalStorage<AuthProps | UnauthProps>(
     "authState",
@@ -34,8 +34,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await api.apiAuthCheckGet();
       setAuthState({
         isAuthenticated: true,
-        userId: response.userId,
-        user: response.user,
+        userId: response.data.userId,
+        user: response.data.user,
       });
     } catch (error: any) {
       if (authState.isAuthenticated) {
@@ -55,20 +55,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }: LoginData): Promise<[boolean, string]> => {
     try {
       const response = await api.apiAuthLoginPost({
-        loginData: {
-          email,
-          password,
-        },
+        email,
+        password,
       });
       setAuthState({
         isAuthenticated: true,
-        userId: response.userId,
-        user: response.user,
+        userId: response.data.userId,
+        user: response.data.user,
       });
       return [true, ""];
     } catch (error: any) {
       if (error.response) {
-        const msg = await error.response.text();
+        const msg = error.response.data;
         return [false, msg];
       } else {
         return [false, error.message];

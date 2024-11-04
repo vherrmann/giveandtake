@@ -152,7 +152,7 @@ default-extensions:
   - StrictData
   # - RebindableSyntax
   # - OverloadedRecordDot
-  # - NoFieldSelectors
+  - NoFieldSelectors
 
 language: GHC2021
 
