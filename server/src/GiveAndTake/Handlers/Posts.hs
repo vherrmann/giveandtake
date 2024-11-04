@@ -82,15 +82,23 @@ createPostH user newpost = do
           , media = mediaIds
           , body = newpost.body
           , user = entityUKey user
+          , deleted = False
           , createdAt = ct
           }
       )
 
 deletePostH :: (HasHandler m) => Entity User -> PostUUID -> m ()
 deletePostH userEnt postId = do
-  post <- getByKeySE @Post postId
+  post <- getByKeySE @DB.Post postId
   checkIsEqUser userEnt.key post.user
-  runDB $ P.delete $ packKey @Post postId
+  runDB $
+    P.update
+      (packKey @DB.Post postId)
+      [ DB.PostTitle =. ""
+      , DB.PostMedia =. []
+      , DB.PostBody =. ""
+      , DB.PostDeleted =. True
+      ]
   -- Delete media
   uconf :: UConfig <- askM
   for_ post.media \mediaUuid -> do
