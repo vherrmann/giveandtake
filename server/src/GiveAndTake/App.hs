@@ -27,9 +27,12 @@ import GiveAndTake.Types
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Middleware.RequestLogger qualified as W
 import Network.Wai.Middleware.Timeout qualified as W
+import Network.Wai.Parse (defaultParseRequestBodyOptions)
+import Network.Wai.Parse qualified as W
 import Servant qualified as S
 import Servant.Auth.Server (CookieSettings (..))
 import Servant.Auth.Server qualified as SA
+import Servant.Multipart qualified as S
 import Servant.Server (Context ((:.)))
 import System.Exit (exitFailure)
 import System.IO (hPutStrLn, stderr)
@@ -77,7 +80,11 @@ app = do
   let jwtCfg = SA.defaultJWTSettings sconfig.cookieKey
       -- We don't need XSRF with SameSite set
       cookieCfg = (def @SA.CookieSettings){cookieSameSite = SA.SameSiteLax, cookieXsrfSetting = Nothing}
-      cfg = cookieCfg :. jwtCfg :. S.EmptyContext
+      multipartCfg =
+        S.MultipartOptions @S.Tmp
+          (defaultParseRequestBodyOptions & W.clearMaxRequestNumFiles)
+          (S.defaultBackendOptions (Proxy @S.Tmp))
+      servantContext = cookieCfg :. jwtCfg :. multipartCfg :. S.EmptyContext
       settings =
         W.defaultSettings
           & W.setOnException (\_ e -> TIO.hPutStrLn stderr $ show e)
@@ -91,7 +98,7 @@ app = do
               W.timeout uconfig.timeout $
                 S.serveWithContextT
                   (Proxy @Api)
-                  cfg
+                  servantContext
                   ( runStderrLoggingT
                       . flip runReaderT uconfig
                       . flip runReaderT dynuconfig
