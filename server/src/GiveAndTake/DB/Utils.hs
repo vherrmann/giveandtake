@@ -5,6 +5,7 @@ module GiveAndTake.DB.Utils where
 import Control.Monad.Error.Class (MonadError)
 import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
+import Data.Coerce (Coercible, coerce)
 import Data.Data (Typeable)
 import Data.Typeable (typeRep)
 import Data.UUID (UUID)
@@ -49,9 +50,9 @@ updateSelect ::
   [P.SelectOpt record] ->
   [P.Update record] ->
   ReaderT backend m [Entity record]
-updateSelect filter opts updates = do
-  entities <- P.selectList filter opts
-  P.updateWhere filter updates
+updateSelect filterOpts opts updates = do
+  entities <- P.selectList filterOpts opts
+  P.updateWhere filterOpts updates
   pure entities
 
 updateGetBy ::
@@ -74,15 +75,14 @@ insertUUID ::
   , P.PersistStoreWrite backend
   , MonadIO m
   , P.PersistEntity record
-  , ToKeyConstr record
-  , KeyType record ~ UUID
+  , Coercible (P.Key record) UUID
   ) =>
   record ->
-  ReaderT backend m UUID
+  ReaderT backend m (P.Key record)
 insertUUID d = do
   newUUID <- randomUUID
-  P.insertKey (packKey newUUID) d
-  pure newUUID
+  P.insertKey (coerce newUUID) d
+  pure $ coerce newUUID
 
 typeName :: forall a. (Typeable a) => Text
 typeName = show . typeRep $ Proxy @a
@@ -93,17 +93,15 @@ selectByKey ::
   , MonadIO m
   , P.PersistEntity record
   , HasDBPool m
-  , ToKeyConstr record
   , Typeable record
   , MonadLogger m
-  , Show (KeyType record)
   ) =>
-  [KeyType record] ->
+  [P.Key record] ->
   m [Entity record]
 selectByKey keys = do
   friends <- for keys \key -> do
-    mRecord <- runDB . P.get . packKey @record $ key
-    pure $ maybeToRight key $ fmap (Entity (packKey key)) mRecord
+    mRecord <- runDB . P.get $ key
+    pure $ maybeToRight key $ fmap (Entity key) mRecord
   let missing = lefts friends
   let typeStr = typeName @record
   unless (null missing) $ logWarn [fmt|"Missing {typeStr} with keys: {show @Text missing}"|]
@@ -116,19 +114,15 @@ getByKeySE ::
   , MonadIO m
   , P.PersistEntity record
   , HasDBPool m
-  , ToKeyConstr record
   , MonadError ServerError m
   , Typeable record
-  , Typeable (KeyType record)
-  , Show (KeyType record)
   ) =>
-  KeyType record ->
+  P.Key record ->
   m record
 getByKeySE key =
   let typeStr = typeName @record
-      keyTypeStr = typeName @(KeyType record)
-   in runDB (P.get $ packKey @record key)
-        >>= maybeToMErr (err404{errBody = [fmt|{typeStr} with key {keyTypeStr} {show @Text key} not found|]})
+   in runDB (P.get key)
+        >>= maybeToMErr (err404{errBody = [fmt|{typeStr} with key {show @Text key} not found|]})
 
 getByKeySEEnt ::
   forall (record :: Type) (m :: Type -> Type).
@@ -136,15 +130,12 @@ getByKeySEEnt ::
   , MonadIO m
   , P.PersistEntity record
   , HasDBPool m
-  , ToKeyConstr record
   , MonadError ServerError m
   , Typeable record
-  , Typeable (KeyType record)
-  , Show (KeyType record)
   ) =>
-  KeyType record ->
+  P.Key record ->
   m (Entity record)
-getByKeySEEnt key = Entity (packKey @record key) <$> getByKeySE @record @m key
+getByKeySEEnt key = Entity key <$> getByKeySE @record @m key
 
 assureByKeySE ::
   forall (record :: Type) (m :: Type -> Type).
@@ -152,11 +143,9 @@ assureByKeySE ::
   , MonadIO m
   , P.PersistEntity record
   , HasDBPool m
-  , ToKeyConstr record
-  , KeyType record ~ UUID
   , MonadError ServerError m
   , Typeable record
   ) =>
-  UUID ->
+  P.Key record ->
   m ()
-assureByKeySE uuid = void $ getByKeySE @record @m uuid
+assureByKeySE key = void $ getByKeySE @record @m key

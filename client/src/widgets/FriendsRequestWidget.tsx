@@ -2,23 +2,15 @@ import { ReactNode, useEffect, useState } from "react";
 import { Api, FriendsRequestGetResponse, WithUUIDUserPublic } from "../api";
 import {
   Box,
-  Card,
   CardContent,
   CardHeader,
   Divider,
   IconButton,
   List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Typography,
 } from "@mui/material";
-import { AvatarWidget } from "./AvatarWidget";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import DoneIcon from "@mui/icons-material/Done";
 import ClearIcon from "@mui/icons-material/Clear";
-import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
 
@@ -98,7 +90,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
         {noneCurr(
           friendReqsTo,
           <List>
-            {friendReqsTo?.map(({ uuid: friendId, value: friend }) => (
+            {friendReqsTo?.map(({ key: friendId, value: friend }) => (
               <ListUserItem
                 userId={friendId}
                 userPublic={friend}
@@ -134,7 +126,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
         {noneCurr(
           friendReqsFrom,
           <List>
-            {friendReqsFrom?.map(({ uuid: friendId, value: friend }) => (
+            {friendReqsFrom?.map(({ key: friendId, value: friend }) => (
               <ListUserItem userId={friendId} userPublic={friend} />
             ))}
           </List>,

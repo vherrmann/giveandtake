@@ -2,10 +2,8 @@ module GiveAndTake.Media where
 
 import Control.Monad.Catch
 import Data.Text qualified as T
-import Data.UUID qualified as U
 import Database.Persist ((=.))
 import Database.Persist qualified as P
-import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Prelude
 import GiveAndTake.Types
@@ -34,11 +32,11 @@ runProcessWOStdout conf = do
 --   evaluate (BL.length out)
 --   pure exitC
 
-mediaPath :: UConfig -> MediaUUID -> FilePath
-mediaPath uconfig uuid = [fmt|{uconfig.mediaDir}/{U.toText uuid}|]
+mediaPath :: UConfig -> MediaId -> FilePath
+mediaPath uconfig mediaId = [fmt|{uconfig.mediaDir}/{mediaId}|]
 
-mediaPathOrig :: UConfig -> MediaUUID -> FilePath
-mediaPathOrig uconfig uuid = mediaPath uconfig uuid <> ".original"
+mediaPathOrig :: UConfig -> MediaId -> FilePath
+mediaPathOrig uconfig mediaId = mediaPath uconfig mediaId <> ".original"
 
 compressAndConvertImage :: (MonadIO m) => FilePath -> FilePath -> m P.ExitCode
 compressAndConvertImage tmpPath newTmpPath =
@@ -107,7 +105,7 @@ runMediaJob (GATJobMediaUploadData{files}) = do
       fsize <- liftIO $ D.getFileSize newTmpPath
       when (fsize > 20 * 1024 * 1024) $ throwIO $ JobError [fmt|"Uploaded file {file.name} is too large."|]
       -- update database
-      runDB $ P.update (packKey @Media file.mediaId) [MediaIsCompressed =. True]
+      runDB $ P.update file.mediaId [MediaIsCompressed =. True]
       -- move file
       let comprPath = mediaPath uconfig file.mediaId
       ensureDirOfPath comprPath -- move this to the beginning of the program?

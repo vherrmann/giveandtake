@@ -1,5 +1,6 @@
 module GiveAndTake.Handlers.Media where
 
+import Data.Coerce (coerce)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.UUID qualified as U
@@ -21,7 +22,7 @@ import WaiAppStatic.Types qualified as W
 mediaHandler :: Entity User -> RServer m MediaApi
 mediaHandler userEnt = uploadMediaH userEnt :<|> getMediaH userEnt
 
-uploadMediaH :: (HasHandler m) => Entity User -> UploadMedia -> m JobUUID
+uploadMediaH :: (HasHandler m) => Entity User -> UploadMedia -> m JobId
 uploadMediaH userEnt umedia = do
   -- check number of files
   when (null umedia.files) $ throwError S.err400{errBody = "Uploaded no file."}
@@ -66,21 +67,21 @@ uploadMediaH userEnt umedia = do
 
 -- FIXME: Use octetstream instead of abused static file server (or implement proper file server as wai application)
 -- FIXME: check if user has access to post (hiddenpost)
-getMediaH :: Entity User -> MediaUUID -> RServer m S.RawM
-getMediaH userEnt uuid req onResponse = do
+getMediaH :: Entity User -> MediaId -> RServer m S.RawM
+getMediaH userEnt mediaId req onResponse = do
   uconfig :: UConfig <- askM
-  media <- getByKeySE @Media uuid
+  media <- getByKeySE @Media mediaId
   checkIsFriendOrEq userEnt.key media.user
 
   let mimeType = T.encodeUtf8 media.mimeType
-  -- Try to convert the uuid to a path piece for a static file server (dots and slashes are not allowed)
+  -- Try to convert the mediaId to a path piece for a static file server (dots and slashes are not allowed)
   uuidPiece <-
     maybeToMErr (err404{errBody = "Impossible! Also this incident will be reported to the webmaster."}) $
-      W.toPiece (U.toText uuid)
+      W.toPiece (U.toText $ coerce mediaId)
   -- Create config
   let defConfig = W.defaultFileServerSettings (T.unpack uconfig.mediaDir)
       origLookupFile = W.ssLookupFile defConfig
-      -- Insert the UUID as the constant piece to the lookup function
+      -- Insert the mediaId as the constant piece to the lookup function
       authorizedLookupFile = origLookupFile . const [uuidPiece]
       config = defConfig{W.ssLookupFile = authorizedLookupFile, W.ssGetMimeType = const (pure mimeType)}
   liftIO $ S.unTagged (S.serveDirectoryWith config) req onResponse

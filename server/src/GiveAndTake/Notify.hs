@@ -1,6 +1,5 @@
 module GiveAndTake.Notify where
 
-import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Email
 import GiveAndTake.Prelude
@@ -24,7 +23,7 @@ Welcome to {uconfig.serviceName}! Your individual feed can be accessed as an rss
 {msg.url}
 |]
 
-dbNotify :: (HasHandler m) => [UserUUID] -> NewNotif -> m ()
+dbNotify :: (HasHandler m) => [UserId] -> NewNotif -> m ()
 dbNotify userIds newNotif = do
   ct <- getUTCTime
   -- check existence of users
@@ -51,8 +50,8 @@ emailNotify users newNotif = do
       , htmlBody = Nothing
       }
 
-notify :: (HasHandler m) => [WithUUID User] -> NewNotif -> m ()
+notify :: (HasHandler m) => [WithKey' User] -> NewNotif -> m ()
 notify users newNotif = do
-  dbNotify (users <&> (.uuid)) newNotif
+  dbNotify (users <&> (.key)) newNotif
   when (newNotif.prio >= NPMedium) $
     emailNotify (users <&> (.value)) newNotif

@@ -14,6 +14,8 @@ import Data.UUID qualified as U
 import Data.UUID.V4 qualified as U
 import GiveAndTake.Prelude
 
+import Data.Coerce
+import Database.Persist qualified as P
 import GiveAndTake.Types
 import System.Directory qualified as D
 import System.FilePath qualified as F
@@ -50,6 +52,6 @@ authUrl uconfig path = [fmt|http://{uconfig.baseUrl}/{T.intercalate "/" path}|]
 docsUrl :: UConfig -> [Text] -> Text
 docsUrl uconfig path = [fmt|http://{uconfig.docsBaseUrl}/{T.intercalate "/" path}|]
 
-type instance PyFClassify UUID = 'PyFString
-instance PyFToString UUID where
-  pyfToString = U.toString
+type instance PyFClassify (P.Key _a) = 'PyFString
+instance (Coercible (P.Key a) UUID) => PyFToString (P.Key a) where
+  pyfToString = U.toString . coerce @(P.Key a) @UUID

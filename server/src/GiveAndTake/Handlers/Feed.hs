@@ -21,10 +21,9 @@ import Text.RSS.Syntax (RSS (..), RSSChannel (..), RSSItem (..))
 import Text.RSS.Syntax qualified as RSS
 
 postToAtomEntry :: UConfig -> P.Entity DB.Post -> User -> Atom.Entry
-postToAtomEntry uconfig postEntity user =
-  let post = P.entityVal postEntity
-      postId = entityUKey postEntity
-      url = authUrl uconfig ["post", show postId]
+postToAtomEntry uconfig postEnt user =
+  let post = postEnt.val
+      url = authUrl uconfig ["post", show postEnt.key]
       date = T.pack $ C.iso8601Show post.createdAt
    in -- FIXME: add source
       ( Atom.nullEntry
@@ -37,20 +36,20 @@ postToAtomEntry uconfig postEntity user =
         , Atom.entryContent = Nothing
         }
 
-fUrl :: UConfig -> UserUUID -> Text -> Text
+fUrl :: UConfig -> UserId -> Text -> Text
 fUrl uconfig userId token = authUrl uconfig ["api", "feed", show userId, token]
 
-generateAtomFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity DB.Post] -> m Atom.Feed
+generateAtomFeed :: (HasHandler m) => WithKey' User -> Text -> [P.Entity DB.Post] -> m Atom.Feed
 generateAtomFeed user token posts = do
   uconfig :: UConfig <- askM
   ct <- getUTCTime
-  let feedId = fUrl uconfig user.uuid token
+  let feedId = fUrl uconfig user.key token
       feedTitle = Atom.TextString [fmt|{user.value.name}'s Feed|]
       feedUpdated = T.pack $ C.iso8601Show ct
       userFeed = Atom.nullFeed feedId feedTitle feedUpdated
   feedEntries <-
     catMaybes <$> for posts \postEnt -> do
-      mUser <- runDB $ P.get (packKey @User postEnt.val.user)
+      mUser <- runDB $ P.get postEnt.val.user
       when (isNothing mUser) do
         logWarn [fmt|User not found for post {show @Text postEnt}|]
       pure $ postToAtomEntry uconfig postEnt <$> mUser
@@ -64,10 +63,9 @@ toRSSDate :: UTCTime -> T.Text
 toRSSDate = T.pack . C.formatTime C.defaultTimeLocale C.rfc822DateFormat
 
 postToRSSItem :: UConfig -> P.Entity DB.Post -> User -> RSSItem
-postToRSSItem uconfig postEntity user =
-  let post = P.entityVal postEntity
-      postId = entityUKey postEntity
-      url = authUrl uconfig ["post", show postId]
+postToRSSItem uconfig postEnt user =
+  let post = postEnt.val
+      url = authUrl uconfig ["post", show postEnt.key]
       date = toRSSDate post.createdAt
    in (RSS.nullItem post.title)
         { rssItemLink = Just url
@@ -75,16 +73,16 @@ postToRSSItem uconfig postEntity user =
         , rssItemPubDate = Just date
         }
 
-generateRSSFeed :: (HasHandler m) => WithUUID User -> Text -> [P.Entity DB.Post] -> m RSS
+generateRSSFeed :: (HasHandler m) => WithKey' User -> Text -> [P.Entity DB.Post] -> m RSS
 generateRSSFeed user token posts = do
   uconfig :: UConfig <- askM
   ct <- getUTCTime
-  let feedUrl = fUrl uconfig user.uuid token
+  let feedUrl = fUrl uconfig user.key token
       feedTitle = [fmt|{user.value.name}'s Feed|]
       feedUpdated = toRSSDate ct
   feedItems <-
     catMaybes <$> for posts \postEnt -> do
-      mUser <- runDB $ P.get (packKey @User postEnt.val.user)
+      mUser <- runDB $ P.get postEnt.val.user
       when (isNothing mUser) do
         logWarn [fmt|User not found for post {show @Text postEnt}|]
       pure $ postToRSSItem uconfig postEnt <$> mUser
@@ -101,7 +99,7 @@ generateRSSFeed user token posts = do
       , rssOther = []
       }
 
-getFeedH :: (HasHandler m) => Maybe Text -> UserUUID -> Text -> m F.Feed
+getFeedH :: (HasHandler m) => Maybe Text -> UserId -> Text -> m F.Feed
 getFeedH accHeader userId token = do
   uconfig <- askM @UConfig
   when (maybe False ("text/html" `T.isInfixOf`) accHeader) do
@@ -118,13 +116,13 @@ getFeedH accHeader userId token = do
   case feed.fType of
     MainFeed -> do
       posts <- getFeedPosts userId
-      rssFeed <- generateRSSFeed (WithUUID userId user) token posts
+      rssFeed <- generateRSSFeed (WithKey userId user) token posts
       pure $ RSSFeed rssFeed
 
 getFeedUrlH :: (HasHandler m) => P.Entity User -> FeedType -> m FeedUrlPostResponse
 getFeedUrlH userEntity fType = do
   uconfig :: UConfig <- askM
-  let userId = entityUKey userEntity
+  let userId = userEntity.key
   mFeedEntity <- runDB (P.getBy $ UniqueFeedKind userId fType)
   feed <- case mFeedEntity of
     Just feedEntity -> pure feedEntity.entityVal

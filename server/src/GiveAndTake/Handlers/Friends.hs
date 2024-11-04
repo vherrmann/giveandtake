@@ -10,29 +10,29 @@ import GiveAndTake.Utils (getUTCTime)
 import Servant (ServerError (..), type (:<|>) (..))
 import Servant qualified as S
 
-getFriendsH :: (HasHandler m) => UserUUID -> m [WithUUID UserPublic]
+getFriendsH :: (HasHandler m) => UserId -> m [WithKey User UserPublic]
 getFriendsH = getFriends
 
-friendsExist :: (HasHandler m) => UserUUID -> UserUUID -> m Bool
-friendsExist uuid1 uuid2 = do
-  exists1 <- runDB $ P.existsBy (UniqueFriends uuid1 uuid2)
-  exists2 <- runDB $ P.existsBy (UniqueFriends uuid2 uuid1)
+friendsExist :: (HasHandler m) => UserId -> UserId -> m Bool
+friendsExist user1Id user2Id = do
+  exists1 <- runDB $ P.existsBy (UniqueFriends user1Id user2Id)
+  exists2 <- runDB $ P.existsBy (UniqueFriends user2Id user1Id)
   pure $ exists1 || exists2
 
-friendRequestExist :: (HasHandler m) => UserUUID -> UserUUID -> m Bool
-friendRequestExist uuid1 uuid2 = do
-  exists1 <- runDB $ P.existsBy (UniqueFriendRequest uuid1 uuid2)
-  exists2 <- runDB $ P.existsBy (UniqueFriendRequest uuid2 uuid1)
+friendRequestExist :: (HasHandler m) => UserId -> UserId -> m Bool
+friendRequestExist user1Id user2Id = do
+  exists1 <- runDB $ P.existsBy (UniqueFriendRequest user1Id user2Id)
+  exists2 <- runDB $ P.existsBy (UniqueFriendRequest user2Id user1Id)
   pure $ exists1 || exists2
 
-deleteFriendsH :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+deleteFriendsH :: (HasHandler m) => UserId -> UserId -> m ()
 deleteFriendsH userId friendId = do
   existP <- friendsExist userId friendId
   unless existP $ throwError S.err409{errBody = "Not friends."}
   runDB $ P.deleteBy $ UniqueFriends userId friendId
   runDB $ P.deleteBy $ UniqueFriends friendId userId
 
-getFriendRequests :: (HasHandler m) => UserUUID -> m FriendsRequestGetResponse
+getFriendRequests :: (HasHandler m) => UserId -> m FriendsRequestGetResponse
 getFriendRequests userId = do
   requestsToYouEnt <-
     selectByKey @User . fmap (.val.from)
@@ -40,13 +40,13 @@ getFriendRequests userId = do
   requestsFromYouEnt <-
     selectByKey @User . fmap (.val.to)
       =<< runDB (P.selectList [FriendRequestFrom P.==. userId] [])
-  let entToPubId ent = WithUUID{uuid = ent.key, value = userToPublic ent.val}
+  let entToPubId ent = WithKey{key = ent.key, value = userToPublic ent.val}
       requestsToYou = entToPubId <$> requestsToYouEnt
       requestsFromYou = entToPubId <$> requestsFromYouEnt
   pure $ FriendsRequestGetResponse{requestsToYou, requestsFromYou}
 
 -- TODO: notify friend
-postFriendRequest :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+postFriendRequest :: (HasHandler m) => UserId -> UserId -> m ()
 postFriendRequest userId friendId = do
   fExistP <- friendsExist userId friendId
   when fExistP $ throwError S.err409{errBody = "Already friends."}
@@ -60,7 +60,7 @@ postFriendRequest userId friendId = do
   runDB $ P.insert_ FriendRequest{from = userId, to = friendId, createdAt = ct}
 
 -- TODO: notify friend
-acceptFriendRequest :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+acceptFriendRequest :: (HasHandler m) => UserId -> UserId -> m ()
 acceptFriendRequest userId friendId = do
   frExistP <- friendRequestExist userId friendId
   unless frExistP $ throwError S.err409{errBody = "Friendship request does not exist."}
@@ -69,7 +69,7 @@ acceptFriendRequest userId friendId = do
   runDB $ P.deleteBy $ UniqueFriendRequest friendId userId
 
 -- TODO: notify friend?
-rejectFriendRequest :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+rejectFriendRequest :: (HasHandler m) => UserId -> UserId -> m ()
 rejectFriendRequest userId friendId = do
   frExistP <- friendRequestExist userId friendId
   unless frExistP $ throwError S.err409{errBody = "Friendship request does not exist."}
@@ -77,7 +77,7 @@ rejectFriendRequest userId friendId = do
 
 friendsHandler :: P.Entity User -> RServer m FriendsApi
 friendsHandler userEnt =
-  let userId = entityUKey userEnt
+  let userId = userEnt.key
    in getFriendsH userId
         :<|> deleteFriendsH userId
         :<|> getFriendRequests userId

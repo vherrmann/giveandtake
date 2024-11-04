@@ -24,6 +24,31 @@ import type { RequestArgs } from './base';
 import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerMap } from './base';
 
 /**
+ * 
+ * @export
+ * @interface ApiGroup
+ */
+export interface ApiGroup {
+    /**
+     * 
+     * @type {Array<WithUUIDUserPublic>}
+     * @memberof ApiGroup
+     */
+    'admins': Array<WithUUIDUserPublic>;
+    /**
+     * 
+     * @type {Group}
+     * @memberof ApiGroup
+     */
+    'group': Group;
+    /**
+     * 
+     * @type {Array<WithUUIDUserPublic>}
+     * @memberof ApiGroup
+     */
+    'members': Array<WithUUIDUserPublic>;
+}
+/**
  * @type ApiPost
  * @export
  */
@@ -695,7 +720,7 @@ export interface WithUUIDApiPost {
      * @type {string}
      * @memberof WithUUIDApiPost
      */
-    'uuid': string;
+    'key': string;
     /**
      * 
      * @type {ApiPost}
@@ -714,7 +739,7 @@ export interface WithUUIDGroup {
      * @type {string}
      * @memberof WithUUIDGroup
      */
-    'uuid': string;
+    'key': string;
     /**
      * 
      * @type {Group}
@@ -733,7 +758,7 @@ export interface WithUUIDNotification {
      * @type {string}
      * @memberof WithUUIDNotification
      */
-    'uuid': string;
+    'key': string;
     /**
      * 
      * @type {Notification}
@@ -752,7 +777,7 @@ export interface WithUUIDPost {
      * @type {string}
      * @memberof WithUUIDPost
      */
-    'uuid': string;
+    'key': string;
     /**
      * 
      * @type {Post}
@@ -771,7 +796,7 @@ export interface WithUUIDUserPublic {
      * @type {string}
      * @memberof WithUUIDUserPublic
      */
-    'uuid': string;
+    'key': string;
     /**
      * 
      * @type {UserPublic}
@@ -2448,7 +2473,7 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiGroupsIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Group>> {
+        async apiGroupsIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiGroup>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiGroupsIdGet(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiGroupsIdGet']?.[localVarOperationServerIndex]?.url;
@@ -2891,7 +2916,7 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsIdGet(id: string, options?: any): AxiosPromise<Group> {
+        apiGroupsIdGet(id: string, options?: any): AxiosPromise<ApiGroup> {
             return localVarFp.apiGroupsIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**

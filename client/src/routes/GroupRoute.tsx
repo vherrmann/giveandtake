@@ -1,35 +1,29 @@
 import {
   Avatar,
-  Card,
-  CardActions,
   CardHeader,
   Divider,
   IconButton,
+  List,
   Stack,
   Typography,
 } from "@mui/material";
-import { Api, Group, UserPublic } from "../api";
-import { PostList } from "../widgets/PostListWidget";
+import { Api, ApiGroup, Group, UserPublic } from "../api";
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
-import { AvatarWidget } from "../widgets/AvatarWidget";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { formatDate, handleApiErr } from "../utils";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
-import { useAuthedState } from "../ProtectedRoute";
 import { LinkWidget } from "../widgets/LinkWidget";
 import { StandardCard } from "../widgets/StandardCard";
 
 const GroupWidget = ({ groupId }: { groupId: string }) => {
   const api = Api();
-  const [group, setGroup] = useState<Group | null>(null);
+  const [apiGroup, setApiGroup] = useState<ApiGroup | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const fetchGroup = async () => {
     try {
       const response = await api.apiGroupsIdGet(groupId);
-      setGroup(response.data);
+      setApiGroup(response.data);
     } catch (e) {
       setError(handleApiErr(e));
     }
@@ -38,6 +32,8 @@ const GroupWidget = ({ groupId }: { groupId: string }) => {
   useEffect(() => {
     fetchGroup();
   }, [groupId]);
+
+  const group = apiGroup?.group;
 
   /* const handleRemoveFriend = async (_event: React.MouseEvent<HTMLElement>) => {
 *   try {

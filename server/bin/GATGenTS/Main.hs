@@ -16,17 +16,20 @@ import Servant.Multipart qualified as SM
 import Servant.OpenApi qualified as SO
 import System.Directory qualified as D
 import System.Environment (getArgs)
-import GiveAndTake.Types (WithUUID)
 import qualified Text.Feed.Types as F
 import Data.OpenApi.Lens
 import qualified Data.OpenApi as SO
 import Servant.OpenApi (HasOpenApi)
 import Servant.Auth qualified as SA
 import qualified Data.Text as T
-import Data.OpenApi (OpenApi (..), Components (..), ToSchema)
+import Data.OpenApi (OpenApi (..), Components (..), ToSchema, ToParamSchema)
 import qualified Data.HashMap.Strict.InsOrd as HM
 import qualified GiveAndTake.DB.Types as DB
-import GiveAndTake.Api (UnlockedHiddenPostData)
+import Data.Coerce
+import Data.UUID (UUID)
+import GiveAndTake.Types (WithKey)
+import qualified Database.Persist as P
+import Data.Typeable (Typeable)
 
 --- https://github.com/biocad/servant-openapi3/issues/42
 
@@ -94,6 +97,25 @@ instance HasOpenApi S.RawM where
   toOpenApi _ = mempty & paths . at "/" ?~ mempty
 
 --- data type instances
+-- The constraint `Coercible (P.Key a) UUID` is important for the correctness of the definition
+instance (Typeable a,Coercible (P.Key a) UUID) => ToSchema (P.Key a) where
+  declareNamedSchema _ = SO.declareNamedSchema (Proxy @UUID)
+
+-- The constraint `Coercible (P.Key a) UUID` is important for the correctness of the definition
+instance (Typeable a,Coercible (P.Key a) UUID) => ToParamSchema (P.Key a) where
+  toParamSchema _ = SO.toParamSchema (Proxy @UUID)
+
+
+data WithUUID b = WithUUID
+  { key :: UUID
+  , value :: b
+  }
+  deriving stock (Generic)
+instance ToSchema b => ToSchema (WithUUID b)
+
+-- HACK: We don't want too long type names in our typescript client (and also I don't be bothered to change my code to use WithKey$X$Y)
+instance (Typeable a, Coercible (P.Key a) UUID, ToSchema b) => ToSchema (WithKey a b) where
+  declareNamedSchema _ = SO.declareNamedSchema (Proxy @(WithUUID b))
 
 instance ToSchema DB.Post
 instance ToSchema LockedHiddenPostData
@@ -121,7 +143,6 @@ instance ToSchema DB.NotifPrio
 instance ToSchema DB.NotifWelcomeMsg
 instance ToSchema DB.NotifContent
 instance ToSchema DB.Notification
-instance ToSchema a => ToSchema (WithUUID a)
 instance ToSchema DB.JobStatus
 instance ToSchema UnlockedHiddenPostData
 instance ToSchema DB.Group

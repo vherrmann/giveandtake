@@ -83,7 +83,7 @@ export const PostList = ({
           margin: "auto",
         }}
       >
-        {shownPosts.map(({ uuid: postId, value: post }) => {
+        {shownPosts.map(({ key: postId, value: post }) => {
           if (post) {
             return (
               <Box sx={{ margin: 2 }} key={postId}>
@@ -95,7 +95,7 @@ export const PostList = ({
                       if (postId) {
                         try {
                           await api.apiPostsIdDelete(postId);
-                          setPosts(posts.filter(({ uuid }) => uuid !== postId));
+                          setPosts(posts.filter(({ key }) => key !== postId));
                         } catch (err) {
                           // FIXME: more information
                           setError("Failed to delete post"); // FIXME: use notification

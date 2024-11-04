@@ -9,7 +9,6 @@
 
 module GiveAndTake.DB.Types (module GiveAndTake.DB.Types, Entity (..)) where
 
-import Control.Lens (Lens')
 import Crypto.JOSE (JWK)
 import Data.Aeson qualified as A
 import Data.ByteString.Char8 qualified as B
@@ -23,6 +22,7 @@ import Database.Persist qualified as P
 import Database.Persist.Sql qualified as PS
 import Database.Persist.TH
 import GHC.Records (HasField (..))
+import GiveAndTake.DB.TH (mySqlSettings)
 import GiveAndTake.Prelude
 import GiveAndTake.Types
 import Servant.Auth.JWT (FromJWT)
@@ -94,26 +94,6 @@ data AuthCodeType = ACTSignup
   deriving anyclass (FromJSON, ToJSON)
 derivePersistField "AuthCodeType"
 
---- Job data types
--- Email verification
-data GATJobVerifyEmailData = GATJobVerifyEmailData {secret :: Text, userId :: UUID, userName :: Text, userEmail :: Text}
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-derivePersistField "GATJobVerifyEmailData"
-
--- Media
-data AllowedMediaTopTypes = MimeImage | MimeVideo
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-
-data MediaUploadFile = MediaUploadFile {name :: Text, mediaId :: UUID, cType :: AllowedMediaTopTypes}
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-
-data GATJobMediaUploadData = GATJobMediaUploadData {files :: [MediaUploadFile], userId :: UUID}
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-
 data GroupRole = GroupRoleNoRole | GroupRoleAdmin
   deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -125,63 +105,19 @@ instance Ord GroupRole where
   GroupRoleAdmin <= GroupRoleNoRole = False
   GroupRoleAdmin <= GroupRoleAdmin = True
 
---- JOB Queue
-data GATJob
-  = GATJobVerifyEmail GATJobVerifyEmailData
-  | GATJobMediaUpload GATJobMediaUploadData
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-derivePersistField "GATJob"
-
-data JobResult
-  = GATJobResultVerifyEmail ()
-  | GATJobResultMediaUpload [UUID]
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-derivePersistField "JobResult"
-
-data JobStatus = JobPending | JobRunning | JobFinished | JobFailed
-  deriving stock (Eq, Show, Read, Generic)
-  deriving anyclass (FromJSON, ToJSON)
-derivePersistField "JobStatus"
-
-jobEnded :: [JobStatus]
-jobEnded = [JobFinished, JobFailed]
-
 share
-  [ mkPersist
-      ( sqlSettings
-          { mpsFieldLabelModifier = flip const
-          , mpsDeriveInstances = [''Eq, ''Show, ''ToJSON, ''FromJSON]
-          }
-      )
-  , mkMigrate "migrateAll"
-  , mkEntityDefList "entityDefs"
+  [ mkPersist mySqlSettings
+  , mkEntityDefList "basicModels"
   ]
   [persistLowerCase|
 Post
     Id UUID primary unique
     title Text
-    media [UUID]
+    media [MediaId]  -- FIXME: seperate out
     body Text
-    user UUID -- FIXME: seperate out
-    -- author UUID
+    user UserId
     deleted Bool
     createdAt UTCTime
-    deriving Generic
-
-Friends
-    user1 UUID
-    user2 UUID
-    createdAt UTCTime
-    UniqueFriends user1 user2
-    deriving Generic
-
-FriendRequest
-    from UUID
-    to UUID
-    createdAt UTCTime
-    UniqueFriendRequest from to
     deriving Generic
 
 -- The User data might be included in the cookie of the user
@@ -198,8 +134,22 @@ User
     UniqueUserEmail email
     deriving Generic ToJWT FromJWT
 
+Friends
+    user1 UserId
+    user2 UserId
+    createdAt UTCTime
+    UniqueFriends user1 user2
+    deriving Generic
+
+FriendRequest
+    from UserId
+    to UserId
+    createdAt UTCTime
+    UniqueFriendRequest from to
+    deriving Generic
+
 EmailConfirm
-    user UUID
+    user UserId
     isConfirmed Bool
     secretHash Text
     confirmedAt (Maybe UTCTime)
@@ -210,7 +160,7 @@ EmailConfirm
 
 Media
     Id UUID primary unique
-    user UUID
+    user UserId
     mimeType Text
     isDraft Bool
     isCompressed Bool
@@ -219,7 +169,7 @@ Media
 
 Feed
     Id UUID primary unique
-    user UUID
+    user UserId
     token Text
     fType FeedType
     createdAt UTCTime
@@ -229,7 +179,7 @@ Feed
 
 Notification
     Id UUID primary unique
-    user UUID
+    user UserId
     title Text
     content NotifContent
     prio NotifPrio
@@ -245,22 +195,11 @@ AuthCode
     UniqueAuthCode secret
     deriving Generic
 
-Job
-    Id UUID primary unique
-    payload GATJob
-    status JobStatus
-    createdAt UTCTime
-    startedAt (Maybe UTCTime)
-    endedAt (Maybe UTCTime)
-    jobError (Maybe Text)
-    result (Maybe JobResult)
-    deriving Generic
-
 TradedPost
-    post1 UUID
-    user1 UUID
-    post2 UUID
-    user2 UUID
+    post1 PostId
+    user1 UserId
+    post2 PostId
+    user2 UserId
     createdAt UTCTime
     -- each post can only be traded once
     UniqueTradedPostPost1User2 post1 user2
@@ -270,21 +209,21 @@ TradedPost
 Group
     Id UUID primary unique
     name Text
-    owner UUID
+    owner UserId
     createdAt UTCTime
     deriving Generic
 
 GroupMember
-    group UUID
-    user UUID
+    group GroupId
+    user UserId
     role GroupRole
     createdAt UTCTime
     UniqueGroupMember group user
     deriving Generic
 
 GroupJoinRequest
-    from UUID
-    to UUID
+    from UserId
+    to GroupId
     createdAt UTCTime
     UniqueGroupJoinRequest from to
     deriving Generic
@@ -295,62 +234,90 @@ SConfig
     deriving Generic
 |]
 
+--- Job data types
+
+-- Media
+data AllowedMediaTopTypes = MimeImage | MimeVideo
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data MediaUploadFile = MediaUploadFile {name :: Text, mediaId :: MediaId, cType :: AllowedMediaTopTypes}
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data GATJobMediaUploadData = GATJobMediaUploadData {files :: [MediaUploadFile], userId :: UserId}
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+-- Email verification
+data GATJobVerifyEmailData = GATJobVerifyEmailData
+  { secret :: Text
+  , userId :: UserId
+  , userName :: Text
+  , userEmail :: Text
+  }
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "GATJobVerifyEmailData"
+
+--- JOB Queue
+data GATJob
+  = GATJobVerifyEmail GATJobVerifyEmailData
+  | GATJobMediaUpload GATJobMediaUploadData
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "GATJob"
+
+data JobResult
+  = GATJobResultVerifyEmail ()
+  | GATJobResultMediaUpload [MediaId]
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "JobResult"
+
+data JobStatus = JobPending | JobRunning | JobFinished | JobFailed
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "JobStatus"
+
+jobEnded :: [JobStatus]
+jobEnded = [JobFinished, JobFailed]
+
+share
+  [ -- mkPersistWith mySqlSettings $(discoverEntities)
+    mkPersist mySqlSettings
+  , mkEntityDefList "jobModels"
+  ]
+  [persistLowerCase|
+Job
+    Id UUID primary unique
+    payload GATJob
+    status JobStatus
+    createdAt UTCTime
+    startedAt (Maybe UTCTime)
+    endedAt (Maybe UTCTime)
+    jobError (Maybe Text)
+    result (Maybe JobResult)
+    deriving Generic
+|]
+
+migrateAll :: PS.Migration
+migrateAll = migrateModels (basicModels <> jobModels)
+
+-- FIXME: replace with a more general solution
 deriving stock instance Generic (P.Key User)
 instance FromJSON (Entity User)
 instance FromJWT (Entity User)
 instance ToJSON (Entity User)
 instance ToJWT (Entity User)
 
-class ToKeyConstr (a :: Type) where
-  type KeyType a
-  packKey :: KeyType a -> P.Key a
-  unpackKey :: P.Key a -> KeyType a
-
-entityUKey :: (ToKeyConstr a, KeyType a ~ b) => Entity a -> b
-entityUKey = unpackKey . entityKey
-
-entityUKeyLens :: (ToKeyConstr a, KeyType a ~ b) => Lens' (Entity a) b
-entityUKeyLens f (Entity key val) = (\key -> Entity (packKey key) val) <$> f (unpackKey key)
-
-entityValLens :: Lens' (Entity a) a
-entityValLens f (Entity key val) = Entity key <$> f val
-
-instance ToKeyConstr User where
-  type KeyType User = UUID
-  packKey = UserKey
-  unpackKey (UserKey x) = x
-instance ToKeyConstr Post where
-  type KeyType Post = UUID
-  packKey = PostKey
-  unpackKey (PostKey x) = x
-instance ToKeyConstr Media where
-  type KeyType Media = UUID
-  packKey = MediaKey
-  unpackKey (MediaKey x) = x
-instance ToKeyConstr Feed where
-  type KeyType Feed = UUID
-  packKey = FeedKey
-  unpackKey (FeedKey x) = x
-instance ToKeyConstr Notification where
-  type KeyType Notification = UUID
-  packKey = NotificationKey
-  unpackKey (NotificationKey x) = x
-instance ToKeyConstr Job where
-  type KeyType Job = UUID
-  packKey = JobKey
-  unpackKey (JobKey x) = x
-instance ToKeyConstr Group where
-  type KeyType Group = UUID
-  packKey = GroupKey
-  unpackKey (GroupKey x) = x
-
-entityToWithUUID :: (ToKeyConstr a, KeyType a ~ UUID) => Entity a -> WithUUID a
-entityToWithUUID (Entity k v) = WithUUID (unpackKey k) v
+entityToWithKey :: Entity a -> WithKey' a
+entityToWithKey (Entity k v) = WithKey k v
 
 -- shorthands
 
-instance (ToKeyConstr a, KeyType a ~ b) => HasField "key" (Entity a) b where
-  getField = entityUKey
+instance HasField "key" (Entity a) (P.Key a) where
+  getField = entityKey
 
 instance HasField "val" (Entity a) a where
   getField = entityVal

@@ -4,9 +4,8 @@
 module GiveAndTake.Api where
 
 import Data.Time (UTCTime)
-import Data.UUID (UUID)
 import Database.Persist
-import GiveAndTake.DB.Types qualified as DB
+import GiveAndTake.DB.Types as DB
 import GiveAndTake.Prelude
 import GiveAndTake.Servant.XML
 import GiveAndTake.Types
@@ -16,19 +15,11 @@ import Servant.Auth (Auth, Cookie)
 import Servant.Auth.Server (SetCookie)
 import Servant.Multipart (FromMultipart, MultipartForm)
 import Servant.Multipart qualified as SM
-import Text.Feed.Types (Feed)
+import Text.Feed.Types qualified as Feed
 
 --- Api Utils
 
 --- Api data types
-
-type UserUUID = UUID
-type PostUUID = UUID
-type MediaUUID = UUID
-type FeedUUID = UUID
-type NotifUUID = UUID
-type JobUUID = UUID
-type GroupUUID = UUID
 
 data LoginData = LoginData
   { email :: Text
@@ -48,14 +39,14 @@ data SignupData = SignupData
 
 data NewPost = NewPost
   { title :: Text
-  , media :: [PostUUID]
+  , media :: [MediaId]
   , body :: Text
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 data VerifyEmail = VerifyEmail
-  { user :: UserUUID
+  { user :: UserId
   , secret :: Text
   }
   deriving stock (Show, Generic)
@@ -70,13 +61,13 @@ instance FromMultipart SM.Tmp UploadMedia where
   fromMultipart multipartData = pure UploadMedia{files = multipartData.files}
 
 data UploadMediaResponse = UploadMediaResponse
-  { mediaIds :: [MediaUUID]
+  { mediaIds :: [MediaId]
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 data SuccessLoginResponse = SuccessLoginResponse
-  { userId :: UserUUID
+  { userId :: UserId
   , user :: DB.User
   }
   deriving stock (Show, Generic)
@@ -95,7 +86,7 @@ userToPublic DB.User{..} = UserPublic{name, createdAt}
 
 data CheckResponse = CheckResponse
   { user :: DB.User
-  , userId :: UserUUID
+  , userId :: UserId
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -107,15 +98,15 @@ data FeedUrlPostResponse = FeedUrlPostResponse
   deriving anyclass (FromJSON, ToJSON)
 
 data FriendsRequestGetResponse = FriendsRequestGetResponse
-  { requestsToYou :: [WithUUID UserPublic]
-  , requestsFromYou :: [WithUUID UserPublic]
+  { requestsToYou :: [WithKey User UserPublic]
+  , requestsFromYou :: [WithKey User UserPublic]
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 data LockedHiddenPostData = LockedHiddenPostData
   { title :: Text
-  , user :: UUID
+  , user :: UserId
   , createdAt :: UTCTime
   }
   deriving stock (Show, Generic)
@@ -123,7 +114,7 @@ data LockedHiddenPostData = LockedHiddenPostData
 
 data UnlockedHiddenPostData = UnlockedHiddenPostData
   { post :: DB.Post
-  , unlockedWithPost :: WithUUID DB.Post
+  , unlockedWithPost :: WithKey Post Post
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -134,7 +125,7 @@ data HiddenPostData = LockedHiddenPost LockedHiddenPostData | UnlockedHiddenPost
 
 data UnhiddenPostData = UnhiddenPostData
   { post :: DB.Post
-  , usedToUnlock :: [WithUUID DB.Post] -- should only be nonempty if the post is requested by the posts owner
+  , usedToUnlock :: [WithKey Post Post] -- should only be nonempty if the post is requested by the posts owner
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -157,8 +148,8 @@ data NewGroup = NewGroup
   deriving anyclass (FromJSON, ToJSON)
 
 data ChangeGroupRole = ChangeGroupRole
-  { group :: GroupUUID
-  , user :: UserUUID
+  { group :: GroupId
+  , user :: UserId
   , role :: DB.GroupRole
   }
   deriving stock (Show, Generic)
@@ -166,8 +157,8 @@ data ChangeGroupRole = ChangeGroupRole
 
 data ApiGroup = ApiGroup
   { group :: DB.Group
-  , members :: [WithUUID UserPublic]
-  , admins :: [WithUUID UserPublic]
+  , members :: [WithKey User UserPublic]
+  , admins :: [WithKey User UserPublic]
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -176,38 +167,38 @@ data ApiGroup = ApiGroup
 
 type PostsApi =
   "posts"
-    :> ( (S.Capture "id" PostUUID :> S.Get '[JSON] ApiPost)
-          :<|> (S.Capture "id" PostUUID :> S.Delete '[JSON] ())
-          :<|> (S.ReqBody '[JSON] NewPost :> S.Post '[JSON] PostUUID)
-          :<|> ("tradeables" :> S.Capture "user" UserUUID :> S.Get '[JSON] [WithUUID DB.Post])
-          :<|> ("trade" :> S.Capture "withPost" PostUUID :> S.Capture "forPost" PostUUID :> S.Post '[JSON] ())
-          :<|> ("feed" :> S.Get '[JSON] [WithUUID ApiPost])
+    :> ( (S.Capture "id" PostId :> S.Get '[JSON] ApiPost)
+          :<|> (S.Capture "id" PostId :> S.Delete '[JSON] ())
+          :<|> (S.ReqBody '[JSON] NewPost :> S.Post '[JSON] PostId)
+          :<|> ("tradeables" :> S.Capture "user" UserId :> S.Get '[JSON] [WithKey Post DB.Post])
+          :<|> ("trade" :> S.Capture "withPost" PostId :> S.Capture "forPost" PostId :> S.Post '[JSON] ())
+          :<|> ("feed" :> S.Get '[JSON] [WithKey Post ApiPost])
        )
 
 type UsersApi =
   "users"
-    :> ( (S.Capture "id" UserUUID :> S.Get '[JSON] UserPublic)
-          :<|> (S.Capture "id" UserUUID :> "posts" :> S.Get '[JSON] [WithUUID ApiPost])
+    :> ( (S.Capture "id" UserId :> S.Get '[JSON] UserPublic)
+          :<|> (S.Capture "id" UserId :> "posts" :> S.Get '[JSON] [WithKey Post ApiPost])
        )
 
 type MediaApi =
   "media"
     :> ( ( "upload"
             :> MultipartForm SM.Tmp UploadMedia
-            :> S.Post '[JSON] JobUUID
+            :> S.Post '[JSON] JobId
          )
-          :<|> (S.Capture "id" MediaUUID :> S.RawM) -- Should always be the last route (RawM catches everything)
+          :<|> (S.Capture "id" MediaId :> S.RawM) -- Should always be the last route (RawM catches everything)
        )
 
 type FriendsApi =
   "friends"
-    :> ( S.Get '[JSON] [WithUUID UserPublic]
-          :<|> (S.Capture "friendId" UserUUID :> S.Delete '[JSON] ())
+    :> ( S.Get '[JSON] [WithKey User UserPublic]
+          :<|> (S.Capture "friendId" UserId :> S.Delete '[JSON] ())
           :<|> ( "request"
                   :> ( S.Get '[JSON] FriendsRequestGetResponse
-                        :<|> (S.Capture "friendId" UserUUID :> S.Post '[JSON] ())
-                        :<|> (S.Capture "friendId" UserUUID :> "accept" :> S.Post '[JSON] ())
-                        :<|> (S.Capture "friendId" UserUUID :> "reject" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "friendId" UserId :> S.Post '[JSON] ())
+                        :<|> (S.Capture "friendId" UserId :> "accept" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "friendId" UserId :> "reject" :> S.Post '[JSON] ())
                      )
                )
        )
@@ -220,41 +211,41 @@ type ProtectedFeedApi =
 
 type NotifApi =
   "notif"
-    :> ( S.Get '[JSON] [WithUUID DB.Notification]
-          :<|> ("read" :> S.ReqBody '[JSON] [NotifUUID] :> S.Post '[JSON] ())
+    :> ( S.Get '[JSON] [WithKey Notification Notification]
+          :<|> ("read" :> S.ReqBody '[JSON] [NotificationId] :> S.Post '[JSON] ())
        )
 
 type JobApi =
   "job"
-    :> ( S.Capture "id" JobUUID :> "status" :> S.Get '[JSON] DB.JobStatus
-          :<|> ( S.Capture "id" JobUUID
+    :> ( S.Capture "id" JobId :> "status" :> S.Get '[JSON] DB.JobStatus
+          :<|> ( S.Capture "id" JobId
                   :> "result"
                   :> ( ("verifyEmail" :> S.Get '[JSON] ())
                         :<|> ("mediaCompress" :> S.Get '[JSON] UploadMediaResponse)
                      )
                )
-               -- :<|> S.Capture "id" JobUUID :> "cancel" :> S.Post '[JSON] ()
+               -- :<|> S.Capture "id" JobId :> "cancel" :> S.Post '[JSON] ()
        )
 
 type GroupsApi =
   "groups"
-    :> ( S.Get '[JSON] [WithUUID DB.Group]
-          :<|> (S.Capture "id" GroupUUID :> "public" :> S.Get '[JSON] GroupPublic)
-          :<|> (S.Capture "id" GroupUUID :> S.Get '[JSON] ApiGroup)
-          :<|> (S.Capture "id" GroupUUID :> S.Delete '[JSON] ())
-          :<|> (S.ReqBody '[JSON] NewGroup :> S.Post '[JSON] GroupUUID)
+    :> ( S.Get '[JSON] [WithKey Group Group] -- FIXME: change to ApiGroup
+          :<|> (S.Capture "id" GroupId :> "public" :> S.Get '[JSON] GroupPublic)
+          :<|> (S.Capture "id" GroupId :> S.Get '[JSON] ApiGroup)
+          :<|> (S.Capture "id" GroupId :> S.Delete '[JSON] ())
+          :<|> (S.ReqBody '[JSON] NewGroup :> S.Post '[JSON] GroupId)
           :<|> ( "request"
-                  :> ( S.Get '[JSON] [GroupUUID]
-                        :<|> (S.Capture "id" GroupUUID :> S.Post '[JSON] ())
-                        :<|> (S.Capture "id" GroupUUID :> "cancel" :> S.Post '[JSON] ())
-                        :<|> (S.Capture "id" GroupUUID :> S.Capture "userId" UserUUID :> "accept" :> S.Post '[JSON] ())
-                        :<|> (S.Capture "id" GroupUUID :> S.Capture "userId" UserUUID :> "reject" :> S.Post '[JSON] ())
+                  :> ( S.Get '[JSON] [GroupId]
+                        :<|> (S.Capture "id" GroupId :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupId :> "cancel" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupId :> S.Capture "userId" UserId :> "accept" :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupId :> S.Capture "userId" UserId :> "reject" :> S.Post '[JSON] ())
                      )
                )
           :<|> ("roles" :> (S.ReqBody '[JSON] ChangeGroupRole :> S.Post '[JSON] ()))
           :<|> ( "member"
-                  :> ( (S.Capture "id" GroupUUID :> "add" :> S.Capture "userId" UserUUID :> S.Post '[JSON] ())
-                        :<|> (S.Capture "id" GroupUUID :> "remove" :> S.Capture "userId" UserUUID :> S.Delete '[JSON] ())
+                  :> ( (S.Capture "id" GroupId :> "add" :> S.Capture "userId" UserId :> S.Post '[JSON] ())
+                        :<|> (S.Capture "id" GroupId :> "remove" :> S.Capture "userId" UserId :> S.Delete '[JSON] ())
                      )
                )
        )
@@ -298,7 +289,7 @@ type AuthApi =
                )
           :<|> ( "signup"
                   :> S.ReqBody '[JSON] SignupData
-                  :> S.Post '[JSON] JobUUID
+                  :> S.Post '[JSON] JobId
                )
           :<|> ( "verifyemail"
                   :> S.ReqBody '[JSON] VerifyEmail
@@ -311,9 +302,9 @@ type AuthApi =
 type UnprotectedFeedApi =
   "feed"
     :> ( S.Header "Accept" Text
-          :> S.Capture "id" UserUUID
+          :> S.Capture "id" UserId
           :> S.Capture "token" Text
-          :> S.Get '[XML] Feed
+          :> S.Get '[XML] Feed.Feed
        )
 
 type UnprotectedApi = AuthApi :<|> UnprotectedFeedApi

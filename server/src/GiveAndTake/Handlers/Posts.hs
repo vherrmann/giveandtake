@@ -1,10 +1,8 @@
 module GiveAndTake.Handlers.Posts where
 
-import Data.List (zip, (\\))
+import Data.List (zip)
 import Data.String (String)
 import Data.Text qualified as T
-import Data.UUID (UUID)
-import Data.UUID qualified as U
 import Database.Persist ((=.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
@@ -27,10 +25,10 @@ postsHandler userEnt =
     :<|> postTradePostsH userEnt
     :<|> getPostsFeedH userEnt
 
-getPostsFeedH :: (HasHandler m) => Entity User -> m [WithUUID ApiPost]
+getPostsFeedH :: (HasHandler m) => Entity User -> m [WithKey Post ApiPost]
 getPostsFeedH userEntity = traverse (dbPostToApiPost userEntity.key) =<< getFeedPosts userEntity.key
 
-getPostH :: (HasHandler m) => Entity User -> PostUUID -> m ApiPost
+getPostH :: (HasHandler m) => Entity User -> PostId -> m ApiPost
 getPostH userEnt postId = do
   postEnt <- getByKeySEEnt @DB.Post postId
   checkIsFriendOrEq userEnt.key postEnt.val.user
@@ -41,10 +39,10 @@ getPostH userEnt postId = do
 --   postList <- runDB $ selectList [] []
 --   pure $ map (\(Entity _ u) -> u) postList
 
-createPostH :: (HasHandler m) => Entity User -> NewPost -> m UUID
+createPostH :: (HasHandler m) => Entity User -> NewPost -> m PostId
 createPostH user newpost = do
   uconf :: UConfig <- askM
-  media <- traverse (getByKeySE @Media) newpost.media
+  media <- traverse getByKeySE newpost.media
 
   when (T.length newpost.title > 24) $
     throwError S.err409{S.errBody = "Title cannot be longer than 24 characters."}
@@ -55,10 +53,10 @@ createPostH user newpost = do
   mediaIds <- for (zip media newpost.media) \(medium, mediaId) -> do
     -- Check if draft, if the medium is not a draft, it is already used by another post
     if medium.isDraft
-      then runDB $ P.update (packKey @Media mediaId) [MediaIsDraft =. False]
+      then runDB $ P.update mediaId [MediaIsDraft =. False]
       else do
         -- copy files (each post should have unique media files, so that we can easily delete them)
-        newUuid <-
+        newMediaId <-
           runDB $
             insertUUID $
               Media
@@ -69,8 +67,8 @@ createPostH user newpost = do
                 , createdAt = medium.createdAt
                 }
         -- Move file
-        let mediaPath = [fmt|{uconf.mediaDir}/{U.toText mediaId}|]
-        let newMediaPath = [fmt|{uconf.mediaDir}/{U.toText newUuid}|]
+        let mediaPath = [fmt|{uconf.mediaDir}/{mediaId}|]
+        let newMediaPath = [fmt|{uconf.mediaDir}/{newMediaId}|]
         liftIO $ D.copyFile mediaPath newMediaPath
     pure mediaId
 
@@ -81,19 +79,19 @@ createPostH user newpost = do
           { title = newpost.title
           , media = mediaIds
           , body = newpost.body
-          , user = entityUKey user
+          , user = user.key
           , deleted = False
           , createdAt = ct
           }
       )
 
-deletePostH :: (HasHandler m) => Entity User -> PostUUID -> m ()
+deletePostH :: (HasHandler m) => Entity User -> PostId -> m ()
 deletePostH userEnt postId = do
   post <- getByKeySE @DB.Post postId
   checkIsEqUser userEnt.key post.user
   runDB $
     P.update
-      (packKey @DB.Post postId)
+      postId
       [ DB.PostTitle =. ""
       , DB.PostMedia =. []
       , DB.PostBody =. ""
@@ -101,32 +99,32 @@ deletePostH userEnt postId = do
       ]
   -- Delete media
   uconf :: UConfig <- askM
-  for_ post.media \mediaUuid -> do
-    mmedia <- runDB (P.get $ packKey @Media mediaUuid)
+  for_ post.media \mediaId -> do
+    mmedia <- runDB (P.get mediaId)
     case mmedia of
       Nothing -> pure () -- FIXME
       Just _ -> do
-        runDB $ P.delete $ packKey @Media mediaUuid
-        let mediaPath = [fmt|{uconf.mediaDir}/{U.toText mediaUuid}|]
+        runDB $ P.delete mediaId
+        let mediaPath = [fmt|{uconf.mediaDir}/{mediaId}|]
         existsP <- liftIO $ D.doesFileExist mediaPath
         if existsP
           then liftIO $ D.removeFile mediaPath
           else -- FIXME: proper logging system
             putStrLn @String [fmt|"File {mediaPath} does not exist when trying to delete it."|]
-        runDB $ P.delete $ MediaKey mediaUuid
+        runDB $ P.delete mediaId
 
-getTradeablePostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID DB.Post]
+getTradeablePostsH :: (HasHandler m) => Entity User -> UserId -> m [WithKey' DB.Post]
 getTradeablePostsH userEnt postUser = do
   checkIsFriendOrEq userEnt.key postUser
   postList <- getUserPosts userEnt.key
   apiPostList <- zip postList <$> traverse (dbPostToApiPost postUser) postList
   let tradeablePostEnts =
         [ postEnt
-        | (postEnt, WithUUID id (HiddenPost (LockedHiddenPost _))) <- apiPostList
+        | (postEnt, WithKey _id (HiddenPost (LockedHiddenPost _))) <- apiPostList
         ]
-  pure $ entityToWithUUID <$> tradeablePostEnts
+  pure $ entityToWithKey <$> tradeablePostEnts
 
-postTradePostsH :: (HasHandler m) => Entity User -> PostUUID -> PostUUID -> m ()
+postTradePostsH :: (HasHandler m) => Entity User -> PostId -> PostId -> m ()
 postTradePostsH userEnt post1Id post2Id = do
   post1 <- getByKeySE @DB.Post post1Id
   post2 <- getByKeySE @DB.Post post2Id
@@ -134,7 +132,7 @@ postTradePostsH userEnt post1Id post2Id = do
   checkIsFriend userEnt.key post2.user
   -- check if post2 was already traded for some post of UserEnt
   whenM (postWasTradedWith post2Id userEnt.key) $ throwError S.err409{S.errBody = "Post was already traded with some post of yours."}
-  unlessM (hiddenPostP (packKey post2Id) post2.user) $ throwError S.err409{S.errBody = "Post is not hidden."}
+  unlessM (hiddenPostP post2Id post2.user) $ throwError S.err409{S.errBody = "Post is not hidden."}
 
   ct <- getUTCTime
   runDB $

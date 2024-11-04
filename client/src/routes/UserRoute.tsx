@@ -40,7 +40,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
     try {
       const response = await api.apiFriendsGet();
       const friends = response.data;
-      setMyFriendp(friends.some(({ uuid: friendId }) => friendId === userId));
+      setMyFriendp(friends.some(({ key: friendId }) => friendId === userId));
     } catch (e) {
       setError(handleApiErr(e));
     }

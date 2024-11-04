@@ -1,5 +1,4 @@
 import {
-  Avatar,
   Box,
   Card,
   CardActions,
@@ -9,26 +8,19 @@ import {
   Dialog,
   DialogContent,
   DialogTitle,
-  Divider,
   IconButton,
   List,
   ListItem,
   ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Link as MuiLink,
   Menu,
   MenuItem,
   Tooltip,
   Typography,
-  styled,
   useTheme,
   Popover,
 } from "@mui/material";
-import ShareIcon from "@mui/icons-material/Share";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import CreateIcon from "@mui/icons-material/Create";
-import FavoriteIcon from "@mui/icons-material/Favorite";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -279,7 +271,7 @@ const ViewablePostWidget = ({
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Traded with post:
                 <LinkWidget
-                  to={"/post/" + unlockedWithPost.uuid}
+                  to={"/post/" + unlockedWithPost.key}
                   underline="always"
                   color="primary"
                 >
@@ -318,7 +310,7 @@ const ViewablePostWidget = ({
                         {usedToUnlock.map((postW) => {
                           const post = postW.value;
                           return (
-                            <ListItem key={postW.uuid}>
+                            <ListItem key={postW.key}>
                               <PostCard
                                 user={post.user}
                                 title={post.title}
@@ -326,7 +318,7 @@ const ViewablePostWidget = ({
                                 headerActions={
                                   <IconButton
                                     component={Link}
-                                    to={"/post/" + postW.uuid}
+                                    to={"/post/" + postW.key}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
@@ -480,7 +472,7 @@ const UnviewablePostWidget = ({
                   const post = postW.value;
                   // FIXME: make posts clickable to see media
                   return (
-                    <ListItem key={postW.uuid}>
+                    <ListItem key={postW.key}>
                       <PostCard
                         user={post.user}
                         title={post.title}
@@ -489,13 +481,13 @@ const UnviewablePostWidget = ({
                           <>
                             <IconButton
                               component={Link}
-                              to={"/post/" + postW.uuid}
+                              to={"/post/" + postW.key}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               <OpenInNewIcon />
                             </IconButton>
-                            <IconButton onClick={tradeExisting(postW.uuid)}>
+                            <IconButton onClick={tradeExisting(postW.key)}>
                               <SyncAltIcon />
                             </IconButton>
                           </>

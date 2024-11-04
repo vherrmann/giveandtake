@@ -1,9 +1,6 @@
 module GiveAndTake.Handlers.Users where
 
-import Database.Persist ((==.))
-import Database.Persist qualified as P
 import GiveAndTake.Api
-import GiveAndTake.Api qualified as Api
 import GiveAndTake.DB
 import GiveAndTake.Handlers.Utils
 import GiveAndTake.Prelude
@@ -13,16 +10,16 @@ import Servant ((:<|>) (..))
 usersHandler :: Entity User -> RServer m UsersApi
 usersHandler userEnt = getUserPublicH :<|> getUserPostsH userEnt
 
-getUserPublicH :: (HasHandler m) => UserUUID -> m UserPublic
+getUserPublicH :: (HasHandler m) => UserId -> m UserPublic
 getUserPublicH userId = do
-  user <- getByKeySE @User userId
+  user <- getByKeySE userId
   pure
     UserPublic
       { name = user.name
       , createdAt = user.createdAt
       }
 
-getUserPostsH :: (HasHandler m) => Entity User -> UserUUID -> m [WithUUID ApiPost]
+getUserPostsH :: (HasHandler m) => Entity User -> UserId -> m [WithKey Post ApiPost]
 getUserPostsH userEnt requestedUserId = do
   checkIsFriendOrEq userEnt.key requestedUserId
   getUserApiPosts requestedUserId

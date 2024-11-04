@@ -8,32 +8,32 @@ import GiveAndTake.Types
 import Servant (type (:<|>) (..))
 import Servant qualified as S
 
-checkAuthJob :: (HasHandler m) => UserUUID -> GATJob -> m ()
+checkAuthJob :: (HasHandler m) => UserId -> GATJob -> m ()
 checkAuthJob userId = \case
   (GATJobVerifyEmail val) -> checkIsEqUser userId val.userId
   (GATJobMediaUpload val) -> checkIsEqUser userId val.userId
 
-getStatusJobH :: (HasHandler m) => UserUUID -> JobUUID -> m JobStatus
+getStatusJobH :: (HasHandler m) => UserId -> JobId -> m JobStatus
 getStatusJobH userId jobId = do
   job <- getByKeySE @Job jobId
   checkAuthJob userId job.payload
   pure job.status
 
--- cancelJobH :: (HasHandler m) => UserUUID -> JobUUID -> m ()
+-- cancelJobH :: (HasHandler m) => UserId -> JobId -> m ()
 -- cancelJobH userId jobId = do
 --   job <- getByKeySE @Job jobId
 --   checkAuthJob userId job.payload
 --   cancelJob job
 
 -- FIXME: remove this, since it's useless?
-verifyEmailResJobH :: UserUUID -> JobUUID -> RHandler m ()
+verifyEmailResJobH :: UserId -> JobId -> RHandler m ()
 verifyEmailResJobH userId jobId = do
   -- FIXME: remove boilerplate auth etc.
   job <- getByKeySE @Job jobId
   checkAuthJob userId job.payload
   pure ()
 
-mediaCompressResJobH :: UserUUID -> JobUUID -> RHandler m UploadMediaResponse
+mediaCompressResJobH :: UserId -> JobId -> RHandler m UploadMediaResponse
 mediaCompressResJobH userId jobId = do
   job <- getByKeySE @Job jobId
   checkAuthJob userId job.payload

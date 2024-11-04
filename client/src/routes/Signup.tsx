@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useState } from "react";
 import { Button, Stack, TextField, Tooltip } from "@mui/material";
 import { useNavigate } from "react-router";
-import { Api, JobStatus } from "../api";
+import { Api } from "../api";
 import { useSearchParams } from "react-router-dom";
 import { handleApiErr } from "../utils";
 

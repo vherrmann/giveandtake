@@ -1,20 +1,13 @@
 import { useEffect, useState } from "react";
 import { Api, WithUUIDUserPublic } from "../api";
 import {
-  Card,
-  CardContent,
   CardHeader,
   Divider,
   IconButton,
   List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Typography,
 } from "@mui/material";
-import { AvatarWidget } from "./AvatarWidget";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
-import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
 import { handleApiErr } from "../utils";
@@ -48,7 +41,7 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
       }
       try {
         await api.apiFriendsFriendIdDelete(friendId);
-        setFriends(friends.filter(({ uuid }) => uuid !== friendId));
+        setFriends(friends.filter(({ key }) => key !== friendId));
       } catch (e) {
         // FIXME: more detailed information
         setError("Failed to remove friend" + handleApiErr(e));
@@ -71,7 +64,7 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
         </Typography>
       ) : (
         <List>
-          {friends.map(({ uuid: friendId, value: friend }) => (
+          {friends.map(({ key: friendId, value: friend }) => (
             <ListUserItem
               userId={friendId}
               userPublic={friend}

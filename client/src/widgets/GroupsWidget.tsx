@@ -2,8 +2,6 @@ import { useEffect, useState } from "react";
 import { Api, WithUUIDUserPublic } from "../api";
 import {
   Avatar,
-  Card,
-  CardContent,
   CardHeader,
   Divider,
   IconButton,
@@ -15,11 +13,8 @@ import {
   Typography,
 } from "@mui/material";
 import { Link, useLocation } from "react-router-dom";
-import { AvatarWidget } from "./AvatarWidget";
-import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
-import { ListUserItem } from "./ListUserItem";
 import { handleApiErr } from "../utils";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -58,7 +53,7 @@ export const GroupsWidget = ({ userId }: { userId: string }) => {
 
       <Divider />
       <List>
-        {groups.map(({ uuid: groupId, value: group }) => (
+        {groups.map(({ key: groupId, value: group }) => (
           <ListItem key={groupId}>
             <ListItemAvatar>
               <Avatar sx={{ bgcolor: "#FF6666" }}>

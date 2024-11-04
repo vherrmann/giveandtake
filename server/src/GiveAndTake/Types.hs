@@ -9,13 +9,15 @@ import Control.Monad.Error.Class (MonadError (..))
 import Control.Monad.Logger.CallStack qualified as L
 import Data.Aeson qualified as A
 import Data.Pool (Pool)
-import Data.UUID
+import Database.Persist qualified as P
 import Database.Persist.Sql qualified as PS
 import GHC.Stack (HasCallStack)
 import GiveAndTake.JobCon (HasJobCon, JobCon)
 import GiveAndTake.Prelude
 import Servant
 import System.IO (FilePath)
+import Text.Show (Show (show))
+import Text.Show qualified as TS
 
 data SmtpMethod = SmtpStartTLS | SmtpSSL | SmtpPlain
   deriving stock (Show, Generic)
@@ -63,12 +65,22 @@ data UConfig = UConfig
 data DynUConfig = DynUConfig {smtpPass :: Text}
   deriving stock (Show, Generic)
 
-data WithUUID a = WithUUID
-  { uuid :: UUID
-  , value :: a
+data WithKey a b = WithKey
+  { key :: P.Key a
+  , value :: b
   }
-  deriving stock (Show, Generic)
-  deriving anyclass (FromJSON, ToJSON)
+  deriving stock (Generic)
+
+instance (Show (P.Key a), Show b) => Show (WithKey a b) where
+  show WithKey{..} = "WithKey {key = " <> TS.show key <> ", value = " <> TS.show value <> "}"
+
+instance (FromJSON (P.Key a), FromJSON b) => FromJSON (WithKey a b) where
+  parseJSON = A.genericParseJSON A.defaultOptions
+
+instance (ToJSON (P.Key a), ToJSON b) => ToJSON (WithKey a b) where
+  toEncoding = A.genericToEncoding A.defaultOptions
+
+type WithKey' a = WithKey a a
 
 type HasUConfig m = (MonadReaderM UConfig m, MonadReaderM DynUConfig m)
 type HasDBPool m = (MonadReaderM (Pool PS.SqlBackend) m)

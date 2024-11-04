@@ -8,7 +8,6 @@ import Database.Persist ((<-.), (==.))
 import Database.Persist qualified as P
 import GHC.Base (Symbol)
 import GiveAndTake.Api
-import GiveAndTake.Api qualified as Api
 import GiveAndTake.DB
 import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Prelude
@@ -17,98 +16,98 @@ import GiveAndTake.Utils (getUTCTime)
 import Servant (err303)
 import Servant qualified as S
 
-getFriends :: (HasDBPool m, MonadIO m, MonadLogger m) => UserUUID -> m [WithUUID UserPublic]
-getFriends uuid = do
-  listFstIds <- runDB $ fmap (.val.user2) <$> P.selectList [FriendsUser1 ==. uuid] []
-  listSndIds <- runDB $ fmap (.val.user1) <$> P.selectList [FriendsUser2 ==. uuid] []
+getFriends :: (HasDBPool m, MonadIO m, MonadLogger m) => UserId -> m [WithKey User UserPublic]
+getFriends userId = do
+  listFstIds <- runDB $ fmap (.val.user2) <$> P.selectList [FriendsUser1 ==. userId] []
+  listSndIds <- runDB $ fmap (.val.user1) <$> P.selectList [FriendsUser2 ==. userId] []
 
   friends <- selectByKey @User (listFstIds <> listSndIds)
-  pure $ friends <&> \user -> WithUUID user.key (userToPublic user.val)
+  pure $ friends <&> \user -> WithKey user.key (userToPublic user.val)
 
-areFriends :: (HasDBPool m, MonadIO m) => UserUUID -> UserUUID -> m Bool
+areFriends :: (HasDBPool m, MonadIO m) => UserId -> UserId -> m Bool
 areFriends user1 user2 = do
   friendsp <- runDB $ P.exists [FriendsUser1 ==. user1, FriendsUser2 ==. user2]
   friendspOtherWay <- runDB $ P.exists [FriendsUser1 ==. user2, FriendsUser2 ==. user1]
 
   pure $ friendsp || friendspOtherWay
 
-isFriendOrEq :: (HasDBPool m, MonadIO m) => UserUUID -> UserUUID -> m Bool
+isFriendOrEq :: (HasDBPool m, MonadIO m) => UserId -> UserId -> m Bool
 isFriendOrEq user1 user2 = if user1 == user2 then pure True else areFriends user1 user2
 
-isGroupMember :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupMember :: (MonadIO m, HasDBPool m) => UserId -> GroupId -> m Bool
 isGroupMember userId groupId = runDB $ P.existsBy (UniqueGroupMember groupId userId)
 
-isGroupOwner :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupOwner :: (MonadIO m, HasDBPool m) => UserId -> GroupId -> m Bool
 isGroupOwner userId groupId = do
   memberp <- isGroupMember userId groupId
-  groupM <- runDB (P.get $ packKey @Group groupId)
+  groupM <- runDB (P.get groupId)
   pure $ case groupM of
     Nothing -> False
     Just group -> memberp && (userId == group.owner)
 
-checkIsFriendOrEq :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+checkIsFriendOrEq :: (HasHandler m) => UserId -> UserId -> m ()
 checkIsFriendOrEq user1 user2 =
   unlessM (isFriendOrEq user1 user2) $
     throwError S.err401{S.errBody = "Users are not friends or the same user."}
 
-checkIsGroupMember :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupMember :: (HasHandler m) => UserId -> GroupId -> m ()
 checkIsGroupMember userId groupId =
   unlessM (isGroupMember userId groupId) $
     throwError S.err401{S.errBody = "User is not a member of the group."}
 
-isGroupHigher :: (MonadIO m, HasDBPool m) => UserUUID -> UserUUID -> GroupUUID -> m Bool
+isGroupHigher :: (MonadIO m, HasDBPool m) => UserId -> UserId -> GroupId -> m Bool
 isGroupHigher user1Id user2Id groupId = runDB do
   groupMemb1M <- P.getBy (UniqueGroupMember groupId user1Id)
   groupMemb2M <- P.getBy (UniqueGroupMember groupId user2Id)
-  groupM <- P.get $ packKey @Group groupId
+  groupM <- P.get groupId
   pure $ case (groupMemb1M, groupMemb2M, groupM) of
     (Just groupMemb1, Just groupMemb2, Just group) ->
       (groupMemb1.val.user == group.owner)
         || (groupMemb1.val.role >= groupMemb2.val.role)
     _ -> False
 
-checkIsGroupHigher :: (HasHandler m) => UserUUID -> UserUUID -> GroupUUID -> m ()
+checkIsGroupHigher :: (HasHandler m) => UserId -> UserId -> GroupId -> m ()
 checkIsGroupHigher user1Id user2Id groupId =
   unlessM (isGroupHigher user1Id user2Id groupId) $
     throwError S.err401{S.errBody = "User is not higher in the group hierarchy."}
 
-isGroupAdmin :: (MonadIO m, HasDBPool m) => UserUUID -> GroupUUID -> m Bool
+isGroupAdmin :: (MonadIO m, HasDBPool m) => UserId -> GroupId -> m Bool
 isGroupAdmin userId groupId = runDB do
   groupMembM <- P.getBy (UniqueGroupMember groupId userId)
-  groupM <- P.get $ packKey @Group groupId
+  groupM <- P.get groupId
   pure $ case (groupMembM, groupM) of
-    (Just groupMemb, Just group) -> groupMemb.val.role == GroupRoleAdmin
+    (Just groupMemb, Just group) -> groupMemb.val.role == GroupRoleAdmin || group.owner == userId
     _ -> False
 
-checkIsGroupAdmin :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupAdmin :: (HasHandler m) => UserId -> GroupId -> m ()
 checkIsGroupAdmin userId groupId =
   unlessM (isGroupAdmin userId groupId) $
     throwError S.err401{S.errBody = "User is not an admin of the group."}
 
-checkIsGroupOwner :: (HasHandler m) => UserUUID -> GroupUUID -> m ()
+checkIsGroupOwner :: (HasHandler m) => UserId -> GroupId -> m ()
 checkIsGroupOwner userId groupId =
   unlessM (isGroupOwner userId groupId) $
     throwError S.err401{S.errBody = "User is not the owner of the group."}
 
-checkIsFriend :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+checkIsFriend :: (HasHandler m) => UserId -> UserId -> m ()
 checkIsFriend user1 user2 =
   unlessM (areFriends user1 user2) $
     throwError S.err401{S.errBody = "Users are not friends."}
 
-checkIsEqUser :: (HasHandler m) => UserUUID -> UserUUID -> m ()
+checkIsEqUser :: (HasHandler m) => UserId -> UserId -> m ()
 checkIsEqUser user1 user2 =
   unless (user1 == user2) $
     throwError S.err401{S.errBody = "Users are not the same."}
 
-getFeedPosts :: (HasHandler m) => UserUUID -> m [P.Entity DB.Post]
+getFeedPosts :: (HasHandler m) => UserId -> m [P.Entity DB.Post]
 getFeedPosts userId = do
-  friendIds <- fmap (.uuid) <$> getFriends userId
+  friendIds <- fmap (.key) <$> getFriends userId
   runDB $ P.selectList [PostUser <-. friendIds] [P.Desc PostCreatedAt]
 
-getUserPosts :: (HasHandler m) => UserUUID -> m [P.Entity DB.Post]
+getUserPosts :: (HasHandler m) => UserId -> m [P.Entity DB.Post]
 getUserPosts requestedUserId = runDB $ P.selectList [PostUser ==. requestedUserId] [P.Desc PostCreatedAt]
 
-getUserApiPosts :: (HasHandler m) => UserUUID -> m [WithUUID ApiPost]
+getUserApiPosts :: (HasHandler m) => UserId -> m [WithKey Post ApiPost]
 getUserApiPosts requestedUserId = do
   postList <- getUserPosts requestedUserId
   traverse (dbPostToApiPost requestedUserId) postList
@@ -123,19 +122,19 @@ type family (-->) (l :: [Type]) (a :: Type) where
 type Doc (str :: Symbol) (a :: Type) = a
 
 -- userId2 traded a post for postId1 or someone else traded postId1 vor some post of userId2
-postWasTradedWith :: (HasHandler m) => PostUUID -> UserUUID -> m Bool
+postWasTradedWith :: (HasHandler m) => PostId -> UserId -> m Bool
 postWasTradedWith postId1 userId2 = runDB do
   tr1p <- P.exists [TradedPostPost1 ==. postId1, TradedPostUser2 ==. userId2]
   tr2p <- P.exists [TradedPostPost2 ==. postId1, TradedPostUser1 ==. userId2]
   pure $ tr1p || tr2p
 
-postTradedForOf :: (HasHandler m) => PostUUID -> UserUUID -> m (Maybe PostUUID)
+postTradedForOf :: (HasHandler m) => PostId -> UserId -> m (Maybe PostId)
 postTradedForOf postId1 userId2 = runDB do
   postIdM <- fmap (.val.post2) <$> P.getBy (UniqueTradedPostPost1User2 postId1 userId2)
   postIdM' <- fmap (.val.post1) <$> P.getBy (UniqueTradedPostPost2User1 postId1 userId2)
   pure $ postIdM <|> postIdM'
 
-hiddenPostP :: (HasHandler m) => P.Key Post -> Doc "postUser" UserUUID -> m Bool
+hiddenPostP :: (HasHandler m) => P.Key Post -> Doc "postUser" UserId -> m Bool
 hiddenPostP postKey postUserId = do
   -- add assertion checking if user is postuser
   hiddenPosts <-
@@ -144,19 +143,19 @@ hiddenPostP postKey postUserId = do
   let hiddenPostIds = hiddenPosts <&> (.entityKey)
   pure $ postKey `elem` hiddenPostIds
 
-tradesBetween :: (HasHandler m) => UserUUID -> UserUUID -> m [Entity DB.TradedPost]
+tradesBetween :: (HasHandler m) => UserId -> UserId -> m [Entity DB.TradedPost]
 tradesBetween userId1 userId2 = do
   posts1 <- runDB $ P.selectList [TradedPostUser1 ==. userId1, TradedPostUser2 ==. userId2] []
   posts2 <- runDB $ P.selectList [TradedPostUser1 ==. userId2, TradedPostUser2 ==. userId1] []
   pure $ posts1 <> posts2
 
-getPostIdsTradedWith :: (HasHandler m) => PostUUID -> m [PostUUID]
+getPostIdsTradedWith :: (HasHandler m) => PostId -> m [PostId]
 getPostIdsTradedWith postId = runDB do
   tradedPosts1 <- (fmap (.val.post2)) <$> P.selectList [TradedPostPost1 ==. postId] []
   tradedPosts2 <- (fmap (.val.post1)) <$> P.selectList [TradedPostPost2 ==. postId] []
   pure $ tradedPosts1 <> tradedPosts2
 
-dbPostToApiPost :: (HasHandler m) => UserUUID -> Entity DB.Post -> m (WithUUID ApiPost)
+dbPostToApiPost :: (HasHandler m) => UserId -> Entity DB.Post -> m (WithKey Post ApiPost)
 dbPostToApiPost requestingUserId dbPostEnt = do
   let dbPost = dbPostEnt.val
       postUserId = dbPost.user
@@ -166,8 +165,8 @@ dbPostToApiPost requestingUserId dbPostEnt = do
     if postUserId == requestingUserId
       then do
         tradedWithPostIds <- getPostIdsTradedWith dbPostEnt.key
-        tradedWithPostEnts <- runDB $ P.selectList [PostId <-. (packKey <$> tradedWithPostIds)] []
-        pure $ UnhiddenPost $ UnhiddenPostData dbPost (entityToWithUUID <$> tradedWithPostEnts)
+        tradedWithPostEnts <- runDB $ P.selectList [PostId <-. tradedWithPostIds] []
+        pure $ UnhiddenPost $ UnhiddenPostData dbPost (entityToWithKey <$> tradedWithPostEnts)
       else do
         -- hide the last three posts
 
@@ -179,16 +178,16 @@ dbPostToApiPost requestingUserId dbPostEnt = do
               Just tradedForPostId -> do
                 -- FIXME: post could be deleted
                 tradedForPost <- getByKeySE @Post tradedForPostId
-                pure $ UnlockedHiddenPost $ UnlockedHiddenPostData{post = dbPost, unlockedWithPost = WithUUID tradedForPostId tradedForPost}
+                pure $ UnlockedHiddenPost $ UnlockedHiddenPostData{post = dbPost, unlockedWithPost = WithKey tradedForPostId tradedForPost}
               Nothing ->
                 pure $
                   let DB.Post{..} = dbPost
                    in LockedHiddenPost LockedHiddenPostData{title, user, createdAt = ct}
           else pure $ UnhiddenPost $ UnhiddenPostData dbPost []
-  pure WithUUID{uuid = dbPostEnt.key, value = apiPost}
+  pure WithKey{key = dbPostEnt.key, value = apiPost}
 
-postIdsToApiPostsForUserWithCheck :: (HasHandler m) => UserUUID -> [PostUUID] -> m [WithUUID ApiPost]
+postIdsToApiPostsForUserWithCheck :: (HasHandler m) => UserId -> [PostId] -> m [WithKey Post ApiPost]
 postIdsToApiPostsForUserWithCheck userId postIds = do
-  postList <- selectByKey @DB.Post postIds
+  postList <- selectByKey postIds
   for_ postList \post -> checkIsFriendOrEq userId post.val.user
   traverse (dbPostToApiPost userId) postList

@@ -1,9 +1,6 @@
 module GiveAndTake.Handlers.Groups where
 
-import Data.List (nub, (\\))
 import Data.Text qualified as T
-import Data.UUID (UUID)
-import Database.Esqueleto.Experimental qualified as E
 import Database.Persist ((=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
@@ -35,22 +32,22 @@ groupsHandler userEnt =
   groupsRolesH = changeRoleH userEnt
   groupsMemberH = addGroupMemberH userEnt :<|> removeGroupMemberH userEnt
 
-getGroups :: Entity User -> RHandler m [WithUUID Group]
+getGroups :: Entity User -> RHandler m [WithKey' Group]
 getGroups userEnt = do
   groupIds <-
     runDB (P.selectList [GroupMemberUser ==. userEnt.key] [])
       <&> fmap (.val.group)
   groupEnts <- selectByKey @Group groupIds
-  pure $ fmap entityToWithUUID groupEnts
+  pure $ fmap entityToWithKey groupEnts
 
-removeGroupMemberH :: Entity User -> GroupUUID -> UserUUID -> RHandler m ()
+removeGroupMemberH :: Entity User -> GroupId -> UserId -> RHandler m ()
 removeGroupMemberH userEnt groupId userId = do
   checkIsGroupMember userEnt.key groupId
   checkIsGroupMember userId groupId
   checkIsGroupHigher userEnt.key userId groupId
   runDB $ P.deleteBy $ UniqueGroupMember groupId userId
 
-addGroupMemberH :: Entity User -> GroupUUID -> UserUUID -> RHandler m ()
+addGroupMemberH :: Entity User -> GroupId -> UserId -> RHandler m ()
 addGroupMemberH userEnt groupId userId = do
   checkIsGroupMember userEnt.key groupId
   checkIsGroupAdmin userEnt.key groupId
@@ -77,7 +74,7 @@ changeRoleH userEnt (ChangeGroupRole{group, user = changedUser, role = newRole})
       ]
       [GroupMemberRole =. newRole]
 
-rejectGroupJoinReqH :: Entity User -> GroupUUID -> UserUUID -> RHandler m ()
+rejectGroupJoinReqH :: Entity User -> GroupId -> UserId -> RHandler m ()
 rejectGroupJoinReqH userEnt groupId requestingUserId = do
   checkIsGroupMember userEnt.key groupId
   checkIsGroupAdmin userEnt.key groupId
@@ -86,7 +83,7 @@ rejectGroupJoinReqH userEnt groupId requestingUserId = do
     then runDB $ P.deleteBy $ UniqueGroupJoinRequest requestingUserId groupId
     else throwError S.err404{S.errBody = "Group join request not found."}
 
-acceptGroupJoinReqH :: Entity User -> GroupUUID -> UserUUID -> RHandler m ()
+acceptGroupJoinReqH :: Entity User -> GroupId -> UserId -> RHandler m ()
 acceptGroupJoinReqH userEnt groupId requestingUserId = do
   group <- getByKeySE @Group groupId
   checkIsGroupMember userEnt.key groupId
@@ -104,7 +101,7 @@ acceptGroupJoinReqH userEnt groupId requestingUserId = do
       P.deleteBy $ UniqueGroupJoinRequest requestingUserId groupId
     else throwError S.err404{S.errBody = "Group join request not found."}
 
-cancelGroupJoinReqH :: Entity User -> GroupUUID -> RHandler m ()
+cancelGroupJoinReqH :: Entity User -> GroupId -> RHandler m ()
 cancelGroupJoinReqH userEnt groupId = do
   existsP <- runDB $ P.existsBy $ UniqueGroupJoinRequest userEnt.key groupId
   if existsP
@@ -112,7 +109,7 @@ cancelGroupJoinReqH userEnt groupId = do
     else throwError S.err404{S.errBody = "Group join request not found."}
 
 -- FIXME: add notification
-createGroupJoinReqH :: Entity User -> GroupUUID -> RHandler m ()
+createGroupJoinReqH :: Entity User -> GroupId -> RHandler m ()
 createGroupJoinReqH userEnt groupId = do
   whenM (isGroupMember userEnt.key groupId) $ throwError S.err409{S.errBody = "User is already a member of the group."}
   ct <- getUTCTime
@@ -124,18 +121,18 @@ createGroupJoinReqH userEnt groupId = do
         , createdAt = ct
         }
 
-getGroupJoinReqH :: Entity User -> RHandler m [GroupUUID]
+getGroupJoinReqH :: Entity User -> RHandler m [GroupId]
 getGroupJoinReqH userEnt = do
   groups <- runDB $ P.selectList [GroupJoinRequestFrom ==. userEnt.key] []
   pure $ (.val.to) <$> groups
 
-createGroupH :: Entity User -> NewGroup -> RHandler m UUID
+createGroupH :: Entity User -> NewGroup -> RHandler m GroupId
 createGroupH userEnt newGroup = do
   when (T.length newGroup.name > 20) $
     throwError S.err409{S.errBody = "Group name cannot be longer than 20 characters."}
 
   ct <- getUTCTime
-  groupUUID <-
+  groupId <-
     runDB $ do
       uuid <-
         insertUUID $
@@ -153,14 +150,14 @@ createGroupH userEnt newGroup = do
           }
       pure uuid
 
-  pure groupUUID
+  pure groupId
 
-deleteGroupH :: Entity User -> GroupUUID -> RHandler m ()
+deleteGroupH :: Entity User -> GroupId -> RHandler m ()
 deleteGroupH userEnt groupId = do
   checkIsGroupOwner userEnt.key groupId
-  runDB $ P.delete $ packKey @Group groupId
+  runDB $ P.delete groupId
 
--- getGroupH :: Entity User -> GroupUUID -> RHandler m ApiGroup
+-- getGroupH :: Entity User -> GroupId -> RHandler m ApiGroup
 -- getGroupH userEnt groupId = do
 --   group <- getByKeySE @Group groupId
 --   checkIsGroupMember userEnt.key groupId
@@ -187,7 +184,7 @@ deleteGroupH userEnt groupId = do
 --   pure todo
 getGroupH = todo
 
-getGroupPublicH :: GroupUUID -> RHandler m GroupPublic
+getGroupPublicH :: GroupId -> RHandler m GroupPublic
 getGroupPublicH groupId = do
   group <- getByKeySE @Group groupId
   pure GroupPublic{name = group.name, createdAt = group.createdAt}

@@ -4,7 +4,6 @@ module GiveAndTake.Job where
 
 import Database.Persist ((=.), (==.))
 import Database.Persist qualified as P
-import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Email
 import GiveAndTake.JobCon
@@ -26,7 +25,7 @@ type HasJob m = (HasUConfig m, HasDBPool m, MonadIO m, HasJobCon m)
 --     Nothing -> error "Impossible: PS.getSimpleConn returned Nothing."
 --     Just res -> pure res
 
-createJob :: (HasHandler m) => GATJob -> m JobUUID
+createJob :: (HasHandler m) => GATJob -> m JobId
 createJob gatjob = do
   ct <- getUTCTime
   -- FIXME: start job
