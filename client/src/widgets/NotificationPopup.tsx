@@ -45,7 +45,9 @@ Welcome! Your individual feed can be accessed as an rss feed under this [url](${
   const markAllasRead = async () => {
     if (!notifications) return;
     try {
-      await api.apiNotifReadPost(notifications.map((n) => n.key));
+      await api.apiNotifReadPost({
+        requestBody: notifications.map((n) => n.key),
+      });
       setNotifications(
         notifications.map((n) => ({
           ...n,

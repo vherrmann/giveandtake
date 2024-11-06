@@ -17,7 +17,7 @@ export const FeedWidget = () => {
 
   const locToFUrl = (location: router.Location<any>) => {
     if (location.pathname === "/") {
-      return api.apiFeedUrlPost("MainFeed");
+      return api.apiFeedUrlPost({ body: "MainFeed" });
     } else {
       return null;
     }

@@ -55,8 +55,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }: LoginData): Promise<[boolean, string]> => {
     try {
       const response = await api.apiAuthLoginPost({
-        email,
-        password,
+        loginData: {
+          email,
+          password,
+        },
       });
       setAuthState({
         isAuthenticated: true,

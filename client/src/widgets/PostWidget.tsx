@@ -206,7 +206,7 @@ const ViewablePostWidget = ({
       const responses = await Promise.all(
         post.media.map(async (fileId: string) => {
           try {
-            const file = api.apiMediaIdGet(fileId);
+            const file = api.apiMediaIdGet({ id: fileId });
             return file;
           } catch (err) {
             // FIXME: add error handling
@@ -364,7 +364,9 @@ const UnviewablePostWidget = ({
   const fetchTradeables = async () => {
     try {
       try {
-        const response = await api.apiPostsTradeablesUserGet(post.user);
+        const response = await api.apiPostsTradeablesUserGet({
+          user: post.user,
+        });
         setTradeablePosts(response.data);
       } catch (e) {
         setError(handleApiErr(e));
@@ -385,7 +387,10 @@ const UnviewablePostWidget = ({
       return;
     }
     try {
-      await api.apiPostsTradeWithPostForPostPost(tradingWithPostId, postId);
+      await api.apiPostsTradeWithPostForPostPost({
+        withPost: tradingWithPostId,
+        forPost: postId,
+      });
       setUnlockDOpen(false);
       // FIXME: reload only current post
       window.location.reload();

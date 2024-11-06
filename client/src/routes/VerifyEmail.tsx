@@ -17,7 +17,7 @@ export const VerifyEmail = () => {
       if (!secret || !user) {
         throw new Error("Invalid verification link");
       }
-      await api.apiAuthVerifyemailPost({ user, secret });
+      await api.apiAuthVerifyemailPost({ verifyEmail: { user, secret } });
       setLoading(false);
       setError(null);
     } catch (e: any) {

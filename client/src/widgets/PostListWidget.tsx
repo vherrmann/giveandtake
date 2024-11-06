@@ -96,7 +96,7 @@ export const PostList = ({
                     deletePost: async (postId) => {
                       if (postId) {
                         try {
-                          await api.apiPostsIdDelete(postId);
+                          await api.apiPostsIdDelete({ id: postId });
                           setPosts(posts.filter(({ key }) => key !== postId));
                         } catch (err) {
                           // FIXME: more information

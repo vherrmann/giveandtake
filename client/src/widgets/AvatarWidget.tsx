@@ -21,7 +21,7 @@ export const AvatarWidget = ({
   const api = Api();
 
   const fetchUserPublic = async () => {
-    const response = await api.apiUsersIdGet(userId);
+    const response = await api.apiUsersIdGet({ id: userId });
     setUserPublicHere(response.data);
   };
 

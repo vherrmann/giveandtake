@@ -56,7 +56,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
 
   const acceptRequest = (friendId: string) => async () => {
     try {
-      await api.apiFriendsRequestFriendIdAcceptPost(friendId);
+      await api.apiFriendsRequestFriendIdAcceptPost({ friendId });
       fetchFriendRequests();
       // FIXME: update friend list
     } catch (e) {
@@ -66,7 +66,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
 
   const rejectRequest = (friendId: string) => async () => {
     try {
-      await api.apiFriendsRequestFriendIdRejectPost(friendId);
+      await api.apiFriendsRequestFriendIdRejectPost({ friendId });
       fetchFriendRequests();
     } catch (e) {
       setError(handleApiErr(e));
@@ -75,7 +75,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
 
   const cancelRequest = (friendId: string) => async () => {
     try {
-      await api.apiFriendsRequestFriendIdCancelPost(friendId);
+      await api.apiFriendsRequestFriendIdCancelPost({ friendId });
       fetchFriendRequests();
     } catch (e) {
       setError(handleApiErr(e));

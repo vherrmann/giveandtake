@@ -30,7 +30,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
 
   const fetchInfo = async () => {
     try {
-      const response = await api.apiUsersIdGet(userId);
+      const response = await api.apiUsersIdGet({ id: userId });
       setUserPublic(response.data);
     } catch (e) {
       setError(handleApiErr(e));
@@ -70,10 +70,10 @@ const UserWidget = ({ userId }: { userId: string }) => {
   const handleRemoveFriend = async (_event: React.MouseEvent<HTMLElement>) => {
     try {
       if (myFriendp) {
-        await api.apiFriendsFriendIdDelete(userId);
+        await api.apiFriendsFriendIdDelete({ friendId: userId });
         setMyFriendp(false);
       } else {
-        await api.apiFriendsRequestFriendIdCancelPost(userId);
+        await api.apiFriendsRequestFriendIdCancelPost({ friendId: userId });
         setFriendReqExists(false);
       }
     } catch (e) {
@@ -85,7 +85,7 @@ const UserWidget = ({ userId }: { userId: string }) => {
     _event: React.MouseEvent<HTMLElement>,
   ) => {
     try {
-      await api.apiFriendsRequestFriendIdPost(userId);
+      await api.apiFriendsRequestFriendIdPost({ friendId: userId });
       setFriendReqExists(true);
     } catch (e) {
       setError(handleApiErr(e));
@@ -169,7 +169,7 @@ export const UserRoute = () => {
           // FIXME: add error handling?
           {
             try {
-              const response = await api.apiUsersIdPostsGet(userId);
+              const response = await api.apiUsersIdPostsGet({ id: userId });
               return response.data;
             } catch (e: any) {
               if (e?.response?.status === 401) {

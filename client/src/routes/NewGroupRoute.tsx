@@ -38,7 +38,9 @@ export default function NewGroupRoute() {
     event.preventDefault();
     try {
       const response = await api.apiGroupsPost({
-        name: state.name,
+        newGroup: {
+          name: state.name,
+        },
       });
       const uuid = response.data;
 

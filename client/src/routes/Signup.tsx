@@ -63,7 +63,9 @@ export const Signup = (): JSX.Element => {
     try {
       setInfo("Sending signup request.... Sending verification email....");
       setLoading(true);
-      const jobId = await api.apiAuthSignupPost({ ...signupData, secret });
+      const jobId = await api.apiAuthSignupPost({
+        signupData: { ...signupData, secret },
+      });
       setInfo("Sending verification email!");
       setError("");
 

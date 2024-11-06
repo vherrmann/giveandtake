@@ -60,14 +60,16 @@ export default function NewPostRoute() {
     // Poll every 5 seconds
     mediaUploadPollId.current = setInterval(async () => {
       try {
-        const response = await api.apiJobIdStatusGet(jobId);
+        const response = await api.apiJobIdStatusGet({ id: jobId });
         const jobStatus = response.data;
 
         if (JobStatus.JobFinished === jobStatus) {
           clearInterval(mediaUploadPollId.current);
           setUploadingMedia(false);
           setInfo("Finished compressing files.");
-          const response = await api.apiJobIdResultMediaCompressGet(jobId);
+          const response = await api.apiJobIdResultMediaCompressGet({
+            id: jobId,
+          });
           const jobRes = response.data;
 
           setState((state) => ({
@@ -102,7 +104,8 @@ export default function NewPostRoute() {
     setInfo("Uploading media");
     setError("");
     try {
-      const jobId = (await api.apiMediaUploadPost({ files })).data;
+      const jobId = (await api.apiMediaUploadPost({ uploadMedia: { files } }))
+        .data;
       setupMediaUpPolling(jobId);
     } catch (e) {
       setError(handleApiErr(e));
@@ -114,9 +117,11 @@ export default function NewPostRoute() {
     event.preventDefault();
     try {
       const response = await api.apiPostsPost({
-        title: state.title,
-        media: state.fileIds,
-        body: state.body,
+        newPost: {
+          title: state.title,
+          media: state.fileIds,
+          body: state.body,
+        },
       });
       setInfo("Post created successfully");
 
@@ -126,7 +131,10 @@ export default function NewPostRoute() {
 
       if (tradeFor) {
         try {
-          await api.apiPostsTradeWithPostForPostPost(newPostId, tradeFor);
+          await api.apiPostsTradeWithPostForPostPost({
+            withPost: newPostId,
+            forPost: tradeFor,
+          });
         } catch (e) {
           setError(handleApiErr(e));
         }

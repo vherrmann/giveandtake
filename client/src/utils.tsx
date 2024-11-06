@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { User, UserPublic } from "./api";
+import { Api, User, UserPublic } from "./api";
+import { AxiosPromise } from "axios";
 
 export type Nullable<T> = T | null | undefined;
 
@@ -120,3 +121,128 @@ export const handleApiErr = (error: any): string => {
   console.log(error.config);
   return errMsg;
 };
+
+export const withApi = async (
+  fn: (api: ReturnType<typeof Api>) => Promise<void>,
+  setError: React.Dispatch<React.SetStateAction<string | null>>,
+  errorHandler?: (e: any) => void,
+) => {
+  try {
+    await fn(Api());
+  } catch (e) {
+    try {
+      if (errorHandler) {
+        errorHandler(e);
+      } else {
+        setError(handleApiErr(e));
+      }
+    } catch (e: any) {
+      setError(handleApiErr(e));
+    }
+  }
+};
+
+type AxiosPromiseType<T extends AxiosPromise<any>> =
+  T extends AxiosPromise<infer U> ? U : never;
+
+type ApiType = ReturnType<typeof Api>;
+type ApiMethod = keyof ReturnType<typeof Api>;
+type ApiReturnType<T> = AxiosPromiseType<ReturnType<ApiType[T & ApiMethod]>>;
+
+type ApiStateFnRet<T> = [
+  ApiReturnType<T> | null,
+  React.Dispatch<React.SetStateAction<ApiReturnType<T> | null>>,
+  boolean,
+  string | null,
+];
+
+type EndpointToReqParam<T> =
+  Parameters<ApiType[T & ApiMethod]> extends [
+    requestParameters: infer R,
+    options?: infer O,
+  ]
+    ? R
+    : undefined;
+
+type EndpointToOptions<T> =
+  Parameters<ApiType[T & ApiMethod]> extends [options?: infer O]
+    ? O
+    : Parameters<ApiType[T & ApiMethod]> extends [
+          requestParameters: infer R,
+          options?: infer O,
+        ]
+      ? R
+      : undefined;
+
+// https://github.com/microsoft/TypeScript/issues/27808
+// Here you define how your function overload will look
+type ApiStateFn<OneOfPossibleOptions> = <const T extends OneOfPossibleOptions>(
+  method: T,
+  requestParameters: EndpointToReqParam<T>,
+  options?: EndpointToOptions<T>,
+  extraDeps?: any[],
+  errorHandler?: (e: any) => void,
+) => ApiStateFnRet<T>;
+
+type IntersectionToRenderedIntersection<U> = (
+  U extends any ? (_: ApiStateFn<U>) => void : never
+) extends (_: infer I) => void
+  ? I
+  : never;
+
+export const useApiState: IntersectionToRenderedIntersection<ApiMethod> = <
+  T extends ApiMethod,
+>(
+  method: T,
+  requestParameters: EndpointToReqParam<T>,
+  options?: EndpointToOptions<T>,
+  extraDeps?: any[],
+  errorHandler?: (e: any) => void,
+) => {
+  type Data = AxiosPromiseType<ReturnType<ApiType[T]>>;
+  const [data, setData] = useState<Data | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    await withApi(
+      async (api) => {
+        if (requestParameters) {
+          const response = await (api[method] as any)(
+            requestParameters,
+            options,
+          );
+          setData(response.data);
+        } else {
+          const response = await (api[method] as any)(options);
+          setData(response.data);
+        }
+      },
+      setError,
+      errorHandler,
+    );
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, [requestParameters, ...(extraDeps || [])]);
+
+  const res: ApiStateFnRet<T> = [data, setData, loading, error];
+
+  return res;
+};
+
+type Endpoints = {
+  [Property in keyof ApiType]: Property;
+};
+
+// helper to have autocompletion for the strings of all endpoints, should be used like this:
+/* const [friends, setFriends, loadingFr, errorFr] = useApiState(DApi.apiFriendsGet); */
+const globalApi = Api();
+// @ts-ignore
+export const DApi: Endpoints = Object.fromEntries(
+  Object.keys(globalApi).map((endpoint) => [endpoint, endpoint]),
+);

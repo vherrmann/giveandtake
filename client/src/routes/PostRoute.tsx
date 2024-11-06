@@ -16,7 +16,7 @@ export default function PostRoute() {
       throw new Error("No postId provided for useParams");
     }
     try {
-      const post = await api.apiPostsIdGet(postId);
+      const post = await api.apiPostsIdGet({ id: postId });
       setPost(post.data);
       setLoading(false);
     } catch (err) {
@@ -47,7 +47,7 @@ export default function PostRoute() {
           deletePost: async (postId) => {
             if (postId) {
               try {
-                await api.apiPostsIdDelete(postId);
+                await api.apiPostsIdDelete({ id: postId });
                 navigate("/");
               } catch (err) {
                 setError("Failed to delete post"); // FIXME: use notification

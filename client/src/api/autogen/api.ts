@@ -2915,123 +2915,121 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthCheckGet(options?: any): AxiosPromise<CheckResponse> {
+        apiAuthCheckGet(options?: RawAxiosRequestConfig): AxiosPromise<CheckResponse> {
             return localVarFp.apiAuthCheckGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {LoginData} loginData 
+         * @param {DefaultApiApiAuthLoginPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLoginPost(loginData: LoginData, options?: any): AxiosPromise<SuccessLoginResponse> {
-            return localVarFp.apiAuthLoginPost(loginData, options).then((request) => request(axios, basePath));
+        apiAuthLoginPost(requestParameters: DefaultApiApiAuthLoginPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<SuccessLoginResponse> {
+            return localVarFp.apiAuthLoginPost(requestParameters.loginData, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthLogoutPost(options?: any): AxiosPromise<void> {
+        apiAuthLogoutPost(options?: RawAxiosRequestConfig): AxiosPromise<void> {
             return localVarFp.apiAuthLogoutPost(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {SignupData} signupData 
+         * @param {DefaultApiApiAuthSignupPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthSignupPost(signupData: SignupData, options?: any): AxiosPromise<string> {
-            return localVarFp.apiAuthSignupPost(signupData, options).then((request) => request(axios, basePath));
+        apiAuthSignupPost(requestParameters: DefaultApiApiAuthSignupPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiAuthSignupPost(requestParameters.signupData, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {VerifyEmail} verifyEmail 
+         * @param {DefaultApiApiAuthVerifyemailPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthVerifyemailPost(verifyEmail: VerifyEmail, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiAuthVerifyemailPost(verifyEmail, options).then((request) => request(axios, basePath));
+        apiAuthVerifyemailPost(requestParameters: DefaultApiApiAuthVerifyemailPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiAuthVerifyemailPost(requestParameters.verifyEmail, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
-         * @param {string} token 
-         * @param {string} [accept] 
+         * @param {DefaultApiApiFeedIdTokenGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFeedIdTokenGet(id: string, token: string, accept?: string, options?: any): AxiosPromise<any> {
-            return localVarFp.apiFeedIdTokenGet(id, token, accept, options).then((request) => request(axios, basePath));
+        apiFeedIdTokenGet(requestParameters: DefaultApiApiFeedIdTokenGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<any> {
+            return localVarFp.apiFeedIdTokenGet(requestParameters.id, requestParameters.token, requestParameters.accept, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} body 
+         * @param {DefaultApiApiFeedUrlPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFeedUrlPost(body: string, options?: any): AxiosPromise<FeedUrlPostResponse> {
-            return localVarFp.apiFeedUrlPost(body, options).then((request) => request(axios, basePath));
+        apiFeedUrlPost(requestParameters: DefaultApiApiFeedUrlPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<FeedUrlPostResponse> {
+            return localVarFp.apiFeedUrlPost(requestParameters.body, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} friendId 
+         * @param {DefaultApiApiFriendsFriendIdDeleteRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsFriendIdDelete(friendId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiFriendsFriendIdDelete(friendId, options).then((request) => request(axios, basePath));
+        apiFriendsFriendIdDelete(requestParameters: DefaultApiApiFriendsFriendIdDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsFriendIdDelete(requestParameters.friendId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsGet(options?: any): AxiosPromise<Array<WithUUIDUserPublic>> {
+        apiFriendsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDUserPublic>> {
             return localVarFp.apiFriendsGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} friendId 
+         * @param {DefaultApiApiFriendsRequestFriendIdAcceptPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsRequestFriendIdAcceptPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiFriendsRequestFriendIdAcceptPost(friendId, options).then((request) => request(axios, basePath));
+        apiFriendsRequestFriendIdAcceptPost(requestParameters: DefaultApiApiFriendsRequestFriendIdAcceptPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsRequestFriendIdAcceptPost(requestParameters.friendId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} friendId 
+         * @param {DefaultApiApiFriendsRequestFriendIdCancelPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsRequestFriendIdCancelPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiFriendsRequestFriendIdCancelPost(friendId, options).then((request) => request(axios, basePath));
+        apiFriendsRequestFriendIdCancelPost(requestParameters: DefaultApiApiFriendsRequestFriendIdCancelPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsRequestFriendIdCancelPost(requestParameters.friendId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} friendId 
+         * @param {DefaultApiApiFriendsRequestFriendIdPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsRequestFriendIdPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiFriendsRequestFriendIdPost(friendId, options).then((request) => request(axios, basePath));
+        apiFriendsRequestFriendIdPost(requestParameters: DefaultApiApiFriendsRequestFriendIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsRequestFriendIdPost(requestParameters.friendId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} friendId 
+         * @param {DefaultApiApiFriendsRequestFriendIdRejectPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsRequestFriendIdRejectPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiFriendsRequestFriendIdRejectPost(friendId, options).then((request) => request(axios, basePath));
+        apiFriendsRequestFriendIdRejectPost(requestParameters: DefaultApiApiFriendsRequestFriendIdRejectPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsRequestFriendIdRejectPost(requestParameters.friendId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiFriendsRequestGet(options?: any): AxiosPromise<FriendsRequestGetResponse> {
+        apiFriendsRequestGet(options?: RawAxiosRequestConfig): AxiosPromise<FriendsRequestGetResponse> {
             return localVarFp.apiFriendsRequestGet(options).then((request) => request(axios, basePath));
         },
         /**
@@ -3039,162 +3037,158 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsGet(options?: any): AxiosPromise<Array<WithUUIDGroup>> {
+        apiGroupsGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDGroup>> {
             return localVarFp.apiGroupsGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsIdDeleteRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsIdDelete(id: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsIdDelete(id, options).then((request) => request(axios, basePath));
+        apiGroupsIdDelete(requestParameters: DefaultApiApiGroupsIdDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsIdDelete(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsIdGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsIdGet(id: string, options?: any): AxiosPromise<ApiGroup> {
-            return localVarFp.apiGroupsIdGet(id, options).then((request) => request(axios, basePath));
+        apiGroupsIdGet(requestParameters: DefaultApiApiGroupsIdGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiGroup> {
+            return localVarFp.apiGroupsIdGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsIdPublicGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsIdPublicGet(id: string, options?: any): AxiosPromise<GroupPublic> {
-            return localVarFp.apiGroupsIdPublicGet(id, options).then((request) => request(axios, basePath));
+        apiGroupsIdPublicGet(requestParameters: DefaultApiApiGroupsIdPublicGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<GroupPublic> {
+            return localVarFp.apiGroupsIdPublicGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
-         * @param {string} userId 
+         * @param {DefaultApiApiGroupsMemberIdAddUserIdPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsMemberIdAddUserIdPost(id: string, userId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsMemberIdAddUserIdPost(id, userId, options).then((request) => request(axios, basePath));
+        apiGroupsMemberIdAddUserIdPost(requestParameters: DefaultApiApiGroupsMemberIdAddUserIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsMemberIdAddUserIdPost(requestParameters.id, requestParameters.userId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
-         * @param {string} userId 
+         * @param {DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsMemberIdRemoveUserIdDelete(id: string, userId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsMemberIdRemoveUserIdDelete(id, userId, options).then((request) => request(axios, basePath));
+        apiGroupsMemberIdRemoveUserIdDelete(requestParameters: DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsMemberIdRemoveUserIdDelete(requestParameters.id, requestParameters.userId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {NewGroup} newGroup 
+         * @param {DefaultApiApiGroupsPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsPost(newGroup: NewGroup, options?: any): AxiosPromise<string> {
-            return localVarFp.apiGroupsPost(newGroup, options).then((request) => request(axios, basePath));
+        apiGroupsPost(requestParameters: DefaultApiApiGroupsPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiGroupsPost(requestParameters.newGroup, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestGet(options?: any): AxiosPromise<Array<string>> {
+        apiGroupsRequestGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<string>> {
             return localVarFp.apiGroupsRequestGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsRequestIdCancelPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestIdCancelPost(id: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRequestIdCancelPost(id, options).then((request) => request(axios, basePath));
+        apiGroupsRequestIdCancelPost(requestParameters: DefaultApiApiGroupsRequestIdCancelPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRequestIdCancelPost(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsRequestIdGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestIdGet(id: string, options?: any): AxiosPromise<Array<WithUUIDUserPublic>> {
-            return localVarFp.apiGroupsRequestIdGet(id, options).then((request) => request(axios, basePath));
+        apiGroupsRequestIdGet(requestParameters: DefaultApiApiGroupsRequestIdGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDUserPublic>> {
+            return localVarFp.apiGroupsRequestIdGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiGroupsRequestIdPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestIdPost(id: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRequestIdPost(id, options).then((request) => request(axios, basePath));
+        apiGroupsRequestIdPost(requestParameters: DefaultApiApiGroupsRequestIdPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRequestIdPost(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
-         * @param {string} userId 
+         * @param {DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestIdUserIdAcceptPost(id: string, userId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRequestIdUserIdAcceptPost(id, userId, options).then((request) => request(axios, basePath));
+        apiGroupsRequestIdUserIdAcceptPost(requestParameters: DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRequestIdUserIdAcceptPost(requestParameters.id, requestParameters.userId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
-         * @param {string} userId 
+         * @param {DefaultApiApiGroupsRequestIdUserIdRejectPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRequestIdUserIdRejectPost(id: string, userId: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRequestIdUserIdRejectPost(id, userId, options).then((request) => request(axios, basePath));
+        apiGroupsRequestIdUserIdRejectPost(requestParameters: DefaultApiApiGroupsRequestIdUserIdRejectPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRequestIdUserIdRejectPost(requestParameters.id, requestParameters.userId, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {ChangeGroupRole} changeGroupRole 
+         * @param {DefaultApiApiGroupsRolesPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRolesPost(changeGroupRole: ChangeGroupRole, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRolesPost(changeGroupRole, options).then((request) => request(axios, basePath));
+        apiGroupsRolesPost(requestParameters: DefaultApiApiGroupsRolesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRolesPost(requestParameters.changeGroupRole, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiJobIdResultMediaCompressGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiJobIdResultMediaCompressGet(id: string, options?: any): AxiosPromise<UploadMediaResponse> {
-            return localVarFp.apiJobIdResultMediaCompressGet(id, options).then((request) => request(axios, basePath));
+        apiJobIdResultMediaCompressGet(requestParameters: DefaultApiApiJobIdResultMediaCompressGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<UploadMediaResponse> {
+            return localVarFp.apiJobIdResultMediaCompressGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiJobIdResultVerifyEmailGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiJobIdResultVerifyEmailGet(id: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiJobIdResultVerifyEmailGet(id, options).then((request) => request(axios, basePath));
+        apiJobIdResultVerifyEmailGet(requestParameters: DefaultApiApiJobIdResultVerifyEmailGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiJobIdResultVerifyEmailGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiJobIdStatusGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiJobIdStatusGet(id: string, options?: any): AxiosPromise<JobStatus> {
-            return localVarFp.apiJobIdStatusGet(id, options).then((request) => request(axios, basePath));
+        apiJobIdStatusGet(requestParameters: DefaultApiApiJobIdStatusGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<JobStatus> {
+            return localVarFp.apiJobIdStatusGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiMediaUploadPost(options?: any): AxiosPromise<string> {
+        apiMediaUploadPost(options?: RawAxiosRequestConfig): AxiosPromise<string> {
             return localVarFp.apiMediaUploadPost(options).then((request) => request(axios, basePath));
         },
         /**
@@ -3202,92 +3196,602 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiNotifGet(options?: any): AxiosPromise<Array<WithUUIDNotification>> {
+        apiNotifGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDNotification>> {
             return localVarFp.apiNotifGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {Array<string>} requestBody 
+         * @param {DefaultApiApiNotifReadPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiNotifReadPost(requestBody: Array<string>, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiNotifReadPost(requestBody, options).then((request) => request(axios, basePath));
+        apiNotifReadPost(requestParameters: DefaultApiApiNotifReadPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiNotifReadPost(requestParameters.requestBody, options).then((request) => request(axios, basePath));
         },
         /**
          * 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsFeedGet(options?: any): AxiosPromise<Array<WithUUIDApiPost>> {
+        apiPostsFeedGet(options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDApiPost>> {
             return localVarFp.apiPostsFeedGet(options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiPostsIdDeleteRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsIdDelete(id: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiPostsIdDelete(id, options).then((request) => request(axios, basePath));
+        apiPostsIdDelete(requestParameters: DefaultApiApiPostsIdDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiPostsIdDelete(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiPostsIdGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsIdGet(id: string, options?: any): AxiosPromise<ApiPost> {
-            return localVarFp.apiPostsIdGet(id, options).then((request) => request(axios, basePath));
+        apiPostsIdGet(requestParameters: DefaultApiApiPostsIdGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<ApiPost> {
+            return localVarFp.apiPostsIdGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {NewPost} newPost 
+         * @param {DefaultApiApiPostsPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsPost(newPost: NewPost, options?: any): AxiosPromise<string> {
-            return localVarFp.apiPostsPost(newPost, options).then((request) => request(axios, basePath));
+        apiPostsPost(requestParameters: DefaultApiApiPostsPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiPostsPost(requestParameters.newPost, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} withPost 
-         * @param {string} forPost 
+         * @param {DefaultApiApiPostsTradeWithPostForPostPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsTradeWithPostForPostPost(withPost: string, forPost: string, options?: any): AxiosPromise<Array<any>> {
-            return localVarFp.apiPostsTradeWithPostForPostPost(withPost, forPost, options).then((request) => request(axios, basePath));
+        apiPostsTradeWithPostForPostPost(requestParameters: DefaultApiApiPostsTradeWithPostForPostPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiPostsTradeWithPostForPostPost(requestParameters.withPost, requestParameters.forPost, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} user 
+         * @param {DefaultApiApiPostsTradeablesUserGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiPostsTradeablesUserGet(user: string, options?: any): AxiosPromise<Array<WithUUIDPost>> {
-            return localVarFp.apiPostsTradeablesUserGet(user, options).then((request) => request(axios, basePath));
+        apiPostsTradeablesUserGet(requestParameters: DefaultApiApiPostsTradeablesUserGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDPost>> {
+            return localVarFp.apiPostsTradeablesUserGet(requestParameters.user, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiUsersIdGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUsersIdGet(id: string, options?: any): AxiosPromise<UserPublic> {
-            return localVarFp.apiUsersIdGet(id, options).then((request) => request(axios, basePath));
+        apiUsersIdGet(requestParameters: DefaultApiApiUsersIdGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<UserPublic> {
+            return localVarFp.apiUsersIdGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
-         * @param {string} id 
+         * @param {DefaultApiApiUsersIdPostsGetRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiUsersIdPostsGet(id: string, options?: any): AxiosPromise<Array<WithUUIDApiPost>> {
-            return localVarFp.apiUsersIdPostsGet(id, options).then((request) => request(axios, basePath));
+        apiUsersIdPostsGet(requestParameters: DefaultApiApiUsersIdPostsGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDApiPost>> {
+            return localVarFp.apiUsersIdPostsGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
     };
 };
+
+/**
+ * Request parameters for apiAuthLoginPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiAuthLoginPostRequest
+ */
+export interface DefaultApiApiAuthLoginPostRequest {
+    /**
+     * 
+     * @type {LoginData}
+     * @memberof DefaultApiApiAuthLoginPost
+     */
+    readonly loginData: LoginData
+}
+
+/**
+ * Request parameters for apiAuthSignupPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiAuthSignupPostRequest
+ */
+export interface DefaultApiApiAuthSignupPostRequest {
+    /**
+     * 
+     * @type {SignupData}
+     * @memberof DefaultApiApiAuthSignupPost
+     */
+    readonly signupData: SignupData
+}
+
+/**
+ * Request parameters for apiAuthVerifyemailPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiAuthVerifyemailPostRequest
+ */
+export interface DefaultApiApiAuthVerifyemailPostRequest {
+    /**
+     * 
+     * @type {VerifyEmail}
+     * @memberof DefaultApiApiAuthVerifyemailPost
+     */
+    readonly verifyEmail: VerifyEmail
+}
+
+/**
+ * Request parameters for apiFeedIdTokenGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFeedIdTokenGetRequest
+ */
+export interface DefaultApiApiFeedIdTokenGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFeedIdTokenGet
+     */
+    readonly id: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFeedIdTokenGet
+     */
+    readonly token: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFeedIdTokenGet
+     */
+    readonly accept?: string
+}
+
+/**
+ * Request parameters for apiFeedUrlPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFeedUrlPostRequest
+ */
+export interface DefaultApiApiFeedUrlPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFeedUrlPost
+     */
+    readonly body: string
+}
+
+/**
+ * Request parameters for apiFriendsFriendIdDelete operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFriendsFriendIdDeleteRequest
+ */
+export interface DefaultApiApiFriendsFriendIdDeleteRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFriendsFriendIdDelete
+     */
+    readonly friendId: string
+}
+
+/**
+ * Request parameters for apiFriendsRequestFriendIdAcceptPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFriendsRequestFriendIdAcceptPostRequest
+ */
+export interface DefaultApiApiFriendsRequestFriendIdAcceptPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFriendsRequestFriendIdAcceptPost
+     */
+    readonly friendId: string
+}
+
+/**
+ * Request parameters for apiFriendsRequestFriendIdCancelPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFriendsRequestFriendIdCancelPostRequest
+ */
+export interface DefaultApiApiFriendsRequestFriendIdCancelPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFriendsRequestFriendIdCancelPost
+     */
+    readonly friendId: string
+}
+
+/**
+ * Request parameters for apiFriendsRequestFriendIdPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFriendsRequestFriendIdPostRequest
+ */
+export interface DefaultApiApiFriendsRequestFriendIdPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFriendsRequestFriendIdPost
+     */
+    readonly friendId: string
+}
+
+/**
+ * Request parameters for apiFriendsRequestFriendIdRejectPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiFriendsRequestFriendIdRejectPostRequest
+ */
+export interface DefaultApiApiFriendsRequestFriendIdRejectPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiFriendsRequestFriendIdRejectPost
+     */
+    readonly friendId: string
+}
+
+/**
+ * Request parameters for apiGroupsIdDelete operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsIdDeleteRequest
+ */
+export interface DefaultApiApiGroupsIdDeleteRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsIdDelete
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsIdGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsIdGetRequest
+ */
+export interface DefaultApiApiGroupsIdGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsIdGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsIdPublicGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsIdPublicGetRequest
+ */
+export interface DefaultApiApiGroupsIdPublicGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsIdPublicGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsMemberIdAddUserIdPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsMemberIdAddUserIdPostRequest
+ */
+export interface DefaultApiApiGroupsMemberIdAddUserIdPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsMemberIdAddUserIdPost
+     */
+    readonly id: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsMemberIdAddUserIdPost
+     */
+    readonly userId: string
+}
+
+/**
+ * Request parameters for apiGroupsMemberIdRemoveUserIdDelete operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest
+ */
+export interface DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsMemberIdRemoveUserIdDelete
+     */
+    readonly id: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsMemberIdRemoveUserIdDelete
+     */
+    readonly userId: string
+}
+
+/**
+ * Request parameters for apiGroupsPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsPostRequest
+ */
+export interface DefaultApiApiGroupsPostRequest {
+    /**
+     * 
+     * @type {NewGroup}
+     * @memberof DefaultApiApiGroupsPost
+     */
+    readonly newGroup: NewGroup
+}
+
+/**
+ * Request parameters for apiGroupsRequestIdCancelPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRequestIdCancelPostRequest
+ */
+export interface DefaultApiApiGroupsRequestIdCancelPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdCancelPost
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsRequestIdGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRequestIdGetRequest
+ */
+export interface DefaultApiApiGroupsRequestIdGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsRequestIdPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRequestIdPostRequest
+ */
+export interface DefaultApiApiGroupsRequestIdPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdPost
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiGroupsRequestIdUserIdAcceptPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest
+ */
+export interface DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdUserIdAcceptPost
+     */
+    readonly id: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdUserIdAcceptPost
+     */
+    readonly userId: string
+}
+
+/**
+ * Request parameters for apiGroupsRequestIdUserIdRejectPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRequestIdUserIdRejectPostRequest
+ */
+export interface DefaultApiApiGroupsRequestIdUserIdRejectPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdUserIdRejectPost
+     */
+    readonly id: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiGroupsRequestIdUserIdRejectPost
+     */
+    readonly userId: string
+}
+
+/**
+ * Request parameters for apiGroupsRolesPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiGroupsRolesPostRequest
+ */
+export interface DefaultApiApiGroupsRolesPostRequest {
+    /**
+     * 
+     * @type {ChangeGroupRole}
+     * @memberof DefaultApiApiGroupsRolesPost
+     */
+    readonly changeGroupRole: ChangeGroupRole
+}
+
+/**
+ * Request parameters for apiJobIdResultMediaCompressGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiJobIdResultMediaCompressGetRequest
+ */
+export interface DefaultApiApiJobIdResultMediaCompressGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiJobIdResultMediaCompressGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiJobIdResultVerifyEmailGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiJobIdResultVerifyEmailGetRequest
+ */
+export interface DefaultApiApiJobIdResultVerifyEmailGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiJobIdResultVerifyEmailGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiJobIdStatusGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiJobIdStatusGetRequest
+ */
+export interface DefaultApiApiJobIdStatusGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiJobIdStatusGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiNotifReadPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiNotifReadPostRequest
+ */
+export interface DefaultApiApiNotifReadPostRequest {
+    /**
+     * 
+     * @type {Array<string>}
+     * @memberof DefaultApiApiNotifReadPost
+     */
+    readonly requestBody: Array<string>
+}
+
+/**
+ * Request parameters for apiPostsIdDelete operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsIdDeleteRequest
+ */
+export interface DefaultApiApiPostsIdDeleteRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsIdDelete
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiPostsIdGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsIdGetRequest
+ */
+export interface DefaultApiApiPostsIdGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsIdGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiPostsPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsPostRequest
+ */
+export interface DefaultApiApiPostsPostRequest {
+    /**
+     * 
+     * @type {NewPost}
+     * @memberof DefaultApiApiPostsPost
+     */
+    readonly newPost: NewPost
+}
+
+/**
+ * Request parameters for apiPostsTradeWithPostForPostPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsTradeWithPostForPostPostRequest
+ */
+export interface DefaultApiApiPostsTradeWithPostForPostPostRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsTradeWithPostForPostPost
+     */
+    readonly withPost: string
+
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsTradeWithPostForPostPost
+     */
+    readonly forPost: string
+}
+
+/**
+ * Request parameters for apiPostsTradeablesUserGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsTradeablesUserGetRequest
+ */
+export interface DefaultApiApiPostsTradeablesUserGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsTradeablesUserGet
+     */
+    readonly user: string
+}
+
+/**
+ * Request parameters for apiUsersIdGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiUsersIdGetRequest
+ */
+export interface DefaultApiApiUsersIdGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiUsersIdGet
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiUsersIdPostsGet operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiUsersIdPostsGetRequest
+ */
+export interface DefaultApiApiUsersIdPostsGetRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiUsersIdPostsGet
+     */
+    readonly id: string
+}
 
 /**
  * DefaultApi - object-oriented interface
@@ -3308,13 +3812,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {LoginData} loginData 
+     * @param {DefaultApiApiAuthLoginPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiAuthLoginPost(loginData: LoginData, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiAuthLoginPost(loginData, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthLoginPost(requestParameters: DefaultApiApiAuthLoginPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiAuthLoginPost(requestParameters.loginData, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3329,59 +3833,57 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {SignupData} signupData 
+     * @param {DefaultApiApiAuthSignupPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiAuthSignupPost(signupData: SignupData, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiAuthSignupPost(signupData, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthSignupPost(requestParameters: DefaultApiApiAuthSignupPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiAuthSignupPost(requestParameters.signupData, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {VerifyEmail} verifyEmail 
+     * @param {DefaultApiApiAuthVerifyemailPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiAuthVerifyemailPost(verifyEmail: VerifyEmail, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiAuthVerifyemailPost(verifyEmail, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthVerifyemailPost(requestParameters: DefaultApiApiAuthVerifyemailPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiAuthVerifyemailPost(requestParameters.verifyEmail, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
-     * @param {string} token 
-     * @param {string} [accept] 
+     * @param {DefaultApiApiFeedIdTokenGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFeedIdTokenGet(id: string, token: string, accept?: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFeedIdTokenGet(id, token, accept, options).then((request) => request(this.axios, this.basePath));
+    public apiFeedIdTokenGet(requestParameters: DefaultApiApiFeedIdTokenGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFeedIdTokenGet(requestParameters.id, requestParameters.token, requestParameters.accept, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} body 
+     * @param {DefaultApiApiFeedUrlPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFeedUrlPost(body: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFeedUrlPost(body, options).then((request) => request(this.axios, this.basePath));
+    public apiFeedUrlPost(requestParameters: DefaultApiApiFeedUrlPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFeedUrlPost(requestParameters.body, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} friendId 
+     * @param {DefaultApiApiFriendsFriendIdDeleteRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFriendsFriendIdDelete(friendId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFriendsFriendIdDelete(friendId, options).then((request) => request(this.axios, this.basePath));
+    public apiFriendsFriendIdDelete(requestParameters: DefaultApiApiFriendsFriendIdDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsFriendIdDelete(requestParameters.friendId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3396,46 +3898,46 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {string} friendId 
+     * @param {DefaultApiApiFriendsRequestFriendIdAcceptPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFriendsRequestFriendIdAcceptPost(friendId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdAcceptPost(friendId, options).then((request) => request(this.axios, this.basePath));
+    public apiFriendsRequestFriendIdAcceptPost(requestParameters: DefaultApiApiFriendsRequestFriendIdAcceptPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdAcceptPost(requestParameters.friendId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} friendId 
+     * @param {DefaultApiApiFriendsRequestFriendIdCancelPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFriendsRequestFriendIdCancelPost(friendId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdCancelPost(friendId, options).then((request) => request(this.axios, this.basePath));
+    public apiFriendsRequestFriendIdCancelPost(requestParameters: DefaultApiApiFriendsRequestFriendIdCancelPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdCancelPost(requestParameters.friendId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} friendId 
+     * @param {DefaultApiApiFriendsRequestFriendIdPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFriendsRequestFriendIdPost(friendId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdPost(friendId, options).then((request) => request(this.axios, this.basePath));
+    public apiFriendsRequestFriendIdPost(requestParameters: DefaultApiApiFriendsRequestFriendIdPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdPost(requestParameters.friendId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} friendId 
+     * @param {DefaultApiApiFriendsRequestFriendIdRejectPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiFriendsRequestFriendIdRejectPost(friendId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdRejectPost(friendId, options).then((request) => request(this.axios, this.basePath));
+    public apiFriendsRequestFriendIdRejectPost(requestParameters: DefaultApiApiFriendsRequestFriendIdRejectPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdRejectPost(requestParameters.friendId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3460,70 +3962,68 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsIdDeleteRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsIdDelete(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsIdDelete(requestParameters: DefaultApiApiGroupsIdDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsIdDelete(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsIdGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsIdGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsIdGet(requestParameters: DefaultApiApiGroupsIdGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsIdGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsIdPublicGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsIdPublicGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsIdPublicGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsIdPublicGet(requestParameters: DefaultApiApiGroupsIdPublicGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsIdPublicGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
-     * @param {string} userId 
+     * @param {DefaultApiApiGroupsMemberIdAddUserIdPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsMemberIdAddUserIdPost(id: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsMemberIdAddUserIdPost(id, userId, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsMemberIdAddUserIdPost(requestParameters: DefaultApiApiGroupsMemberIdAddUserIdPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsMemberIdAddUserIdPost(requestParameters.id, requestParameters.userId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
-     * @param {string} userId 
+     * @param {DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsMemberIdRemoveUserIdDelete(id: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsMemberIdRemoveUserIdDelete(id, userId, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsMemberIdRemoveUserIdDelete(requestParameters: DefaultApiApiGroupsMemberIdRemoveUserIdDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsMemberIdRemoveUserIdDelete(requestParameters.id, requestParameters.userId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {NewGroup} newGroup 
+     * @param {DefaultApiApiGroupsPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsPost(newGroup: NewGroup, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsPost(newGroup, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsPost(requestParameters: DefaultApiApiGroupsPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsPost(requestParameters.newGroup, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3538,103 +4038,101 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsRequestIdCancelPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRequestIdCancelPost(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRequestIdCancelPost(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRequestIdCancelPost(requestParameters: DefaultApiApiGroupsRequestIdCancelPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdCancelPost(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsRequestIdGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRequestIdGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRequestIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRequestIdGet(requestParameters: DefaultApiApiGroupsRequestIdGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiGroupsRequestIdPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRequestIdPost(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRequestIdPost(id, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRequestIdPost(requestParameters: DefaultApiApiGroupsRequestIdPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdPost(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
-     * @param {string} userId 
+     * @param {DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRequestIdUserIdAcceptPost(id: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRequestIdUserIdAcceptPost(id, userId, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRequestIdUserIdAcceptPost(requestParameters: DefaultApiApiGroupsRequestIdUserIdAcceptPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdUserIdAcceptPost(requestParameters.id, requestParameters.userId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
-     * @param {string} userId 
+     * @param {DefaultApiApiGroupsRequestIdUserIdRejectPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRequestIdUserIdRejectPost(id: string, userId: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRequestIdUserIdRejectPost(id, userId, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRequestIdUserIdRejectPost(requestParameters: DefaultApiApiGroupsRequestIdUserIdRejectPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdUserIdRejectPost(requestParameters.id, requestParameters.userId, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {ChangeGroupRole} changeGroupRole 
+     * @param {DefaultApiApiGroupsRolesPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRolesPost(changeGroupRole: ChangeGroupRole, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRolesPost(changeGroupRole, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRolesPost(requestParameters: DefaultApiApiGroupsRolesPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRolesPost(requestParameters.changeGroupRole, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiJobIdResultMediaCompressGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiJobIdResultMediaCompressGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiJobIdResultMediaCompressGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiJobIdResultMediaCompressGet(requestParameters: DefaultApiApiJobIdResultMediaCompressGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiJobIdResultMediaCompressGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiJobIdResultVerifyEmailGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiJobIdResultVerifyEmailGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiJobIdResultVerifyEmailGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiJobIdResultVerifyEmailGet(requestParameters: DefaultApiApiJobIdResultVerifyEmailGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiJobIdResultVerifyEmailGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiJobIdStatusGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiJobIdStatusGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiJobIdStatusGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiJobIdStatusGet(requestParameters: DefaultApiApiJobIdStatusGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiJobIdStatusGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3659,13 +4157,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {Array<string>} requestBody 
+     * @param {DefaultApiApiNotifReadPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiNotifReadPost(requestBody: Array<string>, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiNotifReadPost(requestBody, options).then((request) => request(this.axios, this.basePath));
+    public apiNotifReadPost(requestParameters: DefaultApiApiNotifReadPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiNotifReadPost(requestParameters.requestBody, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -3680,80 +4178,79 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiPostsIdDeleteRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiPostsIdDelete(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiPostsIdDelete(id, options).then((request) => request(this.axios, this.basePath));
+    public apiPostsIdDelete(requestParameters: DefaultApiApiPostsIdDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsIdDelete(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiPostsIdGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiPostsIdGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiPostsIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiPostsIdGet(requestParameters: DefaultApiApiPostsIdGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsIdGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {NewPost} newPost 
+     * @param {DefaultApiApiPostsPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiPostsPost(newPost: NewPost, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiPostsPost(newPost, options).then((request) => request(this.axios, this.basePath));
+    public apiPostsPost(requestParameters: DefaultApiApiPostsPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsPost(requestParameters.newPost, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} withPost 
-     * @param {string} forPost 
+     * @param {DefaultApiApiPostsTradeWithPostForPostPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiPostsTradeWithPostForPostPost(withPost: string, forPost: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiPostsTradeWithPostForPostPost(withPost, forPost, options).then((request) => request(this.axios, this.basePath));
+    public apiPostsTradeWithPostForPostPost(requestParameters: DefaultApiApiPostsTradeWithPostForPostPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsTradeWithPostForPostPost(requestParameters.withPost, requestParameters.forPost, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} user 
+     * @param {DefaultApiApiPostsTradeablesUserGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiPostsTradeablesUserGet(user: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiPostsTradeablesUserGet(user, options).then((request) => request(this.axios, this.basePath));
+    public apiPostsTradeablesUserGet(requestParameters: DefaultApiApiPostsTradeablesUserGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsTradeablesUserGet(requestParameters.user, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiUsersIdGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiUsersIdGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiUsersIdGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiUsersIdGet(requestParameters: DefaultApiApiUsersIdGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersIdGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
      * 
-     * @param {string} id 
+     * @param {DefaultApiApiUsersIdPostsGetRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiUsersIdPostsGet(id: string, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiUsersIdPostsGet(id, options).then((request) => request(this.axios, this.basePath));
+    public apiUsersIdPostsGet(requestParameters: DefaultApiApiUsersIdPostsGetRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersIdPostsGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

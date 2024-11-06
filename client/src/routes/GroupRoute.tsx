@@ -162,9 +162,9 @@ const GroupJoinrequestsWidget = ({
   groupId: string;
   apiGroup: ApiGroup;
 }) => {
-  const [users, setUsers, loadingGReq, errorGReq] = useApiState(
+  const [users, _setUsers, _loadingGReq, errorGReq] = useApiState(
     DApi.apiGroupsRequestIdGet,
-    [groupId],
+    { id: groupId },
   );
 
   if (!users || users.length === 0) {
@@ -252,12 +252,12 @@ export const GroupRoute = () => {
 
   const fetchGroup = async () => {
     try {
-      const response = await api.apiGroupsIdGet(groupId);
+      const response = await api.apiGroupsIdGet({ id: groupId });
       setApiGroup(response.data);
     } catch (e: any) {
       if (e?.response?.status === 401) {
         try {
-          const response = await api.apiGroupsIdPublicGet(groupId);
+          const response = await api.apiGroupsIdPublicGet({ id: groupId });
           setGroupPublic(response.data);
         } catch (e) {
           setError(handleApiErr(e));

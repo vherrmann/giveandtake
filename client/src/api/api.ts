@@ -106,12 +106,13 @@ export const Api = () => {
     };
 
     const apiMediaUploadPost = async (
-        uploadMedia: UploadMedia,
+        requestParameters: { uploadMedia: UploadMedia },
         options?: any,
     ): AxiosPromise<string> => {
-        return apiMediaUploadPostFp(uploadMedia, options).then((request) =>
-            request(undefined, basePath),
-        );
+        return apiMediaUploadPostFp(
+            requestParameters.uploadMedia,
+            options,
+        ).then((request) => request(undefined, basePath));
     };
 
     const apiMediaIdGetArgs = async (
@@ -185,10 +186,10 @@ export const Api = () => {
     };
 
     const apiMediaIdGet = async (
-        id: string,
+        requestParameters: { id: string },
         options?: any,
     ): AxiosPromise<File> => {
-        return apiMediaIdGetFp(id, options).then((request) =>
+        return apiMediaIdGetFp(requestParameters.id, options).then((request) =>
             request(undefined, basePath),
         );
     };

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Api, WithUUIDUserPublic } from "../api";
 import {
+  CardContent,
   CardHeader,
   Divider,
   IconButton,
@@ -10,29 +11,15 @@ import {
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
-import { handleApiErr } from "../utils";
+import { DApi, handleApiErr, useApiState } from "../utils";
 
 export const FriendsWidget = ({ userId }: { userId: string }) => {
-  const [friends, setFriends] = useState<WithUUIDUserPublic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
   const api = Api();
-  const fetchFriends = async () => {
-    try {
-      setLoading(true);
-      const response = await api.apiFriendsGet();
-      const friends = response.data;
-      setFriends(friends);
-    } catch (e) {
-      setError("Failed to fetch friends: " + handleApiErr(e));
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchFriends();
-  }, []);
+  const [error, setError] = useState<string | null>(null);
+  const [friends, setFriends, loadingFr, errorFr] = useApiState(
+    DApi.apiFriendsGet,
+    undefined,
+  );
 
   const handleDelete =
     (friendId: string) => async (_event: React.MouseEvent<HTMLElement>) => {
@@ -40,11 +27,10 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
         return;
       }
       try {
-        await api.apiFriendsFriendIdDelete(friendId);
-        setFriends(friends.filter(({ key }) => key !== friendId));
+        await api.apiFriendsFriendIdDelete({ friendId: friendId });
+        setFriends(friends?.filter(({ key }) => key !== friendId) ?? null);
       } catch (e) {
-        // FIXME: more detailed information
-        setError("Failed to remove friend" + handleApiErr(e));
+        setError("Failed to remove friend: " + handleApiErr(e));
       }
     };
   return (
@@ -57,31 +43,41 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
         }
       />
 
+      <Typography color="red">
+        {error}
+        {errorFr}
+      </Typography>
       <Divider />
-      {friends.length === 0 ? (
-        <Typography sx={{ margin: 1 }} align="center">
-          No friends D: Add some!
-        </Typography>
-      ) : (
-        <List>
-          {friends.map(({ key: friendId, value: friend }) => (
-            <ListUserItem
-              userId={friendId}
-              userPublic={friend}
-              key={friendId}
-              secondaryAction={
-                <IconButton
-                  edge="end"
-                  aria-label="delete"
-                  onClick={handleDelete(friendId)}
-                >
-                  <PersonRemoveIcon />
-                </IconButton>
-              }
-            />
-          ))}
-        </List>
-      )}
+      <CardContent>
+        {friends === null ? (
+          <Typography sx={{ margin: 1 }} align="center">
+            Loading...
+          </Typography>
+        ) : friends.length === 0 ? (
+          <Typography sx={{ margin: 1 }} align="center">
+            No friends D: Add some!
+          </Typography>
+        ) : (
+          <List>
+            {friends.map(({ key: friendId, value: friend }) => (
+              <ListUserItem
+                userId={friendId}
+                userPublic={friend}
+                key={friendId}
+                secondaryAction={
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={handleDelete(friendId)}
+                  >
+                    <PersonRemoveIcon />
+                  </IconButton>
+                }
+              />
+            ))}
+          </List>
+        )}
+      </CardContent>
     </StandardCard>
   );
 };
