@@ -18,6 +18,7 @@ library
       GiveAndTake.Api
       GiveAndTake.App
       GiveAndTake.DB
+      GiveAndTake.DB.TH
       GiveAndTake.DB.Types
       GiveAndTake.DB.Utils
       GiveAndTake.Email
@@ -94,6 +95,7 @@ library
     , data-default
     , directory
     , either
+    , esqueleto
     , exceptions
     , feed
     , filepath
@@ -186,6 +188,7 @@ executable giveandtake
     , data-default
     , directory
     , either
+    , esqueleto
     , exceptions
     , feed
     , filepath
@@ -280,6 +283,7 @@ executable giveandtake-cmd
     , data-default
     , directory
     , either
+    , esqueleto
     , exceptions
     , feed
     , filepath
@@ -375,6 +379,7 @@ executable giveandtake-generate-typescript
     , data-default
     , directory
     , either
+    , esqueleto
     , exceptions
     , feed
     , filepath

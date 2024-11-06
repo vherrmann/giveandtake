@@ -13,6 +13,7 @@ import DoneIcon from "@mui/icons-material/Done";
 import ClearIcon from "@mui/icons-material/Clear";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
+import { handleApiErr } from "../utils";
 
 export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
   const [friendReqs, setFriendReqs] =
@@ -58,8 +59,8 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
       await api.apiFriendsRequestFriendIdAcceptPost(friendId);
       fetchFriendRequests();
       // FIXME: update friend list
-    } catch (err) {
-      // FIXME: inform user
+    } catch (e) {
+      setError(handleApiErr(e));
     }
   };
 
@@ -67,8 +68,17 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
     try {
       await api.apiFriendsRequestFriendIdRejectPost(friendId);
       fetchFriendRequests();
-    } catch (err) {
-      // FIXME: inform user
+    } catch (e) {
+      setError(handleApiErr(e));
+    }
+  };
+
+  const cancelRequest = (friendId: string) => async () => {
+    try {
+      await api.apiFriendsRequestFriendIdCancelPost(friendId);
+      fetchFriendRequests();
+    } catch (e) {
+      setError(handleApiErr(e));
     }
   };
 
@@ -82,6 +92,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
         }
       />
 
+      <Typography color="red">{error}</Typography>
       <Divider />
       <CardContent>
         <Typography gutterBottom variant="h6" align="center">
@@ -127,7 +138,21 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
           friendReqsFrom,
           <List>
             {friendReqsFrom?.map(({ key: friendId, value: friend }) => (
-              <ListUserItem userId={friendId} userPublic={friend} />
+              <ListUserItem
+                userId={friendId}
+                userPublic={friend}
+                secondaryAction={
+                  <Box sx={{ display: "flex", gap: 1 }}>
+                    <IconButton
+                      edge="end"
+                      aria-label="cancel-request"
+                      onClick={cancelRequest(friendId)}
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  </Box>
+                }
+              />
             ))}
           </List>,
         )}

@@ -69,7 +69,7 @@ data WithKey a b = WithKey
   { key :: P.Key a
   , value :: b
   }
-  deriving stock (Generic)
+  deriving stock (Generic, Functor)
 
 instance (Show (P.Key a), Show b) => Show (WithKey a b) where
   show WithKey{..} = "WithKey {key = " <> TS.show key <> ", value = " <> TS.show value <> "}"

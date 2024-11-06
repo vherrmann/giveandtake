@@ -84,6 +84,9 @@ data UserPublic = UserPublic
 userToPublic :: DB.User -> UserPublic
 userToPublic DB.User{..} = UserPublic{name, createdAt}
 
+userEToWPublic :: Entity DB.User -> WithKey User UserPublic
+userEToWPublic ent = WithKey ent.key $ userToPublic ent.val
+
 data CheckResponse = CheckResponse
   { user :: DB.User
   , userId :: UserId
@@ -155,10 +158,16 @@ data ChangeGroupRole = ChangeGroupRole
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
+data ApiGroupMember = ApiGroupMember
+  { user :: UserPublic
+  , role :: DB.GroupRole
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
 data ApiGroup = ApiGroup
   { group :: DB.Group
-  , members :: [WithKey User UserPublic]
-  , admins :: [WithKey User UserPublic]
+  , members :: [WithKey User ApiGroupMember]
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
@@ -197,6 +206,7 @@ type FriendsApi =
           :<|> ( "request"
                   :> ( S.Get '[JSON] FriendsRequestGetResponse
                         :<|> (S.Capture "friendId" UserId :> S.Post '[JSON] ())
+                        :<|> (S.Capture "friendId" UserId :> "cancel" :> S.Post '[JSON] ())
                         :<|> (S.Capture "friendId" UserId :> "accept" :> S.Post '[JSON] ())
                         :<|> (S.Capture "friendId" UserId :> "reject" :> S.Post '[JSON] ())
                      )
@@ -236,6 +246,7 @@ type GroupsApi =
           :<|> (S.ReqBody '[JSON] NewGroup :> S.Post '[JSON] GroupId)
           :<|> ( "request"
                   :> ( S.Get '[JSON] [GroupId]
+                        :<|> (S.Capture "id" GroupId :> S.Get '[JSON] [WithKey User UserPublic])
                         :<|> (S.Capture "id" GroupId :> S.Post '[JSON] ())
                         :<|> (S.Capture "id" GroupId :> "cancel" :> S.Post '[JSON] ())
                         :<|> (S.Capture "id" GroupId :> S.Capture "userId" UserId :> "accept" :> S.Post '[JSON] ())

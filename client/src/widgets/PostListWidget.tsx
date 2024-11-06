@@ -7,8 +7,10 @@ import { Api, WithUUIDApiPost } from "../api";
 import { handleApiErr } from "../utils";
 
 export const PostList = ({
+  updateOn,
   postsFetcher,
 }: {
+  updateOn: any;
   postsFetcher: () => Promise<WithUUIDApiPost[]>;
 }) => {
   const [posts, setPosts] = useState<WithUUIDApiPost[]>([]);
@@ -31,7 +33,7 @@ export const PostList = ({
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [updateOn]);
 
   const chunkSize = 4;
   const [shownPosts, setShownPosts] = useState<WithUUIDApiPost[]>([]);

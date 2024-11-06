@@ -31,23 +31,38 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
 export interface ApiGroup {
     /**
      * 
-     * @type {Array<WithUUIDUserPublic>}
-     * @memberof ApiGroup
-     */
-    'admins': Array<WithUUIDUserPublic>;
-    /**
-     * 
      * @type {Group}
      * @memberof ApiGroup
      */
     'group': Group;
     /**
      * 
-     * @type {Array<WithUUIDUserPublic>}
+     * @type {Array<WithUUIDApiGroupMember>}
      * @memberof ApiGroup
      */
-    'members': Array<WithUUIDUserPublic>;
+    'members': Array<WithUUIDApiGroupMember>;
 }
+/**
+ * 
+ * @export
+ * @interface ApiGroupMember
+ */
+export interface ApiGroupMember {
+    /**
+     * 
+     * @type {GroupRole}
+     * @memberof ApiGroupMember
+     */
+    'role': GroupRole;
+    /**
+     * 
+     * @type {UserPublic}
+     * @memberof ApiGroupMember
+     */
+    'user': UserPublic;
+}
+
+
 /**
  * @type ApiPost
  * @export
@@ -712,6 +727,25 @@ export interface VerifyEmail {
 /**
  * 
  * @export
+ * @interface WithUUIDApiGroupMember
+ */
+export interface WithUUIDApiGroupMember {
+    /**
+     * 
+     * @type {string}
+     * @memberof WithUUIDApiGroupMember
+     */
+    'key': string;
+    /**
+     * 
+     * @type {ApiGroupMember}
+     * @memberof WithUUIDApiGroupMember
+     */
+    'value': ApiGroupMember;
+}
+/**
+ * 
+ * @export
  * @interface WithUUIDApiPost
  */
 export interface WithUUIDApiPost {
@@ -1172,6 +1206,43 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiFriendsRequestFriendIdCancelPost: async (friendId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'friendId' is not null or undefined
+            assertParamExists('apiFriendsRequestFriendIdCancelPost', 'friendId', friendId)
+            const localVarPath = `/api/friends/request/{friendId}/cancel`
+                .replace(`{${"friendId"}}`, encodeURIComponent(String(friendId)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} friendId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiFriendsRequestFriendIdPost: async (friendId: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'friendId' is not null or undefined
             assertParamExists('apiFriendsRequestFriendIdPost', 'friendId', friendId)
@@ -1590,6 +1661,43 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             }
 
             const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGroupsRequestIdGet: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiGroupsRequestIdGet', 'id', id)
+            const localVarPath = `/api/groups/request/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -2415,6 +2523,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        async apiFriendsRequestFriendIdCancelPost(friendId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiFriendsRequestFriendIdCancelPost(friendId, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiFriendsRequestFriendIdCancelPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} friendId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         async apiFriendsRequestFriendIdPost(friendId: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiFriendsRequestFriendIdPost(friendId, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
@@ -2550,6 +2670,18 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarAxiosArgs = await localVarAxiosParamCreator.apiGroupsRequestIdCancelPost(id, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiGroupsRequestIdCancelPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiGroupsRequestIdGet(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<WithUUIDUserPublic>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGroupsRequestIdGet(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiGroupsRequestIdGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2873,6 +3005,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
+        apiFriendsRequestFriendIdCancelPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
+            return localVarFp.apiFriendsRequestFriendIdCancelPost(friendId, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} friendId 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
         apiFriendsRequestFriendIdPost(friendId: string, options?: any): AxiosPromise<Array<any>> {
             return localVarFp.apiFriendsRequestFriendIdPost(friendId, options).then((request) => request(axios, basePath));
         },
@@ -2973,6 +3114,15 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
          */
         apiGroupsRequestIdCancelPost(id: string, options?: any): AxiosPromise<Array<any>> {
             return localVarFp.apiGroupsRequestIdCancelPost(id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiGroupsRequestIdGet(id: string, options?: any): AxiosPromise<Array<WithUUIDUserPublic>> {
+            return localVarFp.apiGroupsRequestIdGet(id, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3262,6 +3412,17 @@ export class DefaultApi extends BaseAPI {
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
+    public apiFriendsRequestFriendIdCancelPost(friendId: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdCancelPost(friendId, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} friendId 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
     public apiFriendsRequestFriendIdPost(friendId: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiFriendsRequestFriendIdPost(friendId, options).then((request) => request(this.axios, this.basePath));
     }
@@ -3384,6 +3545,17 @@ export class DefaultApi extends BaseAPI {
      */
     public apiGroupsRequestIdCancelPost(id: string, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiGroupsRequestIdCancelPost(id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {string} id 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiGroupsRequestIdGet(id: string, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRequestIdGet(id, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**

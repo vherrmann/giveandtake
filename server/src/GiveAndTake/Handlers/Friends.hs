@@ -59,6 +59,13 @@ postFriendRequest userId friendId = do
   ct <- getUTCTime
   runDB $ P.insert_ FriendRequest{from = userId, to = friendId, createdAt = ct}
 
+-- TODO: notify friend?
+cancelFriendRequest :: UserId -> UserId -> RHandler m ()
+cancelFriendRequest userId friendId = do
+  frExp <- runDB $ P.existsBy (UniqueFriendRequest userId friendId)
+  unless frExp $ throwError S.err409{errBody = "Friendship request does not exist."}
+  runDB $ P.deleteBy $ UniqueFriendRequest userId friendId
+
 -- TODO: notify friend
 acceptFriendRequest :: (HasHandler m) => UserId -> UserId -> m ()
 acceptFriendRequest userId friendId = do
@@ -82,5 +89,6 @@ friendsHandler userEnt =
         :<|> deleteFriendsH userId
         :<|> getFriendRequests userId
         :<|> postFriendRequest userId
+        :<|> cancelFriendRequest userId
         :<|> acceptFriendRequest userId
         :<|> rejectFriendRequest userId

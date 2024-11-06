@@ -1,6 +1,7 @@
 module GiveAndTake.Handlers.Groups where
 
 import Data.Text qualified as T
+import Database.Esqueleto.Experimental qualified as E
 import Database.Persist ((=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.Api
@@ -24,7 +25,8 @@ groupsHandler userEnt =
     :<|> groupsMemberH
  where
   groupsJoinReqH =
-    getGroupJoinReqH userEnt
+    getUserGroupJoinReqH userEnt
+      :<|> getGroupJoinReqH userEnt
       :<|> createGroupJoinReqH userEnt
       :<|> cancelGroupJoinReqH userEnt
       :<|> acceptGroupJoinReqH userEnt
@@ -74,6 +76,20 @@ changeRoleH userEnt (ChangeGroupRole{group, user = changedUser, role = newRole})
       ]
       [GroupMemberRole =. newRole]
 
+getGroupJoinReqH :: Entity User -> GroupId -> RHandler m [WithKey User UserPublic]
+getGroupJoinReqH userEnt groupId = do
+  checkIsGroupMember userEnt.key groupId
+  checkIsGroupAdmin userEnt.key groupId
+  users <- runDB $ E.select $ do
+    (req E.:& user) <-
+      E.from $
+        E.table @GroupJoinRequest
+          `E.innerJoin` E.table @User
+          `E.on` \(req E.:& user) -> req E.^. #from E.==. user E.^. UserId
+    E.where_ (req E.^. #to E.==. E.val groupId)
+    pure user
+  pure $ fmap userEToWPublic users
+
 rejectGroupJoinReqH :: Entity User -> GroupId -> UserId -> RHandler m ()
 rejectGroupJoinReqH userEnt groupId requestingUserId = do
   checkIsGroupMember userEnt.key groupId
@@ -121,8 +137,8 @@ createGroupJoinReqH userEnt groupId = do
         , createdAt = ct
         }
 
-getGroupJoinReqH :: Entity User -> RHandler m [GroupId]
-getGroupJoinReqH userEnt = do
+getUserGroupJoinReqH :: Entity User -> RHandler m [GroupId]
+getUserGroupJoinReqH userEnt = do
   groups <- runDB $ P.selectList [GroupJoinRequestFrom ==. userEnt.key] []
   pure $ (.val.to) <$> groups
 
@@ -157,32 +173,29 @@ deleteGroupH userEnt groupId = do
   checkIsGroupOwner userEnt.key groupId
   runDB $ P.delete groupId
 
--- getGroupH :: Entity User -> GroupId -> RHandler m ApiGroup
--- getGroupH userEnt groupId = do
---   group <- getByKeySE @Group groupId
---   checkIsGroupMember userEnt.key groupId
---   groupMemberEnts <- runDB $ P.selectList [GroupMemberGroup ==. groupId] []
---   runDB $ E.select $ do
---     (groupMember E.:& user) <-
---       E.from $
---         ( E.table @GroupMember
---             `E.innerJoin` E.table @User
---             `E.on` ( \(groupMember E.:& user) ->
---                       groupMember E.^. GroupMemberUser E.==. user E.^. UserId
---                    )
---         )
---     E.where_ (groupMember E.^. GroupMemberGroup E.==. E.val groupId)
---     pure (groupMember, user)
+getGroupH :: Entity User -> GroupId -> RHandler m ApiGroup
+getGroupH userEnt groupId = do
+  checkIsGroupMember userEnt.key groupId
+  group <- getByKeySE @Group groupId
+  membersDB <- runDB $ E.select $ do
+    (groupMember E.:& user) <-
+      E.from $
+        E.table @GroupMember
+          `E.innerJoin` E.table @User
+          `E.on` \(groupMember E.:& user) -> groupMember E.^. #user E.==. user E.^. UserId
+    E.where_ (groupMember E.^. #group E.==. E.val groupId)
+    pure (groupMember, user)
 
---   runDB $
---     E.select $
---       do
---         groupMember <- E.from $ E.table @GroupMember
---         E.where_ (groupMember E.^. GroupMemberGroup E.==. E.val groupId)
---         pure groupMember
-
---   pure todo
-getGroupH = todo
+  let members =
+        membersDB
+          <&> \(groupMember, user) ->
+            WithKey
+              user.key
+              ApiGroupMember
+                { user = userToPublic user.val
+                , role = groupMember.val.role
+                }
+  pure ApiGroup{group, members}
 
 getGroupPublicH :: GroupId -> RHandler m GroupPublic
 getGroupPublicH groupId = do

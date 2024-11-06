@@ -36,6 +36,7 @@ dependencies:
   - warp
   - persistent
   - persistent-postgresql
+  - esqueleto
   - resource-pool
   - path-pieces
   - resourcet
@@ -62,7 +63,6 @@ dependencies:
   # - row-types
   # - row-types-aeson
   # - generic-lens
-  - lens
   # - odd-jobs
 
 library:

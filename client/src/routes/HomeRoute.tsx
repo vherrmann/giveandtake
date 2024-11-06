@@ -7,6 +7,7 @@ export const HomeRoute = () => {
   return (
     <Stack spacing={2} alignItems="center">
       <PostList
+        updateOn={null}
         postsFetcher={async () =>
           // FIXME: add error handling
           (await api.apiPostsFeedGet()).data

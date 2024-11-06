@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# OPTIONS_GHC -Wno-redundant-constraints #-}
 
 module Main where
 
@@ -150,6 +151,7 @@ instance ToSchema NewGroup
 instance ToSchema GroupPublic
 instance ToSchema DB.GroupRole
 instance ToSchema ChangeGroupRole
+instance ToSchema ApiGroupMember
 instance ToSchema ApiGroup
 
 main :: IO ()

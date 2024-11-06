@@ -22,7 +22,6 @@ export const GroupsWidget = ({ userId }: { userId: string }) => {
   const [groups, setGroups] = useState<WithUUIDUserPublic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const location = useLocation();
 
   const api = Api();
   const fetchGroups = async () => {
