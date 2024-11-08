@@ -19,6 +19,7 @@ import QrCodeIcon from "@mui/icons-material/QrCode";
 import { FeedWidget } from "./FeedIconWidget";
 import { NotificationPopup } from "./NotificationPopup";
 import { AvatarMenu } from "./AvatarMenu";
+
 import logo from "../assets/logo.png";
 import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { QRCodeSVG } from "qrcode.react";
@@ -63,7 +64,7 @@ export const AppBarWidget = () => {
   };
 
   return (
-    <AppBar color="primary" style={{ zIndex: 1000 }}>
+    <AppBar color="primary" style={{ zIndex: 1000, position: "sticky" }}>
       <Toolbar>
         <LinkWidget to={"/"}>
           <img src={logo} alt="Logo" style={{ height: 40, marginRight: 16 }} />

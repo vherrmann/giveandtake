@@ -1,7 +1,6 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
 import { useAuthState } from "../providers/auth";
-import { useLocation } from "react-router";
-import * as router from "react-router";
+import { Location, useLocation } from "react-router";
 
 import { Api } from "../api";
 import { useEffect, useState } from "react";
@@ -15,7 +14,7 @@ export const FeedWidget = () => {
   const location = useLocation();
   const api = Api();
 
-  const locToFUrl = (location: router.Location<any>) => {
+  const locToFUrl = (location: Location<any>) => {
     if (location.pathname === "/") {
       return api.apiFeedUrlPost({ body: "MainFeed" });
     } else {

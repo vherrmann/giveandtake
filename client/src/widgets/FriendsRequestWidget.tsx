@@ -87,7 +87,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
       <CardHeader
         title={
           <Typography gutterBottom variant="h5" align="center">
-            Friendrequests
+            Friend requests
           </Typography>
         }
       />

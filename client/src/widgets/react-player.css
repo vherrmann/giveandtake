@@ -1,0 +1,9 @@
+/* https://stackoverflow.com/questions/26979003/space-after-html5s-video-tag */
+.ReactPlayer {
+    video {
+        display: block;
+        object-fit: scale-down;
+        max-width: 100%;
+        max-height: 100%;
+    }
+}

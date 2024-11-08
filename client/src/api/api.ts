@@ -182,7 +182,6 @@ export const Api = () => {
                 autob.BASE_PATH,
                 configuration,
             )(axios, localVarOperationServerBasePath || basePath);
-        // FIXME: convert to File
     };
 
     const apiMediaIdGet = async (

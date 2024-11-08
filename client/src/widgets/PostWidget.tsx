@@ -4,7 +4,6 @@ import {
   CardActions,
   CardContent,
   CardHeader,
-  CardMedia,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -16,7 +15,6 @@ import {
   MenuItem,
   Tooltip,
   Typography,
-  useTheme,
   Popover,
 } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -26,114 +24,27 @@ import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpen from "@mui/icons-material/LockOpen";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Markdown from "react-markdown";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Keyboard } from "swiper/modules";
-import "swiper/css";
-import "swiper/css/navigation";
-import "swiper/css/pagination";
-
-import "./swiper.css";
-import ReactPlayer from "react-player";
-import LightGallery from "lightgallery/react";
-import lgZoom from "lightgallery/plugins/zoom";
 
 // import styles
-import "lightgallery/css/lightgallery.css";
-import "lightgallery/css/lg-zoom.css";
 import { formatDate, handleApiErr } from "../utils";
 import PopupState, {
   bindTrigger,
   bindMenu,
   bindPopover,
 } from "material-ui-popup-state";
-import {
-  Api,
-  ApiPost,
-  LockedHiddenPostData,
-  Post,
-  UnhiddenPostData,
-  User,
-  WithUUIDPost,
-} from "../api";
+import { Api, ApiPost, LockedHiddenPostData, Post, WithUUIDPost } from "../api";
 import { ShareMenu } from "./ShareMenuWidget";
 import { AvatarWidget } from "./AvatarWidget";
 import { useAuthedState } from "../ProtectedRoute";
 import { Link, useLocation } from "react-router-dom";
 import { LinkWidget } from "./LinkWidget";
+import { MediaPostWidget } from "./MediaPostWidget";
 
 export interface PostActions {
   deletePost: (postId: string | null) => Promise<void>;
 }
-
-const MediaPostWidget = ({ files }: { files: (File | null)[] }) => {
-  const theme = useTheme();
-  const paginationRef = useRef<HTMLDivElement>(null);
-
-  return (
-    <CardMedia
-      sx={{
-        ["--swiper-theme-color" as any]: theme.palette.primary.main,
-      }}
-    >
-      <Swiper
-        spaceBetween={10}
-        navigation={true}
-        pagination={{
-          clickable: true,
-          el: paginationRef.current,
-          // type: "progressbar",
-        }}
-        keyboard={{ enabled: true }}
-        modules={[Navigation, Pagination, Keyboard]}
-        style={{
-          aspectRatio: 1, //square
-        }}
-      >
-        {files.map((file) => {
-          if (!file) {
-            return "Loading...";
-          }
-          return (
-            <SwiperSlide key={file.name}>
-              {(() => {
-                const fileType = file.type; // Get the MIME type
-                if (fileType.startsWith("image/")) {
-                  return (
-                    <LightGallery plugins={[lgZoom]}>
-                      <img src={URL.createObjectURL(file)} />
-                    </LightGallery>
-                  );
-                } else if (fileType.startsWith("video/")) {
-                  return (
-                    <ReactPlayer
-                      url={URL.createObjectURL(file)}
-                      controls
-                      width="100%"
-                      height="100%"
-                    />
-                  );
-                } else {
-                  console.log("This is neither an image nor a video."); // FIXME: throw error, remove from list (remove at addition)
-                }
-              })()}
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
-      <Box
-        ref={paginationRef}
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          marginTop: "4px",
-        }}
-      ></Box>
-    </CardMedia>
-  );
-};
 
 const PostLikeCard = ({ children }: { children: ReactNode }) => {
   return (
@@ -193,36 +104,7 @@ const ViewablePostWidget = ({
   unlockedWithPost?: WithUUIDPost;
   usedToUnlock?: WithUUIDPost[];
 }) => {
-  const [files, setFiles] = useState<(File | null)[]>(
-    post.media.map((_: string) => null),
-  );
-  const api = Api();
   const { userId } = useAuthedState();
-
-  const [error, setError] = useState<string>("");
-
-  const fetchFiles = async () => {
-    try {
-      const responses = await Promise.all(
-        post.media.map(async (fileId: string) => {
-          try {
-            const file = api.apiMediaIdGet({ id: fileId });
-            return file;
-          } catch (err) {
-            // FIXME: add error handling
-            return null;
-          }
-        }),
-      );
-      setFiles(responses.map((response) => response?.data ?? null));
-    } catch (err) {
-      setError("Failed to fetch posts");
-    }
-  };
-
-  useEffect(() => {
-    fetchFiles();
-  }, [post.media]);
 
   // TODO: add endpoint
   /* const fetchUser = async () => {
@@ -265,7 +147,7 @@ const ViewablePostWidget = ({
       }
       content={
         <>
-          {files.length != 0 && <MediaPostWidget files={files} />}
+          <MediaPostWidget fileIds={post.media} />
           <CardContent sx={{ pl: 2, pr: 2, pt: 0, pb: 0 }}>
             {unlockedWithPost && (
               <Typography variant="body2" sx={{ color: "text.secondary" }}>

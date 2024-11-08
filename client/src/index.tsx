@@ -23,7 +23,6 @@ import CssBaseline from "@mui/material/CssBaseline/CssBaseline";
 import UserRoute from "./routes/UserRoute";
 import CommunityRoute from "./routes/CommunityRoute";
 import HomeRoute from "./routes/HomeRoute";
-import { HardRedirect } from "./utils";
 import { SettingsRoute } from "./routes/SettingsRoute";
 import NewGroupRoute from "./routes/NewGroupRoute";
 import GroupRoute from "./routes/GroupRoute";
