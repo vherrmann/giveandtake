@@ -2,6 +2,8 @@ import { format } from "date-fns";
 import { useEffect, useState } from "react";
 import { Api, User, UserPublic } from "./api";
 import { AxiosPromise } from "axios";
+import { Typography } from "@mui/material";
+import { useDeepCompareEffectNoCheck } from "use-deep-compare-effect";
 
 export type Nullable<T> = T | null | undefined;
 
@@ -53,7 +55,7 @@ export function useLocalStorage<T>(
   });
 
   // Update localStorage whenever state changes
-  useEffect(() => {
+  useDeepCompareEffectNoCheck(() => {
     try {
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
@@ -125,14 +127,14 @@ export const handleApiErr = (error: any): string => {
 export const withApi = async (
   fn: (api: ReturnType<typeof Api>) => Promise<void>,
   setError: React.Dispatch<React.SetStateAction<string | null>>,
-  errorHandler?: (e: any) => void,
+  onError?: (e: any) => void,
 ) => {
   try {
     await fn(Api());
   } catch (e) {
     try {
-      if (errorHandler) {
-        errorHandler(e);
+      if (onError) {
+        onError(e);
       } else {
         setError(handleApiErr(e));
       }
@@ -144,17 +146,81 @@ export const withApi = async (
 
 type AxiosPromiseType<T extends AxiosPromise<any>> =
   T extends AxiosPromise<infer U> ? U : never;
+type PromiseType<T extends Promise<any>> =
+  T extends AxiosPromise<infer U> ? U : never;
 
 type ApiType = ReturnType<typeof Api>;
 type ApiMethod = keyof ReturnType<typeof Api>;
 type ApiReturnType<T> = AxiosPromiseType<ReturnType<ApiType[T & ApiMethod]>>;
 
-type ApiStateFnRet<T> = [
-  ApiReturnType<T> | null,
-  React.Dispatch<React.SetStateAction<ApiReturnType<T> | null>>,
-  boolean,
-  string | null,
-];
+type ApiOnSuccess<T> = (
+  response: PromiseType<ReturnType<ApiType[T & ApiMethod]>>,
+) => void;
+
+type ApiCB<T> =
+  EndpointToReqParam<T> extends undefined
+    ? (
+        requestParameters?: EndpointToReqParam<T>,
+        options?: EndpointToOptions<T>,
+        onSuccess?: ApiOnSuccess<T>,
+        onError?: (e: any) => void,
+      ) => void
+    : (
+        requestParameters: EndpointToReqParam<T>,
+        options?: EndpointToOptions<T>,
+        onSuccess?: ApiOnSuccess<T>,
+        onError?: (e: any) => void,
+      ) => void;
+
+type ApiFnRet<T> = [ApiCB<T>, boolean, string | null];
+
+type ApiFn<OneOfPossibleOptions> = <const T extends OneOfPossibleOptions>(
+  method: T,
+  onSuccess?: ApiOnSuccess<T>,
+) => ApiFnRet<T>;
+
+export const useApi: IntersectionToRenderedIntersection<
+  ApiFn<ApiMethod>,
+  ApiMethod
+> = <T extends ApiMethod>(method: T, onSuccess?: ApiOnSuccess<T>) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fnOnSuccess = onSuccess;
+
+  const sendReq: ApiCB<T> = async (
+    requestParameters: EndpointToReqParam<T> | undefined,
+    options?: EndpointToOptions<T>,
+    onSuccess?: ApiOnSuccess<T>,
+    onError?: (e: any) => void,
+  ) => {
+    setLoading(true);
+    setError(null);
+    await withApi(
+      async (api) => {
+        if (requestParameters !== undefined) {
+          const response = await (api[method] as any)(
+            requestParameters,
+            options,
+          );
+          fnOnSuccess && fnOnSuccess(response);
+          onSuccess && onSuccess(response);
+        } else {
+          const response = await (api[method] as any)(options);
+          fnOnSuccess && fnOnSuccess(response);
+          onSuccess && onSuccess(response);
+        }
+      },
+      setError,
+      onError,
+    );
+    setLoading(false);
+  };
+
+  const res: ApiFnRet<T> = [sendReq, loading, error];
+
+  return res;
+};
 
 type EndpointToReqParam<T> =
   Parameters<ApiType[T & ApiMethod]> extends [
@@ -174,63 +240,71 @@ type EndpointToOptions<T> =
       ? R
       : undefined;
 
-// https://github.com/microsoft/TypeScript/issues/27808
-// Here you define how your function overload will look
-type ApiStateFn<OneOfPossibleOptions> = <const T extends OneOfPossibleOptions>(
-  method: T,
-  requestParameters: EndpointToReqParam<T>,
-  options?: EndpointToOptions<T>,
-  extraDeps?: any[],
-  errorHandler?: (e: any) => void,
-) => ApiStateFnRet<T>;
-
-type IntersectionToRenderedIntersection<U> = (
-  U extends any ? (_: ApiStateFn<U>) => void : never
+type IntersectionToRenderedIntersection<T, U> = (
+  U extends any ? (_: T) => void : never
 ) extends (_: infer I) => void
   ? I
   : never;
 
-export const useApiState: IntersectionToRenderedIntersection<ApiMethod> = <
-  T extends ApiMethod,
->(
+type ApiStateFnRet<T> = [
+  ApiReturnType<T> | null,
+  string | null,
+  { loading: boolean; refetch: () => void },
+];
+
+// https://github.com/microsoft/TypeScript/issues/27808
+// Here you define how your function overload will look
+type ApiStateFn<OneOfPossibleOptions> =
+  EndpointToReqParam<OneOfPossibleOptions> extends undefined
+    ? <const T extends OneOfPossibleOptions>(
+        method: T,
+        requestParameters?: EndpointToReqParam<T>,
+        options?: EndpointToOptions<T>,
+        extraDeps?: any[],
+        onError?: (e: any) => void,
+      ) => ApiStateFnRet<T>
+    : <const T extends OneOfPossibleOptions>(
+        method: T,
+        requestParameters: EndpointToReqParam<T>,
+        options?: EndpointToOptions<T>,
+        extraDeps?: any[],
+        onError?: (e: any) => void,
+      ) => ApiStateFnRet<T>;
+
+export const useApiState: IntersectionToRenderedIntersection<
+  ApiStateFn<ApiMethod>,
+  ApiMethod
+> = <T extends ApiMethod>(
   method: T,
-  requestParameters: EndpointToReqParam<T>,
+  requestParameters: EndpointToReqParam<T> | undefined,
   options?: EndpointToOptions<T>,
   extraDeps?: any[],
-  errorHandler?: (e: any) => void,
+  onSuccess?: ApiOnSuccess<T>,
+  onError?: (e: any) => void,
 ) => {
-  type Data = AxiosPromiseType<ReturnType<ApiType[T]>>;
+  type Data = ApiReturnType<T>;
   const [data, setData] = useState<Data | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [cb, loading, error] = useApi<T>(method);
 
-  const fetchData = async () => {
-    setLoading(true);
-    setError(null);
-    await withApi(
-      async (api) => {
-        if (requestParameters) {
-          const response = await (api[method] as any)(
-            requestParameters,
-            options,
-          );
-          setData(response.data);
-        } else {
-          const response = await (api[method] as any)(options);
-          setData(response.data);
-        }
+  const sendReq: () => void = () => {
+    cb(
+      // requestParameters can only be undefined, if EndpointToReqParam<T> extends undefined
+      requestParameters as EndpointToReqParam<T>,
+      options,
+      (response) => {
+        setData(response.data);
+        onSuccess && onSuccess(response);
       },
-      setError,
-      errorHandler,
+      onError,
     );
-    setLoading(false);
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [requestParameters, ...(extraDeps || [])]);
+  useDeepCompareEffectNoCheck(sendReq, [
+    requestParameters,
+    ...(extraDeps || []),
+  ]);
 
-  const res: ApiStateFnRet<T> = [data, setData, loading, error];
+  const res: ApiStateFnRet<T> = [data, error, { loading, refetch: sendReq }];
 
   return res;
 };
@@ -246,3 +320,19 @@ const globalApi = Api();
 export const DApi: Endpoints = Object.fromEntries(
   Object.keys(globalApi).map((endpoint) => [endpoint, endpoint]),
 );
+
+export const ErrorWidget = ({
+  errors,
+}: {
+  errors: (string | null | undefined)[];
+}) => {
+  return errors.map((error, i) => {
+    if (error) {
+      return (
+        <Typography key={i} color="red">
+          {error}
+        </Typography>
+      );
+    }
+  });
+};

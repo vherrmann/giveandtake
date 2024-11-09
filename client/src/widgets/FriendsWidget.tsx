@@ -11,28 +11,16 @@ import {
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
-import { DApi, handleApiErr, useApiState } from "../utils";
+import { DApi, ErrorWidget, handleApiErr, useApi, useApiState } from "../utils";
 
 export const FriendsWidget = ({ userId }: { userId: string }) => {
-  const api = Api();
-  const [error, setError] = useState<string | null>(null);
-  const [friends, setFriends, loadingFr, errorFr] = useApiState(
-    DApi.apiFriendsGet,
-    undefined,
+  const [friends, errorFr, { refetch }] = useApiState(DApi.apiFriendsGet);
+
+  const [deleteFriend, _loadingDFr, errorDFr] = useApi(
+    DApi.apiFriendsFriendIdDelete,
+    refetch,
   );
 
-  const handleDelete =
-    (friendId: string) => async (_event: React.MouseEvent<HTMLElement>) => {
-      if (!friendId) {
-        return;
-      }
-      try {
-        await api.apiFriendsFriendIdDelete({ friendId: friendId });
-        setFriends(friends?.filter(({ key }) => key !== friendId) ?? null);
-      } catch (e) {
-        setError("Failed to remove friend: " + handleApiErr(e));
-      }
-    };
   return (
     <StandardCard>
       <CardHeader
@@ -43,10 +31,7 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
         }
       />
 
-      <Typography color="red">
-        {error}
-        {errorFr}
-      </Typography>
+      <ErrorWidget errors={[errorFr, errorDFr]} />
       <Divider />
       <CardContent>
         {friends === null ? (
@@ -68,7 +53,7 @@ export const FriendsWidget = ({ userId }: { userId: string }) => {
                   <IconButton
                     edge="end"
                     aria-label="delete"
-                    onClick={handleDelete(friendId)}
+                    onClick={() => deleteFriend({ friendId })}
                   >
                     <PersonRemoveIcon />
                   </IconButton>

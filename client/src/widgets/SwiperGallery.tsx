@@ -252,6 +252,7 @@ export const SwiperGallery = ({
               initialSlide={curSlide.current}
               onClick={(s, event) => {
                 // close modal on click outside of media
+                // FIXME: use https://mui.com/base-ui/react-click-away-listener/ instead
                 const target = event.target as HTMLElement | null;
                 const mediaEls = ["VIDEO", "IMG", "PICTURE", "CANVAS", "AUDIO"];
                 if (target && !mediaEls.includes(target.tagName)) {

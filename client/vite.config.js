@@ -10,7 +10,17 @@ export default defineConfig({
     checker({
       typescript: true,
     }),
-    eslint(),
+    {
+      // fail on warning in build
+      ...eslint({
+        failOnWarning: true,
+      }),
+      apply: "build",
+    },
+    {
+      ...eslint(),
+      apply: "serve",
+    },
   ],
   // test: {
   //   globals: true,
