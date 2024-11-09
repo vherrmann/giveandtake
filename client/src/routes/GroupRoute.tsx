@@ -1,32 +1,64 @@
 import {
   Avatar,
+  Box,
   CardContent,
   CardHeader,
   Chip,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   Divider,
   IconButton,
   List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  Menu,
+  MenuItem,
   Stack,
   Typography,
 } from "@mui/material";
 import {
   Api,
   ApiGroup,
+  ApiGroupMember,
   Group,
   GroupPublic,
+  GroupRole,
   UserPublic,
   WithUUIDApiGroupMember,
   WithUUIDUserPublic,
 } from "../api";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
+import DoneIcon from "@mui/icons-material/Done";
+import ClearIcon from "@mui/icons-material/Clear";
+import AddIcon from "@mui/icons-material/Add";
 import { useParams } from "react-router";
 import { useEffect, useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { DApi, formatDate, handleApiErr, useApiState } from "../utils";
+import {
+  DApi,
+  ErrorWidget,
+  formatDate,
+  getUserRole,
+  groupHierarchy,
+  handleApiErr,
+  lesserGroupRoles,
+  useApi,
+  useApiState,
+  user1IsHigher,
+} from "../utils";
 import { LinkWidget } from "../widgets/LinkWidget";
 import { StandardCard } from "../widgets/StandardCard";
 import { ListUserItem } from "../widgets/ListUserItem";
 import { useAuthedState } from "../ProtectedRoute";
+import PopupState, {
+  bindDialog,
+  bindMenu,
+  bindTrigger,
+} from "material-ui-popup-state";
+import { useConfirm } from "material-ui-confirm";
 
 const GroupInfoWidget = ({
   groupId,
@@ -75,44 +107,19 @@ const GroupPublicInfoWidget = ({
   groupId: string;
   groupPublic: GroupPublic;
 }) => {
-  const api = Api();
+  const [groupJoinReqs, errorGReq, { refetch }] = useApiState(
+    DApi.apiGroupsRequestGet,
+  );
+  const joinReqEx = groupJoinReqs?.find((id) => id === groupId);
 
-  const [friendReqExists, setFriendReqExists] = useState<boolean | null>(null);
-
-  /* const fetchFriendReqExists = async () => {
-*   try {
-*     const response = await api.apiFriendsRequestGet();
-*     const friendRequests = response.data;
-*     setFriendReqExists(
-*       friendRequests.requestsFromYou.some(
-*         ({ key: friendId }) => friendId === userId,
-*       ),
-*     );
-*   } catch (e) {
-*     setError(handleApiErr(e));
-*   }
-* };
-
-* const handleCancelJoinRequest = async (
-*   _event: React.MouseEvent<HTMLElement>,
-* ) => {
-*   try {
-*     await api.apiFriendsFriendIdDelete(userId);
-*   } catch (e) {
-*     setError(handleApiErr(e));
-*   }
-* };
-
-* const handleCreateJoinRequest = async (
-*   _event: React.MouseEvent<HTMLElement>,
-* ) => {
-*   try {
-*     await api.apiFriendsRequestFriendIdPost(userId);
-*     setJoinReqExists(true);
-*   } catch (e) {
-*     setError(handleApiErr(e));
-*   }
-* }; */
+  const [cancelJoinReq, _loadingRJReq, errorRJReq] = useApi(
+    DApi.apiGroupsRequestIdCancelPost,
+    refetch,
+  );
+  const [postJoinReq, _loadingPJReq, errorPJReq] = useApi(
+    DApi.apiGroupsRequestIdPost,
+    refetch,
+  );
 
   return (
     <StandardCard>
@@ -126,9 +133,21 @@ const GroupPublicInfoWidget = ({
           </Avatar>
         }
         action={
-          <IconButton aria-label="groupJoinRequest">
-            <GroupAddIcon />
-          </IconButton>
+          joinReqEx ? (
+            <IconButton
+              onClick={() => cancelJoinReq({ id: groupId })}
+              aria-label="groupCancelRequest"
+            >
+              <GroupRemoveIcon />
+            </IconButton>
+          ) : (
+            <IconButton
+              onClick={() => postJoinReq({ id: groupId })}
+              aria-label="groupPostRequest"
+            >
+              <GroupAddIcon />
+            </IconButton>
+          )
         }
         title={
           <LinkWidget
@@ -140,6 +159,7 @@ const GroupPublicInfoWidget = ({
         }
         subheader={"Created on " + formatDate(groupPublic.createdAt)}
       />
+      <ErrorWidget errors={[errorGReq, errorPJReq, errorRJReq]} />
     </StandardCard>
   );
 };
@@ -162,9 +182,18 @@ const GroupJoinrequestsWidget = ({
   groupId: string;
   apiGroup: ApiGroup;
 }) => {
-  const [users, _setUsers, _loadingGReq, errorGReq] = useApiState(
+  const [users, errorGReq, { refetch }] = useApiState(
     DApi.apiGroupsRequestIdGet,
     { id: groupId },
+  );
+
+  const [acceptJoinReq, _loadingAJReq, errorAJReq] = useApi(
+    DApi.apiGroupsRequestIdUserIdAcceptPost,
+    refetch,
+  );
+  const [rejectJoinReq, _loadingRJReq, errorRJReq] = useApi(
+    DApi.apiGroupsRequestIdUserIdRejectPost,
+    refetch,
   );
 
   if (!users || users.length === 0) {
@@ -180,7 +209,7 @@ const GroupJoinrequestsWidget = ({
           </Typography>
         }
       />
-      <Typography color="red">{errorGReq}</Typography>
+      <ErrorWidget errors={[errorGReq, errorAJReq, errorRJReq]} />
       <Divider />
       <CardContent>
         <List>
@@ -189,7 +218,28 @@ const GroupJoinrequestsWidget = ({
               key={userW.key}
               userId={userW.key}
               userPublic={userW.value}
-              secondaryAction={null}
+              secondaryAction={
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <IconButton
+                    edge="end"
+                    aria-label="accept-request"
+                    onClick={() =>
+                      acceptJoinReq({ id: groupId, userId: userW.key })
+                    }
+                  >
+                    <DoneIcon />
+                  </IconButton>
+                  <IconButton
+                    edge="end"
+                    aria-label="reject-request"
+                    onClick={() =>
+                      rejectJoinReq({ id: groupId, userId: userW.key })
+                    }
+                  >
+                    <ClearIcon />
+                  </IconButton>
+                </Box>
+              }
             />
           ))}
         </List>
@@ -198,12 +248,133 @@ const GroupJoinrequestsWidget = ({
   );
 };
 
-const GroupMemberList = ({ apiGroup }: { apiGroup: ApiGroup | null }) => {
+const GroupMemberList = ({
+  groupId,
+  apiGroup,
+}: {
+  groupId: string;
+  apiGroup: ApiGroup | null;
+}) => {
+  const { userId: myUserId } = useAuthedState();
   const memberList = apiGroup?.members;
+  const confirm = useConfirm();
+
+  // FIXME: update members
+  const [removeMember, _loadingRM, errorRM] = useApi(
+    DApi.apiGroupsMemberIdRemoveUserIdDelete,
+  );
+
+  // FIXME: update members
+  const [changeRole, _loadingCR, errorCR] = useApi(DApi.apiGroupsRolesPost);
 
   if (!memberList || memberList.length === 0) {
     return null;
   }
+
+  const memberActions = (userId: string, groupMember: ApiGroupMember) => {
+    const higher = user1IsHigher({
+      userId1: myUserId,
+      userId2: userId,
+      apiGroup,
+    });
+    const myUserisOwner = apiGroup.group.owner === myUserId;
+    const myRole = getUserRole(myUserId, apiGroup);
+
+    if (!myRole) {
+      throw new Error("User not found in group");
+    }
+    const lesserRoles = myUserisOwner
+      ? (Object.keys(groupHierarchy) as GroupRole[])
+      : lesserGroupRoles(myRole);
+
+    return (
+      <PopupState variant="popover" popupId="post-action-menu">
+        {(popupState) => (
+          <>
+            <IconButton {...bindTrigger(popupState)}>
+              <MoreVertIcon />
+            </IconButton>
+            <Menu {...bindMenu(popupState)}>
+              {higher && [
+                <MenuItem
+                  key="remove member"
+                  onClick={async () => {
+                    popupState.close();
+                    await confirm({
+                      title: "Remove member",
+                      description: `Are you sure you want to remove ${groupMember.user.name}?`,
+                      confirmationText: "Remove",
+                      cancellationText: "Cancel",
+                    });
+                    removeMember({ id: groupId, userId });
+                  }}
+                >
+                  Remove member
+                </MenuItem>,
+                <PopupState
+                  key="change role"
+                  variant="popover"
+                  popupId="change member role"
+                >
+                  {(chmPopupState) => {
+                    const handleClose = () => {
+                      // FIXME: it would be cleaner to inject this somehow into popupstate
+                      popupState.close();
+                      chmPopupState.close();
+                    };
+                    return (
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            chmPopupState.open();
+                          }}
+                        >
+                          Change role
+                        </MenuItem>
+                        <Dialog
+                          {...bindDialog(chmPopupState)}
+                          onClose={handleClose}
+                        >
+                          <DialogTitle>
+                            Change role of {groupMember.user.name} to
+                          </DialogTitle>
+                          <Divider />
+                          <List>
+                            {lesserRoles.map((role) => (
+                              <ListItem
+                                key={role}
+                                disablePadding
+                                disableGutters
+                              >
+                                <ListItemButton
+                                  onClick={() => {
+                                    changeRole({
+                                      changeGroupRole: {
+                                        user: userId,
+                                        group: groupId,
+                                        role,
+                                      },
+                                    });
+                                    handleClose();
+                                  }}
+                                >
+                                  <ListItemText primary={role} />
+                                </ListItemButton>
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Dialog>
+                      </>
+                    );
+                  }}
+                </PopupState>,
+              ]}
+            </Menu>
+          </>
+        )}
+      </PopupState>
+    );
+  };
 
   return (
     <StandardCard>
@@ -214,25 +385,40 @@ const GroupMemberList = ({ apiGroup }: { apiGroup: ApiGroup | null }) => {
           </Typography>
         }
       />
+      <ErrorWidget errors={[errorRM, errorCR]} />
       <Divider />
       <CardContent>
         <List>
-          {memberList.map(({ key: userId, value: groupMember }) => (
-            <ListUserItem
-              key={userId}
-              userId={userId}
-              userPublic={groupMember.user}
-              secondaryAction={
-                <>
-                  {userId === apiGroup.group.owner ? (
-                    <Chip label="Owner" color="primary" />
-                  ) : groupMember.role === "GroupRoleAdmin" ? (
-                    <Chip label="Admin" color="primary" />
-                  ) : null}
-                </>
-              }
-            />
-          ))}
+          {memberList.map(({ key: userId, value: groupMember }) => {
+            return (
+              <ListUserItem
+                key={userId}
+                userId={userId}
+                userPublic={groupMember.user}
+                secondaryAction={
+                  <>
+                    {userId === apiGroup.group.owner ? (
+                      <Chip label="Owner" color="primary" />
+                    ) : groupMember.role === "GroupRoleAdmin" ? (
+                      <Chip label="Admin" color="primary" />
+                    ) : null}
+                    {memberActions(userId, groupMember)}
+                  </>
+                }
+              />
+            );
+          })}
+          {/* <ListItem key="add member">
+            <ListItemButton>
+              <IconButton>
+                <AddIcon />
+              </IconButton>
+              <ListItemText
+                primary={"Add member"}
+                sx={{ fontWeight: "bold" }}
+              />
+            </ListItemButton>
+          </ListItem> */}
         </List>
       </CardContent>
     </StandardCard>
@@ -278,8 +464,8 @@ export const GroupRoute = () => {
         <GroupInfoWidget groupId={groupId} apiGroup={apiGroup} />
         <Typography color="red">{error}</Typography>
         <Divider flexItem />
-        <GroupMemberList apiGroup={apiGroup} />
-        {!isAdmin({ userId, apiGroup }) && (
+        <GroupMemberList groupId={groupId} apiGroup={apiGroup} />
+        {isAdmin({ userId, apiGroup }) && (
           <GroupJoinrequestsWidget groupId={groupId} apiGroup={apiGroup} />
         )}
       </Stack>

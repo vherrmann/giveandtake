@@ -98,6 +98,7 @@ data GroupRole = GroupRoleNoRole | GroupRoleAdmin
   deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 derivePersistField "GroupRole"
+type instance PyFClassify GroupRole = 'PyFString
 
 instance Ord GroupRole where
   GroupRoleNoRole <= GroupRoleNoRole = True

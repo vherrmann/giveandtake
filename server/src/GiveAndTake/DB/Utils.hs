@@ -149,3 +149,19 @@ assureByKeySE ::
   P.Key record ->
   m ()
 assureByKeySE key = void $ getByKeySE @record @m key
+
+getByUniqSE ::
+  forall (record :: Type) (m :: Type -> Type).
+  ( P.PersistEntityBackend record ~ P.BaseBackend PS.SqlBackend
+  , MonadIO m
+  , P.PersistEntity record
+  , HasDBPool m
+  , MonadError ServerError m
+  , Typeable record
+  ) =>
+  P.Unique record ->
+  m (P.Entity record)
+getByUniqSE unique =
+  let typeStr = typeName @record
+   in runDB (P.getBy unique)
+        >>= maybeToMErr (err404{errBody = [fmt|{typeStr} not founwd|]})

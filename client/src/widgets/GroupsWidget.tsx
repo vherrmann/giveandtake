@@ -66,8 +66,8 @@ export const GroupsWidget = ({ userId }: { userId: string }) => {
             </LinkWidget>
           </ListItem>
         ))}
-        <ListItem>
-          <ListItemButton key="newGroup" component={Link} to={`/newgroup`}>
+        <ListItem key="newGroup">
+          <ListItemButton component={Link} to={`/newgroup`}>
             <IconButton>
               <AddIcon />
             </IconButton>

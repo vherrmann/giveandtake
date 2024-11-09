@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { useEffect, useState } from "react";
-import { Api, User, UserPublic } from "./api";
+import { Api, ApiGroup, GroupRole, User, UserPublic } from "./api";
 import { AxiosPromise } from "axios";
 import { Typography } from "@mui/material";
 import { useDeepCompareEffectNoCheck } from "use-deep-compare-effect";
@@ -71,6 +71,50 @@ export const userToUserPublic = (user: User): UserPublic => {
     name: user.name,
     createdAt: user.createdAt,
   };
+};
+
+export const groupHierarchy: { [key in GroupRole]: number } = {
+  GroupRoleNoRole: 0,
+  GroupRoleAdmin: 1,
+};
+
+export const lesserGroupRoles = (role: GroupRole) =>
+  (Object.keys(groupHierarchy) as GroupRole[]).filter(
+    (key: GroupRole) => groupHierarchy[key] < groupHierarchy[role],
+  );
+
+export const getUserRole = (
+  userId: string,
+  apiGroup: ApiGroup,
+): GroupRole | undefined => {
+  const member = apiGroup.members.find(({ key }) => key === userId);
+  return member?.value.role;
+};
+
+export const user1IsHigher = ({
+  userId1,
+  userId2,
+  apiGroup,
+}: {
+  userId1: string;
+  userId2: string;
+  apiGroup: ApiGroup;
+}) => {
+  if (userId1 === userId2) {
+    return false;
+  }
+  if (userId1 === apiGroup.group.owner) {
+    return true;
+  }
+  if (userId2 === apiGroup.group.owner) {
+    return false;
+  }
+  const role1 = getUserRole(userId1, apiGroup);
+  const role2 = getUserRole(userId2, apiGroup);
+  if (!role1 || !role2) {
+    throw new Error("User1 or user2 is not a member of the group");
+  }
+  return groupHierarchy[role1] > groupHierarchy[role2];
 };
 
 // https://stackoverflow.com/a/66494926/13534562

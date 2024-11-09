@@ -3,12 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import Frame from "./routes/Frame";
 import reportWebVitals from "./reportWebVitals";
-import {
-  createBrowserRouter,
-  Navigate,
-  Outlet,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
 import ErrorPage from "./error-page";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "./theme"; // Path to your custom theme
@@ -26,6 +21,7 @@ import HomeRoute from "./routes/HomeRoute";
 import { SettingsRoute } from "./routes/SettingsRoute";
 import NewGroupRoute from "./routes/NewGroupRoute";
 import GroupRoute from "./routes/GroupRoute";
+import { ConfirmProvider } from "material-ui-confirm";
 
 // Rickroll banner
 const banner = `
@@ -123,10 +119,12 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
-      <CssBaseline enableColorScheme />
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
+      <ConfirmProvider>
+        <CssBaseline enableColorScheme />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </ConfirmProvider>
     </ThemeProvider>
   </React.StrictMode>,
 );

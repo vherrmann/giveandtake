@@ -16,6 +16,7 @@ import {
   Tooltip,
   Typography,
   Popover,
+  Divider,
 } from "@mui/material";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import CreateIcon from "@mui/icons-material/Create";
@@ -41,6 +42,7 @@ import { useAuthedState } from "../ProtectedRoute";
 import { Link, useLocation } from "react-router-dom";
 import { LinkWidget } from "./LinkWidget";
 import { MediaPostWidget } from "./MediaPostWidget";
+import { useConfirm } from "material-ui-confirm";
 
 export interface PostActions {
   deletePost: (postId: string | null) => Promise<void>;
@@ -105,6 +107,7 @@ const ViewablePostWidget = ({
   usedToUnlock?: WithUUIDPost[];
 }) => {
   const { userId } = useAuthedState();
+  const confirm = useConfirm();
 
   // TODO: add endpoint
   /* const fetchUser = async () => {
@@ -131,15 +134,24 @@ const ViewablePostWidget = ({
                 <MoreVertIcon />
               </IconButton>
               <Menu {...bindMenu(popupState)}>
-                <MenuItem
-                  onClick={async () => {
-                    popupState.close();
-                    await postActions.deletePost(postId);
-                  }}
-                  disabled={post.user !== userId}
-                >
-                  Delete post
-                </MenuItem>
+                {post.user === userId && (
+                  <MenuItem
+                    onClick={async () => {
+                      popupState.close();
+
+                      await confirm({
+                        title: "Delete post",
+                        description:
+                          "Are you sure you want to delete this post?",
+                        confirmationText: "Delete",
+                        cancellationText: "Cancel",
+                      });
+                      await postActions.deletePost(postId);
+                    }}
+                  >
+                    Delete post
+                  </MenuItem>
+                )}
               </Menu>
             </>
           )}
@@ -188,11 +200,15 @@ const ViewablePostWidget = ({
                       <SyncAltIcon />
                     </IconButton>
                     <Popover {...bindPopover(popupState)}>
-                      <List>
+                      <List disablePadding>
                         {usedToUnlock.map((postW) => {
                           const post = postW.value;
                           return (
-                            <ListItem key={postW.key}>
+                            <ListItem
+                              key={postW.key}
+                              disablePadding
+                              disableGutters
+                            >
                               <PostCard
                                 user={post.user}
                                 title={post.title}
@@ -312,31 +328,32 @@ const UnviewablePostWidget = ({
             >
               <CloseIcon />
             </IconButton>
-            <DialogContent dividers>
-              {error && <Typography color="error">Error: {error}</Typography>}
-              {loading && <Typography>Loading...</Typography>}
-              <List
-                sx={{
-                  width: "100%",
-                  maxWidth: 360,
-                  position: "relative",
-                  overflow: "auto",
-                  maxHeight: 300,
-                  scrollbarWidth: "thin", // Firefox
-                  "&::-webkit-scrollbar": {
-                    width: "8px",
-                  },
-                  "&::-webkit-scrollbar-thumb": {
-                    backgroundColor: "#888",
-                    borderRadius: "4px",
-                  },
-                }}
-              >
+            <Divider />
+            {error && <Typography color="error">Error: {error}</Typography>}
+            {loading && <Typography>Loading...</Typography>}
+            <List
+              sx={{
+                width: "100%",
+                maxWidth: 360,
+                position: "relative",
+                overflow: "auto",
+                maxHeight: 300,
+                scrollbarWidth: "thin", // Firefox
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  backgroundColor: "#888",
+                  borderRadius: "4px",
+                },
+              }}
+            >
+              <ListItem key="newPost" disableGutters disablePadding>
                 <ListItemButton
-                  key="newPost"
                   component={Link}
                   to={`/newpost/?tradeFor=${postId}`}
                   state={{ path: location.pathname }}
+                  disableGutters
                 >
                   <PostLikeCard>
                     <CardHeader
@@ -355,37 +372,37 @@ const UnviewablePostWidget = ({
                     />
                   </PostLikeCard>
                 </ListItemButton>
-                {tradeablePosts.map((postW) => {
-                  const post = postW.value;
-                  // FIXME: make posts clickable to see media
-                  return (
-                    <ListItem key={postW.key}>
-                      <PostCard
-                        user={post.user}
-                        title={post.title}
-                        createdAt={post.createdAt}
-                        headerActions={
-                          <>
-                            <IconButton
-                              component={Link}
-                              to={"/post/" + postW.key}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <OpenInNewIcon />
-                            </IconButton>
-                            <IconButton onClick={tradeExisting(postW.key)}>
-                              <SyncAltIcon />
-                            </IconButton>
-                          </>
-                        }
-                        content={<> </>}
-                      />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </DialogContent>
+              </ListItem>
+              {tradeablePosts.map((postW) => {
+                const post = postW.value;
+                // FIXME: make posts clickable to see media
+                return (
+                  <ListItem key={postW.key} disableGutters disablePadding>
+                    <PostCard
+                      user={post.user}
+                      title={post.title}
+                      createdAt={post.createdAt}
+                      headerActions={
+                        <>
+                          <IconButton
+                            component={Link}
+                            to={"/post/" + postW.key}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <OpenInNewIcon />
+                          </IconButton>
+                          <IconButton onClick={tradeExisting(postW.key)}>
+                            <SyncAltIcon />
+                          </IconButton>
+                        </>
+                      }
+                      content={<> </>}
+                    />
+                  </ListItem>
+                );
+              })}
+            </List>
           </Dialog>
         </>
       }

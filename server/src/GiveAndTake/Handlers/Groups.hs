@@ -46,14 +46,15 @@ removeGroupMemberH :: Entity User -> GroupId -> UserId -> RHandler m ()
 removeGroupMemberH userEnt groupId userId = do
   checkIsGroupMember userEnt.key groupId
   checkIsGroupMember userId groupId
-  checkIsGroupHigher userEnt.key userId groupId
+  checkIsGroupHigher userEnt.key userId groupId -- in particular, the owner can't remove himself
   runDB $ P.deleteBy $ UniqueGroupMember groupId userId
 
 addGroupMemberH :: Entity User -> GroupId -> UserId -> RHandler m ()
 addGroupMemberH userEnt groupId userId = do
   checkIsGroupMember userEnt.key groupId
   checkIsGroupAdmin userEnt.key groupId
-  whenM (isGroupMember userId groupId) $ throwError S.err409{S.errBody = "User is already a member of the group."}
+  whenM (isGroupMember userId groupId) $
+    throwError S.err409{S.errBody = "User is already a member of the group."}
   ct <- getUTCTime
   runDB $
     P.insert_
@@ -65,13 +66,18 @@ addGroupMemberH userEnt groupId userId = do
         }
 
 changeRoleH :: Entity User -> ChangeGroupRole -> RHandler m ()
-changeRoleH userEnt (ChangeGroupRole{group, user = changedUser, role = newRole}) = do
-  checkIsGroupMember userEnt.key group
-  checkIsGroupMember changedUser group
-  checkIsGroupHigher userEnt.key changedUser group
+changeRoleH userEnt (ChangeGroupRole{group = groupId, user = changedUser, role = newRole}) = do
+  checkIsGroupMember userEnt.key groupId
+  checkIsGroupMember changedUser groupId
+  checkIsGroupHigher userEnt.key changedUser groupId
+  -- check if userEnt is allowed to change the role to newRole
+  group <- getByKeySE groupId
+  userGroupMemb <- getByUniqSE (UniqueGroupMember groupId userEnt.key)
+  unless (group.owner == userEnt.key || userGroupMemb.val.role > newRole) $
+    throwError S.err401{S.errBody = [fmt|"User is not allowed to change to role {newRole}."|]}
   runDB $
     P.updateWhere
-      [ GroupMemberGroup ==. group
+      [ GroupMemberGroup ==. groupId
       , GroupMemberUser ==. changedUser
       ]
       [GroupMemberRole =. newRole]

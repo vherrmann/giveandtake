@@ -56,15 +56,20 @@ checkIsGroupMember userId groupId =
     throwError S.err401{S.errBody = "User is not a member of the group."}
 
 isGroupHigher :: (MonadIO m, HasDBPool m) => UserId -> UserId -> GroupId -> m Bool
-isGroupHigher user1Id user2Id groupId = runDB do
-  groupMemb1M <- P.getBy (UniqueGroupMember groupId user1Id)
-  groupMemb2M <- P.getBy (UniqueGroupMember groupId user2Id)
-  groupM <- P.get groupId
-  pure $ case (groupMemb1M, groupMemb2M, groupM) of
-    (Just groupMemb1, Just groupMemb2, Just group) ->
-      (groupMemb1.val.user == group.owner)
-        || (groupMemb1.val.role >= groupMemb2.val.role)
-    _ -> False
+isGroupHigher user1Id user2Id groupId =
+  if user1Id == user2Id
+    then pure False
+    else runDB do
+      groupMemb1M <- P.getBy (UniqueGroupMember groupId user1Id)
+      groupMemb2M <- P.getBy (UniqueGroupMember groupId user2Id)
+      groupM <- P.get groupId
+      pure $ case (groupMemb1M, groupMemb2M, groupM) of
+        (Just groupMemb1, Just groupMemb2, Just group) ->
+          (groupMemb2.val.user /= group.owner)
+            && ( (groupMemb1.val.user == group.owner)
+                  || (groupMemb1.val.role > groupMemb2.val.role)
+               )
+        _ -> False
 
 checkIsGroupHigher :: (HasHandler m) => UserId -> UserId -> GroupId -> m ()
 checkIsGroupHigher user1Id user2Id groupId =

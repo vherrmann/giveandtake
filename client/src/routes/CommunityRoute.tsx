@@ -7,6 +7,7 @@ import { GroupsWidget } from "../widgets/GroupsWidget";
 export default function CommunityRoute() {
   const { userId } = useAuthedState();
 
+  // FIXME: Add widget for all group join requests
   return (
     <Stack spacing={2}>
       {" "}
