@@ -1,7 +1,7 @@
 import { Avatar, SxProps, Theme } from "@mui/material";
 import { LinkWidget } from "./LinkWidget";
 import { Api, UserPublic } from "../api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { stringToColor } from "../utils";
 
 export const AvatarWidget = ({
@@ -18,18 +18,17 @@ export const AvatarWidget = ({
   sx?: SxProps<Theme>;
 }) => {
   const [userPublicHere, setUserPublicHere] = useState<UserPublic | null>(null);
-  const api = Api();
 
-  const fetchUserPublic = async () => {
-    const response = await api.apiUsersIdGet({ id: userId });
+  const fetchUserPublic = useCallback(async () => {
+    const response = await Api.apiUsersIdGet({ id: userId });
     setUserPublicHere(response.data);
-  };
+  }, [userId]);
 
   useEffect(() => {
     if (userPublic === undefined) {
       fetchUserPublic();
     }
-  }, []);
+  }, [userPublic, fetchUserPublic]);
 
   const userPublicBoth = userPublic || userPublicHere;
 

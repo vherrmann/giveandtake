@@ -132,7 +132,7 @@ export const redirect = (to: string) => {
 export const HardRedirect = ({ to }: { to: string }) => {
   useEffect(() => {
     window.location.href = to;
-  }, []);
+  }, [to]);
 
   return null;
 };
@@ -169,12 +169,12 @@ export const handleApiErr = (error: any): string => {
 };
 
 export const withApi = async (
-  fn: (api: ReturnType<typeof Api>) => Promise<void>,
+  fn: (api: ApiType) => Promise<void>,
   setError: React.Dispatch<React.SetStateAction<string | null>>,
   onError?: (e: any) => void,
 ) => {
   try {
-    await fn(Api());
+    await fn(Api);
   } catch (e) {
     try {
       if (onError) {
@@ -193,53 +193,68 @@ type AxiosPromiseType<T extends AxiosPromise<any>> =
 type PromiseType<T extends Promise<any>> =
   T extends AxiosPromise<infer U> ? U : never;
 
-type ApiType = ReturnType<typeof Api>;
-type ApiMethod = keyof ReturnType<typeof Api>;
+type ApiType = typeof Api;
+type ApiMethod = keyof ApiType;
 type ApiReturnType<T> = AxiosPromiseType<ReturnType<ApiType[T & ApiMethod]>>;
 
 type ApiOnSuccess<T> = (
   response: PromiseType<ReturnType<ApiType[T & ApiMethod]>>,
 ) => void;
 
+type ApiCBExtraParams<T> = {
+  options?: EndpointToOptions<T>;
+  onSuccess?: ApiOnSuccess<T>;
+  onError?: (e: any) => void;
+};
+
 type ApiCB<T> =
   EndpointToReqParam<T> extends undefined
     ? (
         requestParameters?: EndpointToReqParam<T>,
-        options?: EndpointToOptions<T>,
-        onSuccess?: ApiOnSuccess<T>,
-        onError?: (e: any) => void,
+        extraParams?: ApiCBExtraParams<T>,
       ) => void
     : (
         requestParameters: EndpointToReqParam<T>,
-        options?: EndpointToOptions<T>,
-        onSuccess?: ApiOnSuccess<T>,
-        onError?: (e: any) => void,
+        extraParams?: ApiCBExtraParams<T>,
       ) => void;
 
-type ApiFnRet<T> = [ApiCB<T>, boolean, string | null];
+type ApiFnExtraParams<T> = {
+  onSuccess?: ApiOnSuccess<T>;
+  onError?: (e: any) => void;
+};
+
+type ApiFnRet<T> = [string | null, ApiCB<T>, boolean];
 
 type ApiFn<OneOfPossibleOptions> = <const T extends OneOfPossibleOptions>(
   method: T,
-  onSuccess?: ApiOnSuccess<T>,
+  extraParams?: ApiFnExtraParams<T>,
 ) => ApiFnRet<T>;
 
-export const useApi: IntersectionToRenderedIntersection<
-  ApiFn<ApiMethod>,
-  ApiMethod
-> = <T extends ApiMethod>(method: T, onSuccess?: ApiOnSuccess<T>) => {
+type IntersectionToRenderedIntersectionApi<U> = (
+  U extends any ? (_: ApiFn<U>) => void : never
+) extends (_: infer I) => void
+  ? I
+  : never;
+
+export const useApi: IntersectionToRenderedIntersectionApi<ApiMethod> = <
+  T extends ApiMethod,
+>(
+  method: T,
+  extraParams?: ApiFnExtraParams<T>,
+) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fnOnSuccess = onSuccess;
+  const fnOnSuccess = extraParams?.onSuccess;
 
   const sendReq: ApiCB<T> = async (
     requestParameters: EndpointToReqParam<T> | undefined,
-    options?: EndpointToOptions<T>,
-    onSuccess?: ApiOnSuccess<T>,
-    onError?: (e: any) => void,
+    extraParams?: ApiCBExtraParams<T>,
   ) => {
     setLoading(true);
     setError(null);
+    const onSuccess = extraParams?.onSuccess;
+    const options = extraParams?.options;
     await withApi(
       async (api) => {
         if (requestParameters !== undefined) {
@@ -256,12 +271,12 @@ export const useApi: IntersectionToRenderedIntersection<
         }
       },
       setError,
-      onError,
+      extraParams?.onError,
     );
     setLoading(false);
   };
 
-  const res: ApiFnRet<T> = [sendReq, loading, error];
+  const res: ApiFnRet<T> = [error, sendReq, loading];
 
   return res;
 };
@@ -269,7 +284,7 @@ export const useApi: IntersectionToRenderedIntersection<
 type EndpointToReqParam<T> =
   Parameters<ApiType[T & ApiMethod]> extends [
     requestParameters: infer R,
-    options?: infer O,
+    options?: infer _O,
   ]
     ? R
     : undefined;
@@ -278,23 +293,25 @@ type EndpointToOptions<T> =
   Parameters<ApiType[T & ApiMethod]> extends [options?: infer O]
     ? O
     : Parameters<ApiType[T & ApiMethod]> extends [
-          requestParameters: infer R,
+          requestParameters: infer _R,
           options?: infer O,
         ]
-      ? R
+      ? O
       : undefined;
 
-type IntersectionToRenderedIntersection<T, U> = (
-  U extends any ? (_: T) => void : never
-) extends (_: infer I) => void
-  ? I
-  : never;
-
 type ApiStateFnRet<T> = [
-  ApiReturnType<T> | null,
   string | null,
+  ApiReturnType<T> | null,
   { loading: boolean; refetch: () => void },
 ];
+
+type ApiStateFnExtraParams<T> = {
+  options?: EndpointToOptions<T>;
+  extraDeps?: any[];
+  onSuccess?: ApiOnSuccess<T>;
+  onError?: (e: any) => void;
+  enable?: boolean;
+};
 
 // https://github.com/microsoft/TypeScript/issues/27808
 // Here you define how your function overload will look
@@ -303,52 +320,57 @@ type ApiStateFn<OneOfPossibleOptions> =
     ? <const T extends OneOfPossibleOptions>(
         method: T,
         requestParameters?: EndpointToReqParam<T>,
-        options?: EndpointToOptions<T>,
-        extraDeps?: any[],
-        onError?: (e: any) => void,
+        extraParams?: ApiStateFnExtraParams<T>,
       ) => ApiStateFnRet<T>
     : <const T extends OneOfPossibleOptions>(
         method: T,
         requestParameters: EndpointToReqParam<T>,
-        options?: EndpointToOptions<T>,
-        extraDeps?: any[],
-        onError?: (e: any) => void,
+        extraParams?: ApiStateFnExtraParams<T>,
       ) => ApiStateFnRet<T>;
 
-export const useApiState: IntersectionToRenderedIntersection<
-  ApiStateFn<ApiMethod>,
+type IntersectionToRenderedIntersectionApiState<U> = (
+  U extends any ? (_: ApiStateFn<U>) => void : never
+) extends (_: infer I) => void
+  ? I
+  : never;
+
+export const useApiState: IntersectionToRenderedIntersectionApiState<
   ApiMethod
 > = <T extends ApiMethod>(
   method: T,
   requestParameters: EndpointToReqParam<T> | undefined,
-  options?: EndpointToOptions<T>,
-  extraDeps?: any[],
-  onSuccess?: ApiOnSuccess<T>,
-  onError?: (e: any) => void,
+  extraParams?: ApiStateFnExtraParams<T>,
 ) => {
   type Data = ApiReturnType<T>;
   const [data, setData] = useState<Data | null>(null);
-  const [cb, loading, error] = useApi<T>(method);
+  // @ts-ignore
+  const [error, cb, loading] = useApi<T>(method);
 
+  const onSuccess = extraParams?.onSuccess;
   const sendReq: () => void = () => {
+    if (extraParams?.enable === false) {
+      return;
+    }
     cb(
       // requestParameters can only be undefined, if EndpointToReqParam<T> extends undefined
       requestParameters as EndpointToReqParam<T>,
-      options,
-      (response) => {
-        setData(response.data);
-        onSuccess && onSuccess(response);
+      {
+        ...extraParams,
+        onSuccess: (response) => {
+          setData(response.data);
+          onSuccess && onSuccess(response);
+        },
       },
-      onError,
     );
   };
 
   useDeepCompareEffectNoCheck(sendReq, [
     requestParameters,
-    ...(extraDeps || []),
+    extraParams?.enable,
+    extraParams?.extraDeps,
   ]);
 
-  const res: ApiStateFnRet<T> = [data, error, { loading, refetch: sendReq }];
+  const res: ApiStateFnRet<T> = [error, data, { loading, refetch: sendReq }];
 
   return res;
 };
@@ -359,10 +381,9 @@ type Endpoints = {
 
 // helper to have autocompletion for the strings of all endpoints, should be used like this:
 /* const [friends, setFriends, loadingFr, errorFr] = useApiState(DApi.apiFriendsGet); */
-const globalApi = Api();
 // @ts-ignore
 export const DApi: Endpoints = Object.fromEntries(
-  Object.keys(globalApi).map((endpoint) => [endpoint, endpoint]),
+  Object.keys(Api).map((endpoint) => [endpoint, endpoint]),
 );
 
 export const ErrorWidget = ({
@@ -371,12 +392,12 @@ export const ErrorWidget = ({
   errors: (string | null | undefined)[];
 }) => {
   return errors.map((error, i) => {
-    if (error) {
-      return (
+    return (
+      error && (
         <Typography key={i} color="red">
           {error}
         </Typography>
-      );
-    }
+      )
+    );
   });
 };

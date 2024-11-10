@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, docsBaseUrl, ... }:
 {
   pkgs,
   lib,
@@ -11,10 +11,13 @@ in
 (pkgs.buildNpmPackage {
   name = "giveandtake";
   src = gitignoreSource ../client/.;
-  npmDepsHash = "sha256-WIXDl04xqNXrzlqeNsReJ82mFpkGUTxAtjRo3dIo3OM=";
+  npmDepsHash = "sha256-0ZX/L1VBoDQLd99IadBwSlDDVjk1ynv7LisyaOEguPY=";
 }).overrideAttrs
   (oldAttrs: {
+    postConfigure = ''
+      ${pkgs.yq-go}/bin/yq eval '.docsBaseUrl = "${docsBaseUrl}"' -i config.json
+    '';
     installPhase = ''
-      mv build $out
+      mv dist $out
     '';
   })

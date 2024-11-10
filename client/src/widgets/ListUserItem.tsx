@@ -3,8 +3,6 @@ import {
   ListItemAvatar,
   ListItemProps,
   ListItemText,
-  SxProps,
-  Theme,
 } from "@mui/material";
 import { AvatarWidget } from "./AvatarWidget";
 import { LinkWidget } from "./LinkWidget";

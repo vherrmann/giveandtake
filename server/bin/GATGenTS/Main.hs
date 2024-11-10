@@ -173,4 +173,4 @@ main =
                 then putStrLn @Text "File already exists"
                 else BL.writeFile file spec
 
--- rm swagger.json; cabal run giveandtake-generate-typescript -- swagger.json && openapi-generator-cli generate -i swagger.json -g typescript-axios  -o ~/repos/giveandtake/client/src/api/autogen --additional-properties=useSingleRequestParameter=true,disallowAdditionalPropertiesIfNotPresent=false
+-- run generate-api-client

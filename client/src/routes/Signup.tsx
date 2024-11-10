@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Button, Stack, TextField, Tooltip } from "@mui/material";
-import { useNavigate } from "react-router";
 import { Api } from "../api";
 import { useSearchParams } from "react-router-dom";
 import { handleApiErr } from "../utils";
@@ -12,7 +11,6 @@ interface SignupData {
 }
 
 export const Signup = (): JSX.Element => {
-  const navigate = useNavigate();
   const [signupData, setSignupData] = useState<SignupData>({
     name: "",
     email: "",
@@ -23,7 +21,7 @@ export const Signup = (): JSX.Element => {
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const api = Api();
+
   const [searchParams, setSearchParams] = useSearchParams();
   const secret = searchParams.get("secret");
 
@@ -63,7 +61,7 @@ export const Signup = (): JSX.Element => {
     try {
       setInfo("Sending signup request.... Sending verification email....");
       setLoading(true);
-      const jobId = await api.apiAuthSignupPost({
+      const _jobId = await Api.apiAuthSignupPost({
         signupData: { ...signupData, secret },
       });
       setInfo("Sending verification email!");

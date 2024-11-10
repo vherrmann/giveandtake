@@ -11,30 +11,13 @@ import Typography from "@mui/material/Typography";
 import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import { Api, NotifContent, WithUUIDNotification } from "../api";
-import { useEffect, useState } from "react";
+import { NotifContent } from "../api";
 import Markdown from "react-markdown";
 import { popupBarStyle } from "../style";
+import { DApi, ErrorWidget, useApi, useApiState } from "../utils";
 
 export const NotificationPopup = () => {
-  const api = Api();
-  const [notifications, setNotifications] = useState<
-    WithUUIDNotification[] | null
-  >(null);
-  const fetchNotifications = async () => {
-    try {
-      const response = await api.apiNotifGet();
-      const newNotifications = response.data;
-      setNotifications(newNotifications);
-    } catch (e) {
-      console.log(e);
-      // FIXME
-    }
-  };
-
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
+  const [errorN, notifications, { refetch }] = useApiState(DApi.apiNotifGet);
 
   const notifContentToMsg = (content: NotifContent) => {
     return `
@@ -42,22 +25,14 @@ Welcome! Your individual feed can be accessed as an rss feed under this [url](${
     `;
   };
 
+  const [errorNRP, readNotification] = useApi(DApi.apiNotifReadPost, {
+    onSuccess: refetch,
+  });
   const markAllasRead = async () => {
     if (!notifications) return;
-    try {
-      await api.apiNotifReadPost({
-        requestBody: notifications.map((n) => n.key),
-      });
-      setNotifications(
-        notifications.map((n) => ({
-          ...n,
-          value: { ...n.value, read: true },
-        })),
-      );
-    } catch (e) {
-      console.log(e);
-      // FIXME
-    }
+    readNotification({
+      requestBody: notifications.map((n) => n.key),
+    });
   };
 
   const unreadC = notifications?.filter((n) => !n.value.read).length || 0;
@@ -86,6 +61,7 @@ Welcome! Your individual feed can be accessed as an rss feed under this [url](${
           </Tooltip>
           <Popover {...bindPopover(popupState)} {...popupBarStyle}>
             <List>
+              <ErrorWidget errors={[errorN, errorNRP]} />
               {notifications === null ? (
                 <ListItem>
                   <ListItemText>Loading...</ListItemText>

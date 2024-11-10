@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { Api, WithUUIDUserPublic } from "../api";
 import {
   Avatar,
   CardHeader,
@@ -12,33 +10,14 @@ import {
   ListItemText,
   Typography,
 } from "@mui/material";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { LinkWidget } from "./LinkWidget";
 import { StandardCard } from "./StandardCard";
-import { handleApiErr } from "../utils";
+import { DApi, ErrorWidget, useApiState } from "../utils";
 import AddIcon from "@mui/icons-material/Add";
 
-export const GroupsWidget = ({ userId }: { userId: string }) => {
-  const [groups, setGroups] = useState<WithUUIDUserPublic[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const api = Api();
-  const fetchGroups = async () => {
-    try {
-      setLoading(true);
-      const response = await api.apiGroupsGet();
-      const groups = response.data;
-      setGroups(groups);
-    } catch (e) {
-      setError(handleApiErr(e));
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchGroups();
-  }, []);
+export const GroupsWidget = () => {
+  const [errorG, groups] = useApiState(DApi.apiGroupsGet);
 
   return (
     <StandardCard>
@@ -51,8 +30,9 @@ export const GroupsWidget = ({ userId }: { userId: string }) => {
       />
 
       <Divider />
+      <ErrorWidget errors={[errorG]} />
       <List>
-        {groups.map(({ key: groupId, value: group }) => (
+        {groups?.map(({ key: groupId, value: group }) => (
           <ListItem key={groupId}>
             <ListItemAvatar>
               <Avatar sx={{ bgcolor: "#FF6666" }}>
@@ -65,8 +45,8 @@ export const GroupsWidget = ({ userId }: { userId: string }) => {
               <ListItemText primary={group.name} sx={{ fontWeight: "bold" }} />
             </LinkWidget>
           </ListItem>
-        ))}
-        <ListItem key="newGroup">
+        )) ?? "Loading..."}
+        <ListItem key="newGroup" disablePadding>
           <ListItemButton component={Link} to={`/newgroup`}>
             <IconButton>
               <AddIcon />

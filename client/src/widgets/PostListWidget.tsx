@@ -1,25 +1,22 @@
 import { Box, Stack } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { PostWidget } from "../widgets/PostWidget";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useScroll } from "../providers/scroll";
-import { Api, WithUUIDApiPost } from "../api";
+import { WithUUIDApiPost } from "../api";
 import { handleApiErr } from "../utils";
 
 export const PostList = ({
-  updateOn,
   postsFetcher,
 }: {
-  updateOn: any;
   postsFetcher: () => Promise<WithUUIDApiPost[]>;
 }) => {
   const [posts, setPosts] = useState<WithUUIDApiPost[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { scrollRef } = useScroll();
-  const api = Api();
 
-  const fetchPosts = async () => {
+  const fetchPosts = useCallback(async () => {
     try {
       const posts = await postsFetcher();
       setPosts(posts);
@@ -29,11 +26,11 @@ export const PostList = ({
       setError("Failed to fetch posts: " + handleApiErr(e));
       setLoading(false);
     }
-  };
+  }, [postsFetcher]);
 
   useEffect(() => {
     fetchPosts();
-  }, [updateOn]);
+  }, [fetchPosts]);
 
   const chunkSize = 4;
   const [shownPosts, setShownPosts] = useState<WithUUIDApiPost[]>([]);
@@ -92,19 +89,9 @@ export const PostList = ({
                 <PostWidget
                   post={post}
                   postId={postId}
-                  postActions={{
-                    deletePost: async (postId) => {
-                      if (postId) {
-                        try {
-                          await api.apiPostsIdDelete({ id: postId });
-                          setPosts(posts.filter(({ key }) => key !== postId));
-                        } catch (err) {
-                          // FIXME: more information
-                          setError("Failed to delete post"); // FIXME: use notification
-                        }
-                      }
-                    },
-                  }}
+                  onDelete={(postId) =>
+                    setPosts(posts.filter(({ key }) => key !== postId))
+                  }
                 />
               </Box>
             );

@@ -1,18 +1,16 @@
 import { Stack } from "@mui/material";
 import { Api } from "../api";
 import { PostList } from "../widgets/PostListWidget";
+import { useCallback } from "react";
 
 export const HomeRoute = () => {
-  const api = Api();
+  const postsFetcher = useCallback(
+    async () => (await Api.apiPostsFeedGet()).data,
+    [],
+  );
   return (
     <Stack spacing={2} alignItems="center">
-      <PostList
-        updateOn={null}
-        postsFetcher={async () =>
-          // FIXME: add error handling
-          (await api.apiPostsFeedGet()).data
-        }
-      />
+      <PostList postsFetcher={postsFetcher} />
     </Stack>
   );
 };

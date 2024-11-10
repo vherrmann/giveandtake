@@ -1,5 +1,3 @@
-import { useEffect, useState } from "react";
-import { Api, WithUUIDUserPublic } from "../api";
 import {
   CardContent,
   CardHeader,
@@ -11,15 +9,14 @@ import {
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
-import { DApi, ErrorWidget, handleApiErr, useApi, useApiState } from "../utils";
+import { DApi, ErrorWidget, useApi, useApiState } from "../utils";
 
-export const FriendsWidget = ({ userId }: { userId: string }) => {
-  const [friends, errorFr, { refetch }] = useApiState(DApi.apiFriendsGet);
+export const FriendsWidget = () => {
+  const [errorFr, friends, { refetch }] = useApiState(DApi.apiFriendsGet);
 
-  const [deleteFriend, _loadingDFr, errorDFr] = useApi(
-    DApi.apiFriendsFriendIdDelete,
-    refetch,
-  );
+  const [errorDFr, deleteFriend] = useApi(DApi.apiFriendsFriendIdDelete, {
+    onSuccess: refetch,
+  });
 
   return (
     <StandardCard>

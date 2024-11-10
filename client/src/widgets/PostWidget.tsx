@@ -5,7 +5,6 @@ import {
   CardContent,
   CardHeader,
   Dialog,
-  DialogContent,
   DialogTitle,
   IconButton,
   List,
@@ -25,11 +24,18 @@ import CloseIcon from "@mui/icons-material/Close";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpen from "@mui/icons-material/LockOpen";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import Markdown from "react-markdown";
 
 // import styles
-import { formatDate, handleApiErr } from "../utils";
+import {
+  DApi,
+  ErrorWidget,
+  formatDate,
+  handleApiErr,
+  useApi,
+  useApiState,
+} from "../utils";
 import PopupState, {
   bindTrigger,
   bindMenu,
@@ -43,10 +49,6 @@ import { Link, useLocation } from "react-router-dom";
 import { LinkWidget } from "./LinkWidget";
 import { MediaPostWidget } from "./MediaPostWidget";
 import { useConfirm } from "material-ui-confirm";
-
-export interface PostActions {
-  deletePost: (postId: string | null) => Promise<void>;
-}
 
 const PostLikeCard = ({ children }: { children: ReactNode }) => {
   return (
@@ -96,30 +98,22 @@ const PostCard = ({
 const ViewablePostWidget = ({
   post,
   postId,
-  postActions,
+  onDelete,
   unlockedWithPost,
   usedToUnlock,
 }: {
   post: Post;
   postId: string | null;
-  postActions: PostActions;
+  onDelete?: (postId: string) => void;
   unlockedWithPost?: WithUUIDPost;
   usedToUnlock?: WithUUIDPost[];
 }) => {
   const { userId } = useAuthedState();
   const confirm = useConfirm();
 
-  // TODO: add endpoint
-  /* const fetchUser = async () => {
-   *   try {
-   *     const user = await api.apiUsers ({ id: post.user });
-   *     setUser(user);
-   *   } catch (err) {
-   *     setError("Failed to fetch user");
-   *   }
-   * }; */
-
   const postUrl = `${window.location.origin}/post/${postId}`;
+
+  const [errorPD, deletePost] = useApi(DApi.apiPostsIdDelete);
 
   return (
     <PostCard
@@ -146,7 +140,12 @@ const ViewablePostWidget = ({
                         confirmationText: "Delete",
                         cancellationText: "Cancel",
                       });
-                      await postActions.deletePost(postId);
+                      if (postId) {
+                        deletePost(
+                          { id: postId },
+                          { onSuccess: () => onDelete && onDelete(postId) },
+                        );
+                      }
                     }}
                   >
                     Delete post
@@ -159,6 +158,7 @@ const ViewablePostWidget = ({
       }
       content={
         <>
+          <Divider />
           <MediaPostWidget fileIds={post.media} />
           <CardContent sx={{ pl: 2, pr: 2, pt: 0, pb: 0 }}>
             {unlockedWithPost && (
@@ -184,6 +184,7 @@ const ViewablePostWidget = ({
               <Markdown>{post.body}</Markdown>
             </Box>
           </CardContent>
+          <ErrorWidget errors={[errorPD]} />
           <CardActions disableSpacing>
             {
               // FIXME: add like functionality
@@ -191,7 +192,7 @@ const ViewablePostWidget = ({
           <FavoriteIcon />
         </IconButton> */
             }
-            <ShareMenu url={postUrl} />
+            <ShareMenu url={postUrl} title={post.title} />
             {usedToUnlock && usedToUnlock.length !== 0 && (
               <PopupState variant="popover" popupId="show-trades">
                 {(popupState) => (
@@ -253,31 +254,14 @@ const UnviewablePostWidget = ({
     setUnlockDOpen(false);
   };
   const [error, setError] = useState<string>("");
-  const [loading, setLoading] = useState(true);
-  const [tradeablePosts, setTradeablePosts] = useState<WithUUIDPost[]>([]);
-  const api = Api();
-
   const location = useLocation();
 
-  const fetchTradeables = async () => {
-    try {
-      try {
-        const response = await api.apiPostsTradeablesUserGet({
-          user: post.user,
-        });
-        setTradeablePosts(response.data);
-      } catch (e) {
-        setError(handleApiErr(e));
-      }
-      setLoading(false);
-    } catch (err) {
-      setError("Failed to fetch posts");
-    }
-  };
-
-  useEffect(() => {
-    fetchTradeables();
-  }, []);
+  const [errorTP, tradeablePosts] = useApiState(
+    DApi.apiPostsTradeablesUserGet,
+    {
+      user: post.user,
+    },
+  );
 
   const tradeExisting = (tradingWithPostId: string) => async () => {
     if (!postId) {
@@ -285,7 +269,7 @@ const UnviewablePostWidget = ({
       return;
     }
     try {
-      await api.apiPostsTradeWithPostForPostPost({
+      await Api.apiPostsTradeWithPostForPostPost({
         withPost: tradingWithPostId,
         forPost: postId,
       });
@@ -329,8 +313,8 @@ const UnviewablePostWidget = ({
               <CloseIcon />
             </IconButton>
             <Divider />
-            {error && <Typography color="error">Error: {error}</Typography>}
-            {loading && <Typography>Loading...</Typography>}
+            <ErrorWidget errors={[error, errorTP]} />
+            {!tradeablePosts && <Typography>Loading...</Typography>}
             <List
               sx={{
                 width: "100%",
@@ -373,7 +357,7 @@ const UnviewablePostWidget = ({
                   </PostLikeCard>
                 </ListItemButton>
               </ListItem>
-              {tradeablePosts.map((postW) => {
+              {tradeablePosts?.map((postW) => {
                 const post = postW.value;
                 // FIXME: make posts clickable to see media
                 return (
@@ -414,11 +398,11 @@ const UnviewablePostWidget = ({
 export const PostWidget = ({
   post,
   postId,
-  postActions,
+  onDelete,
 }: {
   post: ApiPost;
   postId: string | null;
-  postActions: PostActions;
+  onDelete?: (postId: string) => void;
 }) => {
   switch (post.tag) {
     case "UnhiddenPost":
@@ -426,7 +410,7 @@ export const PostWidget = ({
         <ViewablePostWidget
           post={post.contents.post}
           postId={postId}
-          postActions={postActions}
+          onDelete={onDelete}
           usedToUnlock={post.contents.usedToUnlock}
         />
       );
@@ -438,7 +422,7 @@ export const PostWidget = ({
             <ViewablePostWidget
               post={hpData.contents.post}
               postId={postId}
-              postActions={postActions}
+              onDelete={onDelete}
               unlockedWithPost={hpData.contents.unlockedWithPost}
             />
           );

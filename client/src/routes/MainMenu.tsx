@@ -4,7 +4,6 @@ import { BottomNavigation, BottomNavigationAction } from "@mui/material";
 import GroupsIcon from "@mui/icons-material/Groups";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CreateIcon from "@mui/icons-material/Create";
-import NotificationsIcon from "@mui/icons-material/Notifications";
 import { useLocation } from "react-router";
 import { useAuthedState } from "../ProtectedRoute";
 

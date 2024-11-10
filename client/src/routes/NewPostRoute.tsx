@@ -6,7 +6,7 @@ import { ChangeEvent, useEffect, useRef, useState } from "react";
 // import styles
 import { getCurrDate, handleApiErr, useLocalStorage } from "../utils";
 import { PostWidget } from "../widgets/PostWidget";
-import { Api, ApiPost, JobStatus, Post, UnhiddenPostTagEnum } from "../api";
+import { Api, ApiPost, JobStatus } from "../api";
 import { useAuthedState } from "../ProtectedRoute";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 
@@ -34,7 +34,7 @@ export default function NewPostRoute() {
     fileIds: string[];
   }>("newPostState", emptyState);
   const [uploadingMedia, setUploadingMedia] = useState(false);
-  const api = Api();
+
   const { userId } = useAuthedState();
   const mediaUploadPollId = useRef<NodeJS.Timeout | undefined>(undefined);
   const [error, setError] = useState<string>("");
@@ -60,14 +60,14 @@ export default function NewPostRoute() {
     // Poll every 5 seconds
     mediaUploadPollId.current = setInterval(async () => {
       try {
-        const response = await api.apiJobIdStatusGet({ id: jobId });
+        const response = await Api.apiJobIdStatusGet({ id: jobId });
         const jobStatus = response.data;
 
         if (JobStatus.JobFinished === jobStatus) {
           clearInterval(mediaUploadPollId.current);
           setUploadingMedia(false);
           setInfo("Finished compressing files.");
-          const response = await api.apiJobIdResultMediaCompressGet({
+          const response = await Api.apiJobIdResultMediaCompressGet({
             id: jobId,
           });
           const jobRes = response.data;
@@ -104,7 +104,7 @@ export default function NewPostRoute() {
     setInfo("Uploading media");
     setError("");
     try {
-      const jobId = (await api.apiMediaUploadPost({ uploadMedia: { files } }))
+      const jobId = (await Api.apiMediaUploadPost({ uploadMedia: { files } }))
         .data;
       setupMediaUpPolling(jobId);
     } catch (e) {
@@ -116,7 +116,7 @@ export default function NewPostRoute() {
   const createPost = async (event: any) => {
     event.preventDefault();
     try {
-      const response = await api.apiPostsPost({
+      const response = await Api.apiPostsPost({
         newPost: {
           title: state.title,
           media: state.fileIds,
@@ -131,7 +131,7 @@ export default function NewPostRoute() {
 
       if (tradeFor) {
         try {
-          await api.apiPostsTradeWithPostForPostPost({
+          await Api.apiPostsTradeWithPostForPostPost({
             withPost: newPostId,
             forPost: tradeFor,
           });
@@ -213,12 +213,7 @@ export default function NewPostRoute() {
       <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
         <Box // without the Box the postwidget is fitted to the grid
         >
-          <PostWidget
-            post={post}
-            key={"NewPost"}
-            postId={null}
-            postActions={{ deletePost: async (_postId) => {} }}
-          />
+          <PostWidget post={post} key={"NewPost"} postId={null} />
         </Box>
       </Grid>
     </Grid>

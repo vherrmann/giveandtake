@@ -1,20 +1,16 @@
 import { FriendsWidget } from "../widgets/FriendsWidget";
-import { useAuthedState } from "../ProtectedRoute";
 import { FriendsRequestWidget } from "../widgets/FriendsRequestWidget";
 import { Stack } from "@mui/material";
 import { GroupsWidget } from "../widgets/GroupsWidget";
 
 export default function CommunityRoute() {
-  const { userId } = useAuthedState();
-
   // FIXME: Add widget for all group join requests
   return (
     <Stack spacing={2}>
-      {" "}
-      <FriendsWidget userId={userId} />
-      <FriendsRequestWidget userId={userId} />
+      <FriendsWidget />
+      <FriendsRequestWidget />
       {/* <GroupJoinRequestWidgets userId={userId} /> */}
-      <GroupsWidget userId={userId} />
+      <GroupsWidget />
     </Stack>
   );
 }

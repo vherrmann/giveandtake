@@ -1,14 +1,10 @@
-import styled from "@emotion/styled";
-import { Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { Button, Stack, TextField, Typography } from "@mui/material";
+import { useState } from "react";
 
 // import styles
-import { getCurrDate, handleApiErr, useLocalStorage } from "../utils";
-import { PostWidget } from "../widgets/PostWidget";
-import { Api, ApiPost, JobStatus, Post, UnhiddenPostTagEnum } from "../api";
-import { useAuthedState } from "../ProtectedRoute";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { handleApiErr, useLocalStorage } from "../utils";
+import { Api } from "../api";
+import { useNavigate } from "react-router-dom";
 
 export default function NewGroupRoute() {
   const emptyState = {
@@ -17,8 +13,7 @@ export default function NewGroupRoute() {
   const [state, setState] = useLocalStorage<{
     name: string;
   }>("newPostState", emptyState);
-  const api = Api();
-  const { userId } = useAuthedState();
+
   const [error, setError] = useState<string>("");
 
   const navigate = useNavigate();
@@ -37,14 +32,13 @@ export default function NewGroupRoute() {
   const createPost = async (event: any) => {
     event.preventDefault();
     try {
-      const response = await api.apiGroupsPost({
+      const response = await Api.apiGroupsPost({
         newGroup: {
           name: state.name,
         },
       });
       const uuid = response.data;
 
-      const newPostId = response.data;
       setState(emptyState); // the file ids get invalidated by the post request
       event.target.reset();
       navigate("/group/" + uuid);

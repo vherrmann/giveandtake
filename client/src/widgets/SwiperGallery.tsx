@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
-import * as swiper from "swiper";
 import { Navigation, Pagination, Keyboard, Zoom } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
@@ -9,7 +8,6 @@ import "swiper/css/zoom";
 
 import "./swiper.css";
 import {
-  Backdrop,
   Box,
   LinearProgress,
   Modal,
@@ -17,17 +15,8 @@ import {
   Toolbar,
   useTheme,
   IconButton,
-  ThemeProvider,
-  Theme,
-  createTheme,
 } from "@mui/material";
-import {
-  Swiper,
-  SwiperRef,
-  SwiperSlide,
-  useSwiper,
-  useSwiperSlide,
-} from "swiper/react";
+import { Swiper, SwiperRef, SwiperSlide } from "swiper/react";
 import ReactPlayer, { ReactPlayerProps } from "react-player";
 import CloseIcon from "@mui/icons-material/Close";
 import "./react-player.css"; /* https://stackoverflow.com/questions/26979003/space-after-html5s-video-tag */
@@ -101,6 +90,7 @@ export const SwiperGallery = ({
           return (
             <img
               src={URL.createObjectURL(file)}
+              alt="" // FIXME
               style={{
                 objectFit: fullscreenp ? "scale-down" : "cover",
                 height: fullscreenp ? "auto" : "100%",
@@ -121,7 +111,8 @@ export const SwiperGallery = ({
             <UncontrolledVideoPlayer file={file} playing={!swiperFSOpen} />
           );
         } else {
-          console.log("This is neither an image nor a video."); // FIXME: throw error, remove from list (remove at addition)
+          // FIXME: remove from list (remove at addition)
+          throw new Error("This is neither an image nor a video.");
         }
       })
       .map((slide, i) => (
@@ -131,11 +122,13 @@ export const SwiperGallery = ({
             backgroundColor: "inherit",
           }}
         >
-          {fullscreenp ? (
-            <Box className="swiper-zoom-container">{slide}</Box>
-          ) : (
-            slide
-          )}
+          <Box key={files[i].id}>
+            {fullscreenp ? (
+              <Box className="swiper-zoom-container">{slide}</Box>
+            ) : (
+              slide
+            )}
+          </Box>
         </SwiperSlide>
       ));
   };
@@ -250,7 +243,7 @@ export const SwiperGallery = ({
                 curSlide.current = s.realIndex;
               }}
               initialSlide={curSlide.current}
-              onClick={(s, event) => {
+              onClick={(_s, event) => {
                 // close modal on click outside of media
                 // FIXME: use https://mui.com/base-ui/react-click-away-listener/ instead
                 const target = event.target as HTMLElement | null;

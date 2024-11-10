@@ -1,5 +1,5 @@
-import { ReactNode, useEffect, useState } from "react";
-import { Api, FriendsRequestGetResponse, WithUUIDUserPublic } from "../api";
+import { ReactNode } from "react";
+import { WithUUIDUserPublic } from "../api";
 import {
   Box,
   CardContent,
@@ -13,39 +13,16 @@ import DoneIcon from "@mui/icons-material/Done";
 import ClearIcon from "@mui/icons-material/Clear";
 import { StandardCard } from "./StandardCard";
 import { ListUserItem } from "./ListUserItem";
-import { handleApiErr } from "../utils";
+import { DApi, ErrorWidget, useApi, useApiState } from "../utils";
 
-export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
-  const [friendReqs, setFriendReqs] =
-    useState<FriendsRequestGetResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const api = Api();
-  const fetchFriendRequests = async () => {
-    try {
-      setLoading(true);
-      const response = await api.apiFriendsRequestGet();
-      setFriendReqs(response.data);
-      setLoading(false);
-    } catch (err) {
-      // FIXME: more detailed information
-      setError("Failed to fetch posts");
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFriendRequests();
-  }, []);
+export const FriendsRequestWidget = () => {
+  const [errorFR, friendReqs, { refetch }] = useApiState(
+    DApi.apiFriendsRequestGet,
+  );
 
   const friendReqsTo = friendReqs?.requestsToYou;
   const friendReqsFrom = friendReqs?.requestsFromYou;
 
-  // return nothing if requests empty
-  /* if (friendReqsTo?.length === 0 && friendReqsFrom?.length === 0) {
-   *   return <></>;
-   * } */
   const noneCurr = (reqs: WithUUIDUserPublic[] | undefined, el: ReactNode) => {
     return reqs?.length === 0 ? (
       <Typography align="center">None currently</Typography>
@@ -54,33 +31,20 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
     );
   };
 
-  const acceptRequest = (friendId: string) => async () => {
-    try {
-      await api.apiFriendsRequestFriendIdAcceptPost({ friendId });
-      fetchFriendRequests();
-      // FIXME: update friend list
-    } catch (e) {
-      setError(handleApiErr(e));
-    }
-  };
+  const [errorAR, acceptRequest] = useApi(
+    DApi.apiFriendsRequestFriendIdAcceptPost,
+    { onSuccess: refetch },
+  );
 
-  const rejectRequest = (friendId: string) => async () => {
-    try {
-      await api.apiFriendsRequestFriendIdRejectPost({ friendId });
-      fetchFriendRequests();
-    } catch (e) {
-      setError(handleApiErr(e));
-    }
-  };
+  const [errorRR, rejectRequest] = useApi(
+    DApi.apiFriendsRequestFriendIdRejectPost,
+    { onSuccess: refetch },
+  );
 
-  const cancelRequest = (friendId: string) => async () => {
-    try {
-      await api.apiFriendsRequestFriendIdCancelPost({ friendId });
-      fetchFriendRequests();
-    } catch (e) {
-      setError(handleApiErr(e));
-    }
-  };
+  const [errorCR, cancelRequest] = useApi(
+    DApi.apiFriendsRequestFriendIdCancelPost,
+    { onSuccess: refetch },
+  );
 
   return (
     <StandardCard>
@@ -92,7 +56,7 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
         }
       />
 
-      <Typography color="red">{error}</Typography>
+      <ErrorWidget errors={[errorFR, errorAR, errorRR, errorCR]} />
       <Divider />
       <CardContent>
         <Typography gutterBottom variant="h6" align="center">
@@ -111,14 +75,14 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
                     <IconButton
                       edge="end"
                       aria-label="accept-request"
-                      onClick={acceptRequest(friendId)}
+                      onClick={() => acceptRequest({ friendId })}
                     >
                       <DoneIcon />
                     </IconButton>
                     <IconButton
                       edge="end"
                       aria-label="reject-request"
-                      onClick={rejectRequest(friendId)}
+                      onClick={() => rejectRequest({ friendId })}
                     >
                       <ClearIcon />
                     </IconButton>
@@ -146,14 +110,14 @@ export const FriendsRequestWidget = ({ userId }: { userId: string }) => {
                     <IconButton
                       edge="end"
                       aria-label="cancel-request"
-                      onClick={cancelRequest(friendId)}
+                      onClick={() => cancelRequest({ friendId })}
                     >
                       <ClearIcon />
                     </IconButton>
                   </Box>
                 }
               />
-            ))}
+            )) ?? "Loading..."}
           </List>,
         )}
       </CardContent>

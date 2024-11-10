@@ -30,7 +30,7 @@ export const Login = () => {
     if (authState.isAuthenticated) {
       navigate(state?.path || "/");
     }
-  }, [authState.isAuthenticated]);
+  }, [authState.isAuthenticated, state?.path, navigate]);
 
   // FIXME: forgot password option (auf passwortmanager hinweisen)
 

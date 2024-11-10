@@ -31,12 +31,34 @@
         "x86_64-linux"
         "x86_64-darwin"
       ]
-      (system: {
-        nixosModules.default = import ./nix/nixosModule.nix { inherit inputs system; };
-      })
+      (
+        system:
+        let
+          pkgs = import nixpkgs {
+            inherit system;
+            overlays = [ ];
+          };
+        in
+        {
+          nixosModules.default = import ./nix/nixosModule.nix { inherit inputs system; };
+          # FIXME: exists to test if the build succeeds
+          packages = {
+            backend = inputs.backend.defaultPackage."${system}";
+            frontend = pkgs.callPackage (import ./nix/frontend.nix {
+              inherit inputs;
+              docsBaseUrl = "";
+            }) { };
+            docs = pkgs.callPackage (import ./nix/docs.nix {
+              inherit inputs;
+              docsBaseUrl = "";
+            }) { };
+          };
+        }
+      )
     )
     // {
       # FIXME: hack to make nixos-containers work
+      # Test with `nixos-rebuild build --flake .#container`
       nixosConfigurations.container = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         modules = [
@@ -45,7 +67,21 @@
             # FIXME: extend doc
             services.giveandtake = {
               enable = true;
-              host = "localhost:8090";
+              user = "giveandtake";
+              baseUrl = "giveandtake.com";
+              docsBaseUrl = "docs.giveandtake.com";
+              backend = {
+                dbConfig = {
+                  connections = 10;
+                  connectionString = "";
+                };
+                timeout = 600;
+                emailConfig = {
+                  smtpHost = "gmail.com";
+                  smtpUser = "giveandtake@gmail.com";
+                  smtpPassFile = "";
+                };
+              };
             };
             system.stateVersion = "24.05";
           })

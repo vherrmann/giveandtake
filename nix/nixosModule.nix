@@ -9,10 +9,13 @@ with lib;
 let
   cfg = config.services.giveandtake;
   gatPkgs = {
-    frontend = pkgs.callPackage (import ./frontend.nix { inherit inputs; }) { };
+    frontend = pkgs.callPackage (import ./frontend.nix {
+      inherit inputs;
+      inherit (cfg) docsBaseUrl;
+    }) { };
     docs = pkgs.callPackage (import ./docs.nix {
       inherit inputs;
-      baseUrl = cfg.docsBaseUrl;
+      inherit (cfg) docsBaseUrl;
     }) { };
     backend = inputs.backend.defaultPackage."${system}";
   };
@@ -27,10 +30,7 @@ in
   options.services.giveandtake = {
     enable = mkEnableOption "Enable Give'n'take service";
 
-    baseUrl = mkOption {
-      type = types.str;
-      default = cfg.host;
-    };
+    baseUrl = mkOption { type = types.str; };
     postgres = {
       # USEME
       port = mkOption {

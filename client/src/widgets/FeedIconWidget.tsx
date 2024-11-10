@@ -1,50 +1,22 @@
 import { Box, IconButton, Tooltip } from "@mui/material";
-import { useAuthState } from "../providers/auth";
-import { Location, useLocation } from "react-router";
+import { useLocation } from "react-router";
 
-import { Api } from "../api";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
 import CheckIcon from "@mui/icons-material/Check";
+import { DApi, ErrorWidget, useApiState } from "../utils";
 
 export const FeedWidget = () => {
-  const { isAuthenticated } = useAuthState();
-  const [fUrl, setFUrl] = useState<string | null>("test");
   const [replaced, setReplaced] = useState<boolean>(false);
   const location = useLocation();
-  const api = Api();
+  const [errorFU, furlResponse] = useApiState(
+    DApi.apiFeedUrlPost,
+    { body: "MainFeed" },
+    { enable: location.pathname === "/" },
+  );
+  const fUrl = furlResponse?.feedUrl;
 
-  const locToFUrl = (location: Location<any>) => {
-    if (location.pathname === "/") {
-      return api.apiFeedUrlPost({ body: "MainFeed" });
-    } else {
-      return null;
-    }
-  };
-
-  const fUrlPromise = locToFUrl(location);
-
-  useEffect(() => {
-    const fetchUrl = async () => {
-      if (!fUrlPromise) {
-        return;
-      }
-      try {
-        const response = await fUrlPromise;
-        setFUrl(response.data.feedUrl);
-      } catch (e) {
-        // FIXME
-        console.log(e);
-      }
-    };
-    fetchUrl();
-  }, []);
-
-  if (!isAuthenticated) {
-    return <></>;
-  }
-
-  if (!fUrlPromise) {
+  if (!fUrl) {
     return <></>;
   }
   const handleClick = async () => {
@@ -76,6 +48,7 @@ export const FeedWidget = () => {
         <IconButton onClick={handleClick} disabled={fUrl === null}>
           {replaced ? <CheckIcon /> : <RssFeedIcon />}
         </IconButton>
+        <ErrorWidget errors={[errorFU]} />
       </Box>
     </Tooltip>
   );

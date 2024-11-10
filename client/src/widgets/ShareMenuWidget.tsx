@@ -3,13 +3,13 @@ import ShareIcon from "@mui/icons-material/Share";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import LinkIcon from "@mui/icons-material/Link";
 
-export const ShareMenu = ({ url }: { url: string }) => {
+export const ShareMenu = ({ url, title }: { url: string; title: string }) => {
   // Function to handle sharing via the Web Share API
   const handleNativeShare = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: "",
+          title: title || "",
           text: "",
           url,
         });

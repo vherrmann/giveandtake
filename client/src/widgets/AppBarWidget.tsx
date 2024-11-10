@@ -8,10 +8,8 @@ import {
 } from "@mui/material";
 import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import { useAuthState } from "../providers/auth";
 import { useLocation, useNavigate } from "react-router";
-import { redirect } from "../utils";
 import { LinkWidget } from "./LinkWidget";
 
 import HelpIcon from "@mui/icons-material/Help";
@@ -23,6 +21,7 @@ import { AvatarMenu } from "./AvatarMenu";
 import logo from "../assets/logo.png";
 import PopupState, { bindPopover, bindTrigger } from "material-ui-popup-state";
 import { QRCodeSVG } from "qrcode.react";
+import * as config from "../../config.json";
 
 // see https://mui.com/material-ui/react-app-bar/
 // see https://mui.com/material-ui/react-app-bar/#fixed-placement about placement
@@ -81,7 +80,7 @@ export const AppBarWidget = () => {
         <Tooltip
           title="Open documentation" // FIXME: leads to wrong page
         >
-          <IconButton onClick={() => redirect("/docs")} aria-label="help">
+          <IconButton href={"https://" + config.docsBaseUrl} aria-label="help">
             <HelpIcon />
           </IconButton>
         </Tooltip>
@@ -95,6 +94,7 @@ export const AppBarWidget = () => {
                 <QRCodeSVG
                   value={window.location.href}
                   fgColor={theme.palette.primary.main}
+                  style={{ display: "block" }}
                 />
               </Popover>
             </>

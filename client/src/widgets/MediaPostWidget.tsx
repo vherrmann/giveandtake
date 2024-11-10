@@ -1,26 +1,24 @@
 import { CardMedia, useTheme } from "@mui/material";
-import { SwiperSlide } from "swiper/react";
-import ReactPlayer from "react-player";
 import { SwiperGallery } from "./SwiperGallery";
 import { Api } from "../api";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ErrorWidget, handleApiErr } from "../utils";
 
 export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
-  const api = Api();
   const theme = useTheme();
   const [files, setFiles] = useState<(File | null)[]>(
     fileIds.map((_: string) => null),
   );
   const [error, setError] = useState<string>("");
 
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       const responses = await Promise.all(
         fileIds.map(async (fileId: string) => {
           try {
-            const file = api.apiMediaIdGet({ id: fileId });
+            const file = Api.apiMediaIdGet({ id: fileId });
             return file;
-          } catch (err) {
+          } catch (_err) {
             // FIXME: add error handling
             return null;
           }
@@ -28,13 +26,13 @@ export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
       );
       setFiles(responses.map((response) => response?.data ?? null));
     } catch (err) {
-      setError("Failed to fetch posts");
+      setError("Failed to fetch posts: " + handleApiErr(err));
     }
-  };
+  }, [fileIds]);
 
   useEffect(() => {
     fetchFiles();
-  }, [fileIds]);
+  }, [fetchFiles]);
 
   if (files.length === 0) {
     return null;
@@ -49,6 +47,7 @@ export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
       <SwiperGallery
         files={files.map((file, i) => ({ id: fileIds[i], file }))}
       />
+      <ErrorWidget errors={[error]} />
     </CardMedia>
   );
 };

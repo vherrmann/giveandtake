@@ -5,7 +5,6 @@ import {
   CardHeader,
   Chip,
   Dialog,
-  DialogContent,
   DialogTitle,
   Divider,
   IconButton,
@@ -18,24 +17,13 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import {
-  Api,
-  ApiGroup,
-  ApiGroupMember,
-  Group,
-  GroupPublic,
-  GroupRole,
-  UserPublic,
-  WithUUIDApiGroupMember,
-  WithUUIDUserPublic,
-} from "../api";
+import { Api, ApiGroup, ApiGroupMember, GroupPublic, GroupRole } from "../api";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import GroupRemoveIcon from "@mui/icons-material/GroupRemove";
 import DoneIcon from "@mui/icons-material/Done";
 import ClearIcon from "@mui/icons-material/Clear";
-import AddIcon from "@mui/icons-material/Add";
 import { useParams } from "react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import {
   DApi,
@@ -107,19 +95,18 @@ const GroupPublicInfoWidget = ({
   groupId: string;
   groupPublic: GroupPublic;
 }) => {
-  const [groupJoinReqs, errorGReq, { refetch }] = useApiState(
+  const [errorGReq, groupJoinReqs, { refetch }] = useApiState(
     DApi.apiGroupsRequestGet,
   );
   const joinReqEx = groupJoinReqs?.find((id) => id === groupId);
 
-  const [cancelJoinReq, _loadingRJReq, errorRJReq] = useApi(
+  const [errorRJReq, cancelJoinReq] = useApi(
     DApi.apiGroupsRequestIdCancelPost,
-    refetch,
+    { onSuccess: refetch },
   );
-  const [postJoinReq, _loadingPJReq, errorPJReq] = useApi(
-    DApi.apiGroupsRequestIdPost,
-    refetch,
-  );
+  const [errorPJReq, postJoinReq] = useApi(DApi.apiGroupsRequestIdPost, {
+    onSuccess: refetch,
+  });
 
   return (
     <StandardCard>
@@ -175,25 +162,19 @@ const isAdmin = ({
   return member?.value.role === "GroupRoleAdmin";
 };
 
-const GroupJoinrequestsWidget = ({
-  groupId,
-  apiGroup,
-}: {
-  groupId: string;
-  apiGroup: ApiGroup;
-}) => {
-  const [users, errorGReq, { refetch }] = useApiState(
+const GroupJoinrequestsWidget = ({ groupId }: { groupId: string }) => {
+  const [errorGReq, users, { refetch }] = useApiState(
     DApi.apiGroupsRequestIdGet,
     { id: groupId },
   );
 
-  const [acceptJoinReq, _loadingAJReq, errorAJReq] = useApi(
+  const [errorAJReq, acceptJoinReq] = useApi(
     DApi.apiGroupsRequestIdUserIdAcceptPost,
-    refetch,
+    { onSuccess: refetch },
   );
-  const [rejectJoinReq, _loadingRJReq, errorRJReq] = useApi(
+  const [errorRJReq, rejectJoinReq] = useApi(
     DApi.apiGroupsRequestIdUserIdRejectPost,
-    refetch,
+    { onSuccess: refetch },
   );
 
   if (!users || users.length === 0) {
@@ -260,12 +241,12 @@ const GroupMemberList = ({
   const confirm = useConfirm();
 
   // FIXME: update members
-  const [removeMember, _loadingRM, errorRM] = useApi(
+  const [errorRM, removeMember] = useApi(
     DApi.apiGroupsMemberIdRemoveUserIdDelete,
   );
 
   // FIXME: update members
-  const [changeRole, _loadingCR, errorCR] = useApi(DApi.apiGroupsRolesPost);
+  const [errorCR, changeRole] = useApi(DApi.apiGroupsRolesPost);
 
   if (!memberList || memberList.length === 0) {
     return null;
@@ -434,16 +415,15 @@ export const GroupRoute = () => {
   const [groupPublic, setGroupPublic] = useState<GroupPublic | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { userId } = useAuthedState();
-  const api = Api();
 
-  const fetchGroup = async () => {
+  const fetchGroup = useCallback(async () => {
     try {
-      const response = await api.apiGroupsIdGet({ id: groupId });
+      const response = await Api.apiGroupsIdGet({ id: groupId });
       setApiGroup(response.data);
     } catch (e: any) {
       if (e?.response?.status === 401) {
         try {
-          const response = await api.apiGroupsIdPublicGet({ id: groupId });
+          const response = await Api.apiGroupsIdPublicGet({ id: groupId });
           setGroupPublic(response.data);
         } catch (e) {
           setError(handleApiErr(e));
@@ -452,11 +432,11 @@ export const GroupRoute = () => {
         setError(handleApiErr(e));
       }
     }
-  };
+  }, [groupId]);
 
   useEffect(() => {
     fetchGroup();
-  }, [groupId]);
+  }, [fetchGroup]);
 
   if (apiGroup) {
     return (
@@ -466,7 +446,7 @@ export const GroupRoute = () => {
         <Divider flexItem />
         <GroupMemberList groupId={groupId} apiGroup={apiGroup} />
         {isAdmin({ userId, apiGroup }) && (
-          <GroupJoinrequestsWidget groupId={groupId} apiGroup={apiGroup} />
+          <GroupJoinrequestsWidget groupId={groupId} />
         )}
       </Stack>
     );

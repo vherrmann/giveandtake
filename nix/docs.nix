@@ -1,4 +1,4 @@
-{ inputs, baseUrl, ... }:
+{ inputs, docsBaseUrl, ... }:
 {
   pkgs,
   lib,
@@ -21,7 +21,7 @@ stdenv.mkDerivation rec {
   src = gitignoreSource ../docs;
 
   buildPhase = ''
-    ${pkgs.yq-go}/bin/yq eval '.site_url = "https://${baseUrl}/docs"' -i mkdocs.yml
+    ${pkgs.yq-go}/bin/yq eval '.site_url = "https://${docsBaseUrl}/docs"' -i mkdocs.yml
     ${myMkdocs}/bin/mkdocs build
   '';
 

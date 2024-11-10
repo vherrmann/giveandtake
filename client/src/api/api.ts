@@ -11,7 +11,7 @@ export interface UploadMedia {
     files: FileList;
 }
 
-export const Api = () => {
+export const Api = (() => {
     const basePath = window.location.origin;
     const configuration = new auto.Configuration({
         basePath,
@@ -198,4 +198,4 @@ export const Api = () => {
         apiMediaUploadPost,
         apiMediaIdGet,
     };
-};
+})();
