@@ -9,7 +9,7 @@ import { Api, UserPublic } from "../api";
 import { PostList } from "../widgets/PostListWidget";
 import { useParams } from "react-router";
 import { useCallback, useEffect, useState } from "react";
-import { AvatarWidget } from "../widgets/AvatarWidget";
+import { UserAvatarWidget } from "../widgets/UserAvatarWidget";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { formatDate, handleApiErr } from "../utils";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -115,10 +115,10 @@ const UserWidget = ({ userId }: { userId: string }) => {
     <StandardCard>
       <CardHeader
         avatar={
-          <AvatarWidget
+          <UserAvatarWidget
             userId={userId}
             sx={{ width: 70, height: 70 }}
-            userPublic={userPublic}
+            userPublic={userPublic || undefined}
           />
         }
         action={

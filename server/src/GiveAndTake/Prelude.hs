@@ -32,6 +32,8 @@ module GiveAndTake.Prelude (
   maybeToMErr,
   MonadLoggerWOCStack,
   MonadLogger,
+  whenMLet,
+  whenLet,
 ) where
 
 -- inspired by module from kmonad
@@ -165,6 +167,14 @@ whenM p m =
 unlessM :: (Monad m) => m Bool -> m () -> m ()
 unlessM p m =
   p >>= flip unless m
+
+{-# INLINEABLE whenLet #-}
+whenLet :: (Applicative m) => Maybe a -> (a -> m ()) -> m ()
+whenLet = for_
+
+{-# INLINEABLE whenMLet #-}
+whenMLet :: (Monad m) => m (Maybe a) -> (a -> m ()) -> m ()
+whenMLet p m = traverse_ m =<< p
 
 {-# INLINEABLE ifM #-}
 ifM :: (Monad m) => m Bool -> m a -> m a -> m a

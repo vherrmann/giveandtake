@@ -7,7 +7,7 @@ import Data.UUID qualified as U
 import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Handlers.Utils (checkIsFriendOrEq)
-import GiveAndTake.Job (createJob)
+import GiveAndTake.Job.Utils (createJob)
 import GiveAndTake.Media
 import GiveAndTake.Prelude
 import GiveAndTake.Types
@@ -28,45 +28,10 @@ uploadMediaH userEnt umedia = do
   when (null umedia.files) $ throwError S.err400{errBody = "Uploaded no file."}
   when (length umedia.files > 20) $ throwError S.err400{errBody = "Uploaded too many files."}
   -- check file formats
-  unless (all isMedia umedia.files) $
-    let notMedia = show @Text . fmap SM.fdFileName . filter (not . isMedia) $ umedia.files
-     in throwError S.err400{errBody = [fmt|"Uploaded files {notMedia} are not an image or video."|]}
-
-  uconfig :: UConfig <- askM
-
-  ct <- getUTCTime
-  files <- for umedia.files \file -> do
-    mediaId <-
-      runDB $
-        insertUUID
-          Media
-            { user = userEnt.key
-            , mimeType = file.fdFileCType
-            , createdAt = ct
-            , isDraft = True
-            , isCompressed = False
-            }
-    topType <-
-      if
-        | hasTopTypeOf file.fdFileCType ["image"] -> pure MimeImage
-        | hasTopTypeOf file.fdFileCType ["video"] -> pure MimeVideo
-        -- Should be impossible
-        | otherwise -> throwError S.err400{S.errBody = [fmt|"Uploaded file {file.fdFileName} is not an image or video."|]}
-    -- the files are in a temporary place, we need to move them to the media directory
-
-    -- move file
-    let origPath = mediaPathOrig uconfig mediaId
-    ensureDirOfPath origPath
-    liftIO $ D.renameFile file.fdPayload origPath
-
-    pure MediaUploadFile{mediaId, name = file.fdFileName, cType = topType}
-
-  createJob $ GATJobMediaUpload GATJobMediaUploadData{userId = userEnt.key, files}
-
--- compress & convert files
+  insertMedia userEnt MUReasonPost umedia.files
 
 -- FIXME: Use octetstream instead of abused static file server (or implement proper file server as wai application)
--- FIXME: check if user has access to post (hiddenpost)
+-- FIXME: check if user has access to post (hiddenpost) or profilepicture
 getMediaH :: Entity User -> MediaId -> RServer m S.RawM
 getMediaH userEnt mediaId req onResponse = do
   uconfig :: UConfig <- askM

@@ -246,7 +246,7 @@ const GroupMemberList = ({
   );
 
   // FIXME: update members
-  const [errorCR, changeRole] = useApi(DApi.apiGroupsRolesPost);
+  const [errorCR, changeRole] = useApi(DApi.apiGroupsRolesPut);
 
   if (!memberList || memberList.length === 0) {
     return null;

@@ -17,6 +17,7 @@ library
   exposed-modules:
       GiveAndTake.Api
       GiveAndTake.App
+      GiveAndTake.Auth
       GiveAndTake.DB
       GiveAndTake.DB.TH
       GiveAndTake.DB.Types
@@ -34,8 +35,9 @@ library
       GiveAndTake.Handlers.Posts
       GiveAndTake.Handlers.Users
       GiveAndTake.Handlers.Utils
-      GiveAndTake.Job
-      GiveAndTake.JobCon
+      GiveAndTake.Job.Con
+      GiveAndTake.Job.Run
+      GiveAndTake.Job.Utils
       GiveAndTake.Logging
       GiveAndTake.Media
       GiveAndTake.Notify
@@ -43,6 +45,8 @@ library
       GiveAndTake.Servant.XML
       GiveAndTake.Types
       GiveAndTake.Utils
+      GiveAndTake.VerifyEmail
+      GiveAndTake.VerifyEmail.Utils
   other-modules:
       Paths_giveandtake
   hs-source-dirs:

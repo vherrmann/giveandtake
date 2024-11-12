@@ -12,7 +12,7 @@ import Data.Pool (Pool)
 import Database.Persist qualified as P
 import Database.Persist.Sql qualified as PS
 import GHC.Stack (HasCallStack)
-import GiveAndTake.JobCon (HasJobCon, JobCon)
+import GiveAndTake.Job.Con (HasJobCon, JobCon)
 import GiveAndTake.Prelude
 import Servant
 import System.IO (FilePath)

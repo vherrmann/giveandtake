@@ -1,26 +1,33 @@
-import styled from "@emotion/styled";
-import { Box, Button, Grid, Stack, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CardContent,
+  CardHeader,
+  Grid,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ChangeEvent, useEffect, useRef, useState } from "react";
+import { ChangeEvent, useCallback, useState } from "react";
 
 // import styles
-import { getCurrDate, handleApiErr, useLocalStorage } from "../utils";
+import {
+  ErrorWidget,
+  getCurrDate,
+  handleApiErr,
+  useLocalStorage,
+  useMediaUploadJob,
+  withApi,
+} from "../utils";
 import { PostWidget } from "../widgets/PostWidget";
-import { Api, ApiPost, JobStatus } from "../api";
+import { Api, ApiPost } from "../api";
 import { useAuthedState } from "../ProtectedRoute";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { VisuallyHiddenInput } from "../widgets/VisuallyHiddenInput";
+import { StandardCard } from "../widgets/StandardCard";
 
-const VisuallyHiddenInput = styled("input")({
-  clip: "rect(0 0 0 0)",
-  clipPath: "inset(50%)",
-  height: 1,
-  overflow: "hidden",
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  whiteSpace: "nowrap",
-  width: 1,
-});
+const useless = () => {};
 
 export default function NewPostRoute() {
   const emptyState = {
@@ -36,7 +43,6 @@ export default function NewPostRoute() {
   const [uploadingMedia, setUploadingMedia] = useState(false);
 
   const { userId } = useAuthedState();
-  const mediaUploadPollId = useRef<NodeJS.Timeout | undefined>(undefined);
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
 
@@ -44,6 +50,34 @@ export default function NewPostRoute() {
   const tradeFor = searchParams.get("tradeFor");
   const { state: locState } = useLocation();
   const navigate = useNavigate();
+
+  const onJobFinished = useCallback(
+    async (jobId: string) => {
+      setUploadingMedia(false);
+      withApi(async (api) => {
+        const response = await api.apiJobIdResultMediaCompressGet({
+          id: jobId,
+        });
+        const jobRes = response.data;
+
+        setState((state) => ({
+          ...state,
+          fileIds: jobRes.mediaIds,
+        }));
+      }, setError);
+    },
+    [setUploadingMedia, setState],
+  );
+  const onJobFailed = useCallback(() => {
+    setUploadingMedia(false);
+  }, [setUploadingMedia]);
+
+  const setupMediaUpPolling = useMediaUploadJob({
+    setInfo,
+    setError,
+    onJobFinished,
+    onJobFailed,
+  });
 
   const handleChangeState = (e: React.ChangeEvent<HTMLInputElement>) => {
     // limit length of title to 24 characters
@@ -55,63 +89,26 @@ export default function NewPostRoute() {
       [e.target.name]: e.target.value,
     });
   };
+  const handleFileChange = useCallback(
+    async (e: ChangeEvent<HTMLInputElement>) => {
+      /* setMediaList(e.target.files); // FIXME: merge lists? */
 
-  const setupMediaUpPolling = (jobId: string) => {
-    // Poll every 5 seconds
-    mediaUploadPollId.current = setInterval(async () => {
+      const files = e.target.files;
+      if (!files) return;
+      setUploadingMedia(true);
+      setInfo("Uploading media");
+      setError("");
       try {
-        const response = await Api.apiJobIdStatusGet({ id: jobId });
-        const jobStatus = response.data;
-
-        if (JobStatus.JobFinished === jobStatus) {
-          clearInterval(mediaUploadPollId.current);
-          setUploadingMedia(false);
-          setInfo("Finished compressing files.");
-          const response = await Api.apiJobIdResultMediaCompressGet({
-            id: jobId,
-          });
-          const jobRes = response.data;
-
-          setState((state) => ({
-            ...state,
-            fileIds: jobRes.mediaIds,
-          }));
-        } else if (JobStatus.JobFailed === jobStatus) {
-          clearInterval(mediaUploadPollId.current);
-          setError("File upload failed.");
-          setUploadingMedia(false);
-        } else if (JobStatus.JobRunning === jobStatus) {
-          setInfo("Compressing files...");
-        } else if (JobStatus.JobPending === jobStatus) {
-          setInfo("Starting file compression...");
-        }
+        const jobId = (await Api.apiMediaUploadPost({ uploadMedia: { files } }))
+          .data;
+        setupMediaUpPolling(jobId);
       } catch (e) {
         setError(handleApiErr(e));
+        setUploadingMedia(false);
       }
-    }, 5000);
-  };
-
-  useEffect(() => {
-    return () => clearInterval(mediaUploadPollId.current);
-  }, []);
-
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    /* setMediaList(e.target.files); // FIXME: merge lists */
-
-    const files = e.target.files;
-    if (!files) return;
-    setUploadingMedia(true);
-    setInfo("Uploading media");
-    setError("");
-    try {
-      const jobId = (await Api.apiMediaUploadPost({ uploadMedia: { files } }))
-        .data;
-      setupMediaUpPolling(jobId);
-    } catch (e) {
-      setError(handleApiErr(e));
-      setUploadingMedia(false);
-    }
-  };
+    },
+    [setUploadingMedia, setInfo, setError, setupMediaUpPolling],
+  );
 
   const createPost = async (event: any) => {
     event.preventDefault();
@@ -155,65 +152,90 @@ export default function NewPostRoute() {
     tag: "UnhiddenPost",
     contents: {
       post: {
-        user: userId,
-        title: state.title || "Title",
-        body: state.body ? state.body : "Body",
-        media: state.fileIds,
-        createdAt: date,
-        deleted: false,
+        post: {
+          user: userId,
+          title: state.title || "Title",
+          body: state.body ? state.body : "Body",
+          media: state.fileIds,
+          createdAt: date,
+          deleted: false,
+        },
+        liked: false,
       },
       usedToUnlock: [],
     },
   };
+
   return (
     <Grid container spacing={2}>
-      <Grid item xs>
-        <form onSubmit={createPost}>
-          <Stack spacing={2} alignItems="center">
-            <TextField
-              required
-              name="title"
-              label="Title"
-              variant="standard"
-              value={state.title}
-              onChange={handleChangeState}
-            />
-            <Button
-              component="label"
-              variant="contained"
-              tabIndex={-1}
-              startIcon={<CloudUploadIcon />}
-            >
-              Upload media
-              <VisuallyHiddenInput
-                type="file"
-                onChange={handleFileChange}
-                multiple
-              />
-            </Button>
-            <Typography>{info}</Typography>
-            <Typography color="red">{error}</Typography>
-            <TextField
-              name="body"
-              label="Body"
-              value={state.body}
-              onChange={handleChangeState}
-              multiline
-              minRows={3} // Minimum number of rows to display
-              maxRows={12} // Maximum number of rows before scrolling
-              fullWidth // Makes the input take up the full width of its container
-              variant="outlined" // You can use "filled" or "standard" variant too
-            />
-            <Button variant="contained" type="submit" disabled={uploadingMedia}>
-              Create post
-            </Button>
-          </Stack>
-        </form>
+      <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
+        <StandardCard>
+          <CardHeader
+            title={
+              <Typography variant="h5" align="center">
+                Create new post
+              </Typography>
+            }
+          />
+          <CardContent>
+            <form onSubmit={createPost}>
+              <Stack spacing={2} alignItems="center">
+                <TextField
+                  required
+                  name="title"
+                  label="Title"
+                  variant="standard"
+                  value={state.title}
+                  onChange={handleChangeState}
+                />
+                <Button
+                  component="label"
+                  variant="contained"
+                  tabIndex={-1}
+                  startIcon={<CloudUploadIcon />}
+                  disabled={uploadingMedia}
+                >
+                  Upload media
+                  <VisuallyHiddenInput
+                    type="file"
+                    onChange={handleFileChange}
+                    multiple
+                  />
+                </Button>
+                <Typography>{info}</Typography>
+                <TextField
+                  name="body"
+                  label="Body"
+                  value={state.body}
+                  onChange={handleChangeState}
+                  multiline
+                  minRows={3} // Minimum number of rows to display
+                  maxRows={12} // Maximum number of rows before scrolling
+                  fullWidth // Makes the input take up the full width of its container
+                  variant="outlined" // You can use "filled" or "standard" variant too
+                />
+                <Button
+                  variant="contained"
+                  type="submit"
+                  disabled={uploadingMedia}
+                >
+                  Create post
+                </Button>
+                <ErrorWidget errors={[error]} />
+              </Stack>
+            </form>
+          </CardContent>
+        </StandardCard>
       </Grid>
       <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
         <Box // without the Box the postwidget is fitted to the grid
         >
-          <PostWidget post={post} key={"NewPost"} postId={null} />
+          <PostWidget
+            post={post}
+            key={"NewPost"}
+            postId={null}
+            refetch={useless}
+          />
         </Box>
       </Grid>
     </Grid>

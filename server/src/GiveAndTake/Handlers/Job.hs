@@ -10,7 +10,9 @@ import Servant qualified as S
 
 checkAuthJob :: (HasHandler m) => UserId -> GATJob -> m ()
 checkAuthJob userId = \case
-  (GATJobVerifyEmail val) -> checkIsEqUser userId val.userId
+  (GATJobVerifyEmail val) -> do
+    emailConf <- getByKeySE val.id
+    checkIsEqUser userId emailConf.user
   (GATJobMediaUpload val) -> checkIsEqUser userId val.userId
 
 getStatusJobH :: (HasHandler m) => UserId -> JobId -> m JobStatus

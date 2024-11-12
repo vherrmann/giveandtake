@@ -5,7 +5,7 @@ import {
   useEffect,
   useCallback,
 } from "react";
-import { useLocalStorage } from "../utils";
+import { handleApiErr, useLocalStorage } from "../utils";
 import { Api, LoginData, User } from "../api";
 
 export interface AuthProps {
@@ -23,6 +23,7 @@ export type AuthContextType = {
   login: (loginData: LoginData) => Promise<[boolean, string]>;
   logout: () => Promise<void>;
   authState: AuthProps | UnauthProps;
+  refetchAuth: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,45 +59,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchAuthState();
   }, [fetchAuthState]);
 
-  const login = async ({
-    email,
-    password,
-  }: LoginData): Promise<[boolean, string]> => {
-    try {
-      const response = await Api.apiAuthLoginPost({
-        loginData: {
-          email,
-          password,
-        },
-      });
-      setAuthState({
-        isAuthenticated: true,
-        userId: response.data.userId,
-        user: response.data.user,
-      });
-      return [true, ""];
-    } catch (error: any) {
-      if (error.response) {
-        const msg = error.response.data;
-        return [false, msg];
-      } else {
-        return [false, error.message];
+  const login = useCallback(
+    async ({ email, password }: LoginData): Promise<[boolean, string]> => {
+      try {
+        const response = await Api.apiAuthLoginPost({
+          loginData: {
+            email,
+            password,
+          },
+        });
+        setAuthState({
+          isAuthenticated: true,
+          userId: response.data.userId,
+          user: response.data.user,
+        });
+        return [true, ""];
+      } catch (error: any) {
+        if (error.response) {
+          const msg = error.response.data;
+          return [false, msg];
+        } else {
+          return [false, error.message];
+        }
       }
-    }
-  };
-  const logout = async () => {
+    },
+    [setAuthState],
+  );
+
+  const logout = useCallback(async () => {
     try {
       await Api.apiAuthLogoutPost();
       setAuthState({ isAuthenticated: false, userId: null, user: null });
     } catch (error: any) {
       // FIXME: more information
       // FIXME: inform user
-      console.error(error);
+      handleApiErr(error);
     }
-  };
+  }, [setAuthState]);
 
   return (
-    <AuthContext.Provider value={{ authState, login, logout }}>
+    <AuthContext.Provider
+      value={{ authState, login, logout, refetchAuth: fetchAuthState }}
+    >
       {children}
     </AuthContext.Provider>
   );

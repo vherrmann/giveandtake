@@ -1,4 +1,4 @@
-module GiveAndTake.JobCon where
+module GiveAndTake.Job.Con where
 
 import GiveAndTake.Prelude
 import UnliftIO.STM

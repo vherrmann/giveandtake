@@ -11,11 +11,110 @@ export interface UploadMedia {
     files: FileList;
 }
 
+export interface UploadAvatar {
+    file: File;
+}
+
 export const Api = (() => {
     const basePath = window.location.origin;
     const configuration = new auto.Configuration({
         basePath,
     });
+
+    const apiUsersSettingsAvatarPostArgs = async (
+        uploadAvatar: UploadAvatar,
+        options: RawAxiosRequestConfig = {},
+    ): Promise<autob.RequestArgs> => {
+        // verify required parameter 'uploadMedia' is not null or undefined
+        autoc.assertParamExists(
+            "apiUsersSettingsAvatarPost",
+            "uploadAvatar",
+            uploadAvatar,
+        );
+        const localVarPath = `/api/users/settings/avatar`;
+        // use dummy base URL string because the URL constructor only accepts absolute URLs.
+        const localVarUrlObj = new URL(localVarPath, autoc.DUMMY_BASE_URL);
+        let baseOptions;
+        if (configuration) {
+            baseOptions = configuration.baseOptions;
+        }
+
+        const localVarRequestOptions = {
+            method: "POST",
+            ...baseOptions,
+            ...options,
+        };
+        const localVarHeaderParameter = {} as any;
+        const localVarQueryParameter = {} as any;
+
+        localVarHeaderParameter["Content-Type"] = "multipart/form-data";
+
+        // authentication Cookie required
+        // http bearer authentication required
+        await autoc.setBearerAuthToObject(
+            localVarHeaderParameter,
+            configuration,
+        );
+
+        //  We don't set the content type ourself.
+
+        autoc.setSearchParams(localVarUrlObj, localVarQueryParameter);
+        let headersFromBaseOptions =
+            baseOptions && baseOptions.headers ? baseOptions.headers : {};
+        localVarRequestOptions.headers = {
+            ...localVarHeaderParameter,
+            ...headersFromBaseOptions,
+            ...options.headers,
+        };
+
+        // add request data
+        var formData = new FormData();
+        formData.append(`file0`, uploadAvatar.file);
+        localVarRequestOptions.data = autoc.serializeDataIfNeeded(
+            formData,
+            localVarRequestOptions,
+            configuration,
+        );
+
+        return {
+            url: autoc.toPathString(localVarUrlObj),
+            options: localVarRequestOptions,
+        };
+    };
+
+    const apiUsersSettingsAvatarPostFp = async (
+        uploadAvatar: UploadAvatar,
+        options?: RawAxiosRequestConfig,
+    ): Promise<
+        (axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>
+    > => {
+        const localVarAxiosArgs = await apiUsersSettingsAvatarPostArgs(
+            uploadAvatar,
+            options,
+        );
+        const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+        const localVarOperationServerBasePath =
+            autob.operationServerMap["DefaultApi.apiUsersSettingsAvatarPost"]?.[
+                localVarOperationServerIndex
+            ]?.url;
+        return (axios, basePath) =>
+            autoc.createRequestFunction(
+                localVarAxiosArgs,
+                globalAxios,
+                autob.BASE_PATH,
+                configuration,
+            )(axios, localVarOperationServerBasePath || basePath);
+    };
+
+    const apiUsersSettingsAvatarPost = async (
+        requestParameters: { uploadAvatar: UploadAvatar },
+        options?: any,
+    ): AxiosPromise<string> => {
+        return apiUsersSettingsAvatarPostFp(
+            requestParameters.uploadAvatar,
+            options,
+        ).then((request) => request(undefined, basePath));
+    };
 
     const apiMediaUploadPostArgs = async (
         uploadMedia: UploadMedia,
@@ -196,6 +295,7 @@ export const Api = (() => {
     return {
         ...auto.DefaultApiFactory(configuration, basePath),
         apiMediaUploadPost,
+        apiUsersSettingsAvatarPost,
         apiMediaIdGet,
     };
 })();

@@ -9,10 +9,9 @@ import { DApi, ErrorWidget, useApiState } from "../utils";
 export const FeedWidget = () => {
   const [replaced, setReplaced] = useState<boolean>(false);
   const location = useLocation();
-  const [errorFU, furlResponse] = useApiState(
+  const [errorFU, furlResponse] = useApiState<"apiFeedUrlPost">(
     DApi.apiFeedUrlPost,
-    { body: "MainFeed" },
-    { enable: location.pathname === "/" },
+    (location.pathname === "/" && { body: "MainFeed" }) || null,
   );
   const fUrl = furlResponse?.feedUrl;
 

@@ -20,6 +20,7 @@ import { Swiper, SwiperRef, SwiperSlide } from "swiper/react";
 import ReactPlayer, { ReactPlayerProps } from "react-player";
 import CloseIcon from "@mui/icons-material/Close";
 import "./react-player.css"; /* https://stackoverflow.com/questions/26979003/space-after-html5s-video-tag */
+import { Img } from "./Img";
 
 const UncontrolledVideoPlayer = ({
   file,
@@ -33,6 +34,8 @@ const UncontrolledVideoPlayer = ({
     <Box
       sx={{
         position: "relative",
+        width: "fit-content",
+        height: "fit-content",
       }}
     >
       <ReactPlayer
@@ -46,8 +49,8 @@ const UncontrolledVideoPlayer = ({
           setProgress(state.played);
         }}
         progressInterval={100}
-        width="100%"
-        height="100%"
+        width="auto"
+        height="auto"
         {...props}
       />
       <LinearProgress
@@ -88,14 +91,10 @@ export const SwiperGallery = ({
         const fileType = file.type; // Get the MIME type
         if (fileType.startsWith("image/")) {
           return (
-            <img
-              src={URL.createObjectURL(file)}
+            <Img
+              media={file}
               alt="" // FIXME
-              style={{
-                objectFit: fullscreenp ? "scale-down" : "cover",
-                height: fullscreenp ? "auto" : "100%",
-                width: fullscreenp ? "auto" : "100%",
-              }}
+              cover={!fullscreenp}
             />
           );
         } else if (fileType.startsWith("video/")) {
@@ -120,14 +119,21 @@ export const SwiperGallery = ({
           key={files[i].id}
           style={{
             backgroundColor: "inherit",
+            width: "100%",
+            height: "100%",
           }}
         >
-          <Box key={files[i].id}>
-            {fullscreenp ? (
-              <Box className="swiper-zoom-container">{slide}</Box>
-            ) : (
-              slide
-            )}
+          <Box
+            key={files[i].id}
+            className={fullscreenp ? "swiper-zoom-container" : undefined}
+            style={{
+              width: "100%",
+              height: "100%",
+              alignItems: "center",
+              display: "flex",
+            }}
+          >
+            {slide}
           </Box>
         </SwiperSlide>
       ));

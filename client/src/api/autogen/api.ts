@@ -67,8 +67,40 @@ export interface ApiGroupMember {
  * @type ApiPost
  * @export
  */
-export type ApiPost = HiddenPost | UnhiddenPost;
+export type ApiPost = DeletedPost | HiddenPost | UnhiddenPost;
 
+/**
+ * 
+ * @export
+ * @interface ApiUserSettings
+ */
+export interface ApiUserSettings {
+    /**
+     * 
+     * @type {string}
+     * @memberof ApiUserSettings
+     */
+    'name': string;
+}
+/**
+ * 
+ * @export
+ * @interface ChangeEmailAddress
+ */
+export interface ChangeEmailAddress {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangeEmailAddress
+     */
+    'newEmail': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangeEmailAddress
+     */
+    'password': string;
+}
 /**
  * 
  * @export
@@ -99,6 +131,25 @@ export interface ChangeGroupRole {
 /**
  * 
  * @export
+ * @interface ChangePassword
+ */
+export interface ChangePassword {
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangePassword
+     */
+    'newPassword': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof ChangePassword
+     */
+    'oldPassword': string;
+}
+/**
+ * 
+ * @export
  * @interface CheckResponse
  */
 export interface CheckResponse {
@@ -114,6 +165,64 @@ export interface CheckResponse {
      * @memberof CheckResponse
      */
     'userId': string;
+}
+/**
+ * 
+ * @export
+ * @interface DeletedPost
+ */
+export interface DeletedPost {
+    /**
+     * 
+     * @type {DeletedPostData}
+     * @memberof DeletedPost
+     */
+    'contents': DeletedPostData;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeletedPost
+     */
+    'tag': DeletedPostTagEnum;
+}
+
+export const DeletedPostTagEnum = {
+    DeletedPost: 'DeletedPost'
+} as const;
+
+export type DeletedPostTagEnum = typeof DeletedPostTagEnum[keyof typeof DeletedPostTagEnum];
+
+/**
+ * 
+ * @export
+ * @interface DeletedPostData
+ */
+export interface DeletedPostData {
+    /**
+     * 
+     * @type {string}
+     * @memberof DeletedPostData
+     */
+    'createdAt': string;
+    /**
+     * 
+     * @type {string}
+     * @memberof DeletedPostData
+     */
+    'user': string;
+}
+/**
+ * 
+ * @export
+ * @interface EmailVerificationRequest
+ */
+export interface EmailVerificationRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof EmailVerificationRequest
+     */
+    'email': string;
 }
 /**
  * 
@@ -166,6 +275,12 @@ export interface FriendsRequestGetResponse {
  * @interface Group
  */
 export interface Group {
+    /**
+     * 
+     * @type {string}
+     * @memberof Group
+     */
+    'avatar'?: string;
     /**
      * 
      * @type {string}
@@ -580,10 +695,10 @@ export type UnhiddenPostTagEnum = typeof UnhiddenPostTagEnum[keyof typeof Unhidd
 export interface UnhiddenPostData {
     /**
      * 
-     * @type {Post}
+     * @type {ViewablePostData}
      * @memberof UnhiddenPostData
      */
-    'post': Post;
+    'post': ViewablePostData;
     /**
      * 
      * @type {Array<WithUUIDPost>}
@@ -625,10 +740,10 @@ export type UnlockedHiddenPostTagEnum = typeof UnlockedHiddenPostTagEnum[keyof t
 export interface UnlockedHiddenPostData {
     /**
      * 
-     * @type {Post}
+     * @type {ViewablePostData}
      * @memberof UnlockedHiddenPostData
      */
-    'post': Post;
+    'post': ViewablePostData;
     /**
      * 
      * @type {WithUUIDPost}
@@ -655,6 +770,12 @@ export interface UploadMediaResponse {
  * @interface User
  */
 export interface User {
+    /**
+     * 
+     * @type {string}
+     * @memberof User
+     */
+    'avatar'?: string;
     /**
      * 
      * @type {string}
@@ -697,6 +818,12 @@ export interface UserPublic {
      * @type {string}
      * @memberof UserPublic
      */
+    'avatar'?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof UserPublic
+     */
     'createdAt': string;
     /**
      * 
@@ -716,13 +843,32 @@ export interface VerifyEmail {
      * @type {string}
      * @memberof VerifyEmail
      */
-    'secret': string;
+    'id': string;
     /**
      * 
      * @type {string}
      * @memberof VerifyEmail
      */
-    'user': string;
+    'secret': string;
+}
+/**
+ * 
+ * @export
+ * @interface ViewablePostData
+ */
+export interface ViewablePostData {
+    /**
+     * 
+     * @type {boolean}
+     * @memberof ViewablePostData
+     */
+    'liked': boolean;
+    /**
+     * 
+     * @type {Post}
+     * @memberof ViewablePostData
+     */
+    'post': Post;
 }
 /**
  * 
@@ -983,10 +1129,10 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthVerifyemailPost: async (verifyEmail: VerifyEmail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiAuthVerifyemailFinishPost: async (verifyEmail: VerifyEmail, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'verifyEmail' is not null or undefined
-            assertParamExists('apiAuthVerifyemailPost', 'verifyEmail', verifyEmail)
-            const localVarPath = `/api/auth/verifyemail`;
+            assertParamExists('apiAuthVerifyemailFinishPost', 'verifyEmail', verifyEmail)
+            const localVarPath = `/api/auth/verifyemail/finish`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
             let baseOptions;
@@ -1006,6 +1152,41 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
             let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
             localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
             localVarRequestOptions.data = serializeDataIfNeeded(verifyEmail, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {EmailVerificationRequest} emailVerificationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAuthVerifyemailRequestPost: async (emailVerificationRequest: EmailVerificationRequest, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'emailVerificationRequest' is not null or undefined
+            assertParamExists('apiAuthVerifyemailRequestPost', 'emailVerificationRequest', emailVerificationRequest)
+            const localVarPath = `/api/auth/verifyemail/request`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json;charset=utf-8';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(emailVerificationRequest, localVarRequestOptions, configuration)
 
             return {
                 url: toPathString(localVarUrlObj),
@@ -1841,9 +2022,9 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRolesPost: async (changeGroupRole: ChangeGroupRole, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+        apiGroupsRolesPut: async (changeGroupRole: ChangeGroupRole, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
             // verify required parameter 'changeGroupRole' is not null or undefined
-            assertParamExists('apiGroupsRolesPost', 'changeGroupRole', changeGroupRole)
+            assertParamExists('apiGroupsRolesPut', 'changeGroupRole', changeGroupRole)
             const localVarPath = `/api/groups/roles`;
             // use dummy base URL string because the URL constructor only accepts absolute URLs.
             const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
@@ -1852,7 +2033,7 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 baseOptions = configuration.baseOptions;
             }
 
-            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
             const localVarHeaderParameter = {} as any;
             const localVarQueryParameter = {} as any;
 
@@ -2199,6 +2380,80 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
         },
         /**
          * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiPostsLikeIdDelete: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiPostsLikeIdDelete', 'id', id)
+            const localVarPath = `/api/posts/like/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiPostsLikeIdPut: async (id: string, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'id' is not null or undefined
+            assertParamExists('apiPostsLikeIdPut', 'id', id)
+            const localVarPath = `/api/posts/like/{id}`
+                .replace(`{${"id"}}`, encodeURIComponent(String(id)));
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
          * @param {NewPost} newPost 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2388,6 +2643,222 @@ export const DefaultApiAxiosParamCreator = function (configuration?: Configurati
                 options: localVarRequestOptions,
             };
         },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsAvatarDelete: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/users/settings/avatar`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'DELETE', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsAvatarPost: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/users/settings/avatar`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'POST', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsBasicGet: async (options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            const localVarPath = `/api/users/settings/basic`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'GET', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ApiUserSettings} apiUserSettings 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsBasicPut: async (apiUserSettings: ApiUserSettings, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'apiUserSettings' is not null or undefined
+            assertParamExists('apiUsersSettingsBasicPut', 'apiUserSettings', apiUserSettings)
+            const localVarPath = `/api/users/settings/basic`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json;charset=utf-8';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(apiUserSettings, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ChangeEmailAddress} changeEmailAddress 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsEmailPut: async (changeEmailAddress: ChangeEmailAddress, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'changeEmailAddress' is not null or undefined
+            assertParamExists('apiUsersSettingsEmailPut', 'changeEmailAddress', changeEmailAddress)
+            const localVarPath = `/api/users/settings/email`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json;charset=utf-8';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(changeEmailAddress, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
+        /**
+         * 
+         * @param {ChangePassword} changePassword 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsPasswordPut: async (changePassword: ChangePassword, options: RawAxiosRequestConfig = {}): Promise<RequestArgs> => {
+            // verify required parameter 'changePassword' is not null or undefined
+            assertParamExists('apiUsersSettingsPasswordPut', 'changePassword', changePassword)
+            const localVarPath = `/api/users/settings/password`;
+            // use dummy base URL string because the URL constructor only accepts absolute URLs.
+            const localVarUrlObj = new URL(localVarPath, DUMMY_BASE_URL);
+            let baseOptions;
+            if (configuration) {
+                baseOptions = configuration.baseOptions;
+            }
+
+            const localVarRequestOptions = { method: 'PUT', ...baseOptions, ...options};
+            const localVarHeaderParameter = {} as any;
+            const localVarQueryParameter = {} as any;
+
+            // authentication Cookie required
+            // http bearer authentication required
+            await setBearerAuthToObject(localVarHeaderParameter, configuration)
+
+
+    
+            localVarHeaderParameter['Content-Type'] = 'application/json;charset=utf-8';
+
+            setSearchParams(localVarUrlObj, localVarQueryParameter);
+            let headersFromBaseOptions = baseOptions && baseOptions.headers ? baseOptions.headers : {};
+            localVarRequestOptions.headers = {...localVarHeaderParameter, ...headersFromBaseOptions, ...options.headers};
+            localVarRequestOptions.data = serializeDataIfNeeded(changePassword, localVarRequestOptions, configuration)
+
+            return {
+                url: toPathString(localVarUrlObj),
+                options: localVarRequestOptions,
+            };
+        },
     }
 };
 
@@ -2450,10 +2921,22 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiAuthVerifyemailPost(verifyEmail: VerifyEmail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthVerifyemailPost(verifyEmail, options);
+        async apiAuthVerifyemailFinishPost(verifyEmail: VerifyEmail, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthVerifyemailFinishPost(verifyEmail, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiAuthVerifyemailPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiAuthVerifyemailFinishPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {EmailVerificationRequest} emailVerificationRequest 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiAuthVerifyemailRequestPost(emailVerificationRequest: EmailVerificationRequest, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiAuthVerifyemailRequestPost(emailVerificationRequest, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiAuthVerifyemailRequestPost']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2728,10 +3211,10 @@ export const DefaultApiFp = function(configuration?: Configuration) {
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        async apiGroupsRolesPost(changeGroupRole: ChangeGroupRole, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
-            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGroupsRolesPost(changeGroupRole, options);
+        async apiGroupsRolesPut(changeGroupRole: ChangeGroupRole, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiGroupsRolesPut(changeGroupRole, options);
             const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
-            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiGroupsRolesPost']?.[localVarOperationServerIndex]?.url;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiGroupsRolesPut']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
         /**
@@ -2841,6 +3324,30 @@ export const DefaultApiFp = function(configuration?: Configuration) {
         },
         /**
          * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiPostsLikeIdDelete(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiPostsLikeIdDelete(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiPostsLikeIdDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {string} id 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiPostsLikeIdPut(id: string, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiPostsLikeIdPut(id, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiPostsLikeIdPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
          * @param {NewPost} newPost 
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -2900,6 +3407,75 @@ export const DefaultApiFp = function(configuration?: Configuration) {
             const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersIdPostsGet']?.[localVarOperationServerIndex]?.url;
             return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
         },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsAvatarDelete(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsAvatarDelete(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsAvatarDelete']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsAvatarPost(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsAvatarPost(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsAvatarPost']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsBasicGet(options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<ApiUserSettings>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsBasicGet(options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsBasicGet']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ApiUserSettings} apiUserSettings 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsBasicPut(apiUserSettings: ApiUserSettings, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsBasicPut(apiUserSettings, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsBasicPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ChangeEmailAddress} changeEmailAddress 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsEmailPut(changeEmailAddress: ChangeEmailAddress, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<string>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsEmailPut(changeEmailAddress, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsEmailPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
+        /**
+         * 
+         * @param {ChangePassword} changePassword 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        async apiUsersSettingsPasswordPut(changePassword: ChangePassword, options?: RawAxiosRequestConfig): Promise<(axios?: AxiosInstance, basePath?: string) => AxiosPromise<Array<any>>> {
+            const localVarAxiosArgs = await localVarAxiosParamCreator.apiUsersSettingsPasswordPut(changePassword, options);
+            const localVarOperationServerIndex = configuration?.serverIndex ?? 0;
+            const localVarOperationServerBasePath = operationServerMap['DefaultApi.apiUsersSettingsPasswordPut']?.[localVarOperationServerIndex]?.url;
+            return (axios, basePath) => createRequestFunction(localVarAxiosArgs, globalAxios, BASE_PATH, configuration)(axios, localVarOperationServerBasePath || basePath);
+        },
     }
 };
 
@@ -2946,12 +3522,21 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {DefaultApiApiAuthVerifyemailPostRequest} requestParameters Request parameters.
+         * @param {DefaultApiApiAuthVerifyemailFinishPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiAuthVerifyemailPost(requestParameters: DefaultApiApiAuthVerifyemailPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
-            return localVarFp.apiAuthVerifyemailPost(requestParameters.verifyEmail, options).then((request) => request(axios, basePath));
+        apiAuthVerifyemailFinishPost(requestParameters: DefaultApiApiAuthVerifyemailFinishPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiAuthVerifyemailFinishPost(requestParameters.verifyEmail, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DefaultApiApiAuthVerifyemailRequestPostRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiAuthVerifyemailRequestPost(requestParameters: DefaultApiApiAuthVerifyemailRequestPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiAuthVerifyemailRequestPost(requestParameters.emailVerificationRequest, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3149,12 +3734,12 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
-         * @param {DefaultApiApiGroupsRolesPostRequest} requestParameters Request parameters.
+         * @param {DefaultApiApiGroupsRolesPutRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
          */
-        apiGroupsRolesPost(requestParameters: DefaultApiApiGroupsRolesPostRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
-            return localVarFp.apiGroupsRolesPost(requestParameters.changeGroupRole, options).then((request) => request(axios, basePath));
+        apiGroupsRolesPut(requestParameters: DefaultApiApiGroupsRolesPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiGroupsRolesPut(requestParameters.changeGroupRole, options).then((request) => request(axios, basePath));
         },
         /**
          * 
@@ -3236,6 +3821,24 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         },
         /**
          * 
+         * @param {DefaultApiApiPostsLikeIdDeleteRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiPostsLikeIdDelete(requestParameters: DefaultApiApiPostsLikeIdDeleteRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiPostsLikeIdDelete(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DefaultApiApiPostsLikeIdPutRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiPostsLikeIdPut(requestParameters: DefaultApiApiPostsLikeIdPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiPostsLikeIdPut(requestParameters.id, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
          * @param {DefaultApiApiPostsPostRequest} requestParameters Request parameters.
          * @param {*} [options] Override http request option.
          * @throws {RequiredError}
@@ -3279,6 +3882,57 @@ export const DefaultApiFactory = function (configuration?: Configuration, basePa
         apiUsersIdPostsGet(requestParameters: DefaultApiApiUsersIdPostsGetRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<WithUUIDApiPost>> {
             return localVarFp.apiUsersIdPostsGet(requestParameters.id, options).then((request) => request(axios, basePath));
         },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsAvatarDelete(options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiUsersSettingsAvatarDelete(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsAvatarPost(options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiUsersSettingsAvatarPost(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsBasicGet(options?: RawAxiosRequestConfig): AxiosPromise<ApiUserSettings> {
+            return localVarFp.apiUsersSettingsBasicGet(options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DefaultApiApiUsersSettingsBasicPutRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsBasicPut(requestParameters: DefaultApiApiUsersSettingsBasicPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiUsersSettingsBasicPut(requestParameters.apiUserSettings, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DefaultApiApiUsersSettingsEmailPutRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsEmailPut(requestParameters: DefaultApiApiUsersSettingsEmailPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<string> {
+            return localVarFp.apiUsersSettingsEmailPut(requestParameters.changeEmailAddress, options).then((request) => request(axios, basePath));
+        },
+        /**
+         * 
+         * @param {DefaultApiApiUsersSettingsPasswordPutRequest} requestParameters Request parameters.
+         * @param {*} [options] Override http request option.
+         * @throws {RequiredError}
+         */
+        apiUsersSettingsPasswordPut(requestParameters: DefaultApiApiUsersSettingsPasswordPutRequest, options?: RawAxiosRequestConfig): AxiosPromise<Array<any>> {
+            return localVarFp.apiUsersSettingsPasswordPut(requestParameters.changePassword, options).then((request) => request(axios, basePath));
+        },
     };
 };
 
@@ -3311,17 +3965,31 @@ export interface DefaultApiApiAuthSignupPostRequest {
 }
 
 /**
- * Request parameters for apiAuthVerifyemailPost operation in DefaultApi.
+ * Request parameters for apiAuthVerifyemailFinishPost operation in DefaultApi.
  * @export
- * @interface DefaultApiApiAuthVerifyemailPostRequest
+ * @interface DefaultApiApiAuthVerifyemailFinishPostRequest
  */
-export interface DefaultApiApiAuthVerifyemailPostRequest {
+export interface DefaultApiApiAuthVerifyemailFinishPostRequest {
     /**
      * 
      * @type {VerifyEmail}
-     * @memberof DefaultApiApiAuthVerifyemailPost
+     * @memberof DefaultApiApiAuthVerifyemailFinishPost
      */
     readonly verifyEmail: VerifyEmail
+}
+
+/**
+ * Request parameters for apiAuthVerifyemailRequestPost operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiAuthVerifyemailRequestPostRequest
+ */
+export interface DefaultApiApiAuthVerifyemailRequestPostRequest {
+    /**
+     * 
+     * @type {EmailVerificationRequest}
+     * @memberof DefaultApiApiAuthVerifyemailRequestPost
+     */
+    readonly emailVerificationRequest: EmailVerificationRequest
 }
 
 /**
@@ -3619,15 +4287,15 @@ export interface DefaultApiApiGroupsRequestIdUserIdRejectPostRequest {
 }
 
 /**
- * Request parameters for apiGroupsRolesPost operation in DefaultApi.
+ * Request parameters for apiGroupsRolesPut operation in DefaultApi.
  * @export
- * @interface DefaultApiApiGroupsRolesPostRequest
+ * @interface DefaultApiApiGroupsRolesPutRequest
  */
-export interface DefaultApiApiGroupsRolesPostRequest {
+export interface DefaultApiApiGroupsRolesPutRequest {
     /**
      * 
      * @type {ChangeGroupRole}
-     * @memberof DefaultApiApiGroupsRolesPost
+     * @memberof DefaultApiApiGroupsRolesPut
      */
     readonly changeGroupRole: ChangeGroupRole
 }
@@ -3717,6 +4385,34 @@ export interface DefaultApiApiPostsIdGetRequest {
 }
 
 /**
+ * Request parameters for apiPostsLikeIdDelete operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsLikeIdDeleteRequest
+ */
+export interface DefaultApiApiPostsLikeIdDeleteRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsLikeIdDelete
+     */
+    readonly id: string
+}
+
+/**
+ * Request parameters for apiPostsLikeIdPut operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiPostsLikeIdPutRequest
+ */
+export interface DefaultApiApiPostsLikeIdPutRequest {
+    /**
+     * 
+     * @type {string}
+     * @memberof DefaultApiApiPostsLikeIdPut
+     */
+    readonly id: string
+}
+
+/**
  * Request parameters for apiPostsPost operation in DefaultApi.
  * @export
  * @interface DefaultApiApiPostsPostRequest
@@ -3794,6 +4490,48 @@ export interface DefaultApiApiUsersIdPostsGetRequest {
 }
 
 /**
+ * Request parameters for apiUsersSettingsBasicPut operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiUsersSettingsBasicPutRequest
+ */
+export interface DefaultApiApiUsersSettingsBasicPutRequest {
+    /**
+     * 
+     * @type {ApiUserSettings}
+     * @memberof DefaultApiApiUsersSettingsBasicPut
+     */
+    readonly apiUserSettings: ApiUserSettings
+}
+
+/**
+ * Request parameters for apiUsersSettingsEmailPut operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiUsersSettingsEmailPutRequest
+ */
+export interface DefaultApiApiUsersSettingsEmailPutRequest {
+    /**
+     * 
+     * @type {ChangeEmailAddress}
+     * @memberof DefaultApiApiUsersSettingsEmailPut
+     */
+    readonly changeEmailAddress: ChangeEmailAddress
+}
+
+/**
+ * Request parameters for apiUsersSettingsPasswordPut operation in DefaultApi.
+ * @export
+ * @interface DefaultApiApiUsersSettingsPasswordPutRequest
+ */
+export interface DefaultApiApiUsersSettingsPasswordPutRequest {
+    /**
+     * 
+     * @type {ChangePassword}
+     * @memberof DefaultApiApiUsersSettingsPasswordPut
+     */
+    readonly changePassword: ChangePassword
+}
+
+/**
  * DefaultApi - object-oriented interface
  * @export
  * @class DefaultApi
@@ -3844,13 +4582,24 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {DefaultApiApiAuthVerifyemailPostRequest} requestParameters Request parameters.
+     * @param {DefaultApiApiAuthVerifyemailFinishPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiAuthVerifyemailPost(requestParameters: DefaultApiApiAuthVerifyemailPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiAuthVerifyemailPost(requestParameters.verifyEmail, options).then((request) => request(this.axios, this.basePath));
+    public apiAuthVerifyemailFinishPost(requestParameters: DefaultApiApiAuthVerifyemailFinishPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiAuthVerifyemailFinishPost(requestParameters.verifyEmail, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DefaultApiApiAuthVerifyemailRequestPostRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiAuthVerifyemailRequestPost(requestParameters: DefaultApiApiAuthVerifyemailRequestPostRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiAuthVerifyemailRequestPost(requestParameters.emailVerificationRequest, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4093,13 +4842,13 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
-     * @param {DefaultApiApiGroupsRolesPostRequest} requestParameters Request parameters.
+     * @param {DefaultApiApiGroupsRolesPutRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
      * @memberof DefaultApi
      */
-    public apiGroupsRolesPost(requestParameters: DefaultApiApiGroupsRolesPostRequest, options?: RawAxiosRequestConfig) {
-        return DefaultApiFp(this.configuration).apiGroupsRolesPost(requestParameters.changeGroupRole, options).then((request) => request(this.axios, this.basePath));
+    public apiGroupsRolesPut(requestParameters: DefaultApiApiGroupsRolesPutRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiGroupsRolesPut(requestParameters.changeGroupRole, options).then((request) => request(this.axios, this.basePath));
     }
 
     /**
@@ -4200,6 +4949,28 @@ export class DefaultApi extends BaseAPI {
 
     /**
      * 
+     * @param {DefaultApiApiPostsLikeIdDeleteRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiPostsLikeIdDelete(requestParameters: DefaultApiApiPostsLikeIdDeleteRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsLikeIdDelete(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DefaultApiApiPostsLikeIdPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiPostsLikeIdPut(requestParameters: DefaultApiApiPostsLikeIdPutRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiPostsLikeIdPut(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
      * @param {DefaultApiApiPostsPostRequest} requestParameters Request parameters.
      * @param {*} [options] Override http request option.
      * @throws {RequiredError}
@@ -4251,6 +5022,69 @@ export class DefaultApi extends BaseAPI {
      */
     public apiUsersIdPostsGet(requestParameters: DefaultApiApiUsersIdPostsGetRequest, options?: RawAxiosRequestConfig) {
         return DefaultApiFp(this.configuration).apiUsersIdPostsGet(requestParameters.id, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsAvatarDelete(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsAvatarDelete(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsAvatarPost(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsAvatarPost(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsBasicGet(options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsBasicGet(options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DefaultApiApiUsersSettingsBasicPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsBasicPut(requestParameters: DefaultApiApiUsersSettingsBasicPutRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsBasicPut(requestParameters.apiUserSettings, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DefaultApiApiUsersSettingsEmailPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsEmailPut(requestParameters: DefaultApiApiUsersSettingsEmailPutRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsEmailPut(requestParameters.changeEmailAddress, options).then((request) => request(this.axios, this.basePath));
+    }
+
+    /**
+     * 
+     * @param {DefaultApiApiUsersSettingsPasswordPutRequest} requestParameters Request parameters.
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof DefaultApi
+     */
+    public apiUsersSettingsPasswordPut(requestParameters: DefaultApiApiUsersSettingsPasswordPutRequest, options?: RawAxiosRequestConfig) {
+        return DefaultApiFp(this.configuration).apiUsersSettingsPasswordPut(requestParameters.changePassword, options).then((request) => request(this.axios, this.basePath));
     }
 }
 

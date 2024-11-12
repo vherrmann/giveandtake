@@ -22,6 +22,7 @@ import { SettingsRoute } from "./routes/SettingsRoute";
 import NewGroupRoute from "./routes/NewGroupRoute";
 import GroupRoute from "./routes/GroupRoute";
 import { ConfirmProvider } from "material-ui-confirm";
+import { RequestEmailVerifRoute } from "./routes/RequestEmailVerifRoute";
 
 // Rickroll banner
 const banner = `
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
       { path: "login", element: <Login /> },
       { path: "signup", element: <Signup /> },
       { path: "verifyemail", element: <VerifyEmail /> },
+      { path: "requestEmailVerif", element: <RequestEmailVerifRoute /> },
     ],
   },
 ]);

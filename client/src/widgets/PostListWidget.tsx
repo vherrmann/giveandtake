@@ -92,6 +92,7 @@ export const PostList = ({
                   onDelete={(postId) =>
                     setPosts(posts.filter(({ key }) => key !== postId))
                   }
+                  refetch={fetchPosts}
                 />
               </Box>
             );

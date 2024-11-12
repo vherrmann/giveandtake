@@ -6,24 +6,24 @@ import { handleApiErr } from "../utils";
 export const VerifyEmail = () => {
   const [searchParams] = useSearchParams();
   const secret = searchParams.get("secret");
-  const user = searchParams.get("userId");
+  const id = searchParams.get("id");
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const requestVerification = useCallback(async () => {
     try {
-      if (!secret || !user) {
+      if (!secret || !id) {
         throw new Error("Invalid verification link");
       }
-      await Api.apiAuthVerifyemailPost({ verifyEmail: { user, secret } });
+      await Api.apiAuthVerifyemailFinishPost({ verifyEmail: { id, secret } });
       setLoading(false);
       setError(null);
     } catch (e: any) {
       setError(handleApiErr(e));
       setLoading(false);
     }
-  }, [user, secret]);
+  }, [id, secret]);
 
   useEffect(() => {
     requestVerification();

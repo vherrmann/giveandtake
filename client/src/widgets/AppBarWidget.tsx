@@ -90,7 +90,10 @@ export const AppBarWidget = () => {
               <IconButton {...bindTrigger(popupState)} aria-label="qrcode">
                 <QrCodeIcon />
               </IconButton>
-              <Popover {...bindPopover(popupState)}>
+              <Popover
+                {...bindPopover(popupState)}
+                onClick={() => popupState.close()}
+              >
                 <QRCodeSVG
                   value={window.location.href}
                   fgColor={theme.palette.primary.main}

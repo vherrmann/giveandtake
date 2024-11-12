@@ -1,6 +1,6 @@
 import { format } from "date-fns";
-import { useEffect, useState } from "react";
-import { Api, ApiGroup, GroupRole, User, UserPublic } from "./api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Api, ApiGroup, GroupRole, JobStatus, User, UserPublic } from "./api";
 import { AxiosPromise } from "axios";
 import { Typography } from "@mui/material";
 import { useDeepCompareEffectNoCheck } from "use-deep-compare-effect";
@@ -70,6 +70,7 @@ export const userToUserPublic = (user: User): UserPublic => {
   return {
     name: user.name,
     createdAt: user.createdAt,
+    avatar: user.avatar,
   };
 };
 
@@ -170,15 +171,15 @@ export const handleApiErr = (error: any): string => {
 
 export const withApi = async (
   fn: (api: ApiType) => Promise<void>,
-  setError: React.Dispatch<React.SetStateAction<string | null>>,
-  onError?: (e: any) => void,
+  setError: (error: string) => void,
+  handleError?: (e: any) => void,
 ) => {
   try {
     await fn(Api);
   } catch (e) {
     try {
-      if (onError) {
-        onError(e);
+      if (handleError) {
+        handleError(e);
       } else {
         setError(handleApiErr(e));
       }
@@ -191,7 +192,7 @@ export const withApi = async (
 type AxiosPromiseType<T extends AxiosPromise<any>> =
   T extends AxiosPromise<infer U> ? U : never;
 type PromiseType<T extends Promise<any>> =
-  T extends AxiosPromise<infer U> ? U : never;
+  T extends Promise<infer U> ? U : never;
 
 type ApiType = typeof Api;
 type ApiMethod = keyof ApiType;
@@ -204,7 +205,7 @@ type ApiOnSuccess<T> = (
 type ApiCBExtraParams<T> = {
   options?: EndpointToOptions<T>;
   onSuccess?: ApiOnSuccess<T>;
-  onError?: (e: any) => void;
+  handleError?: (e: any) => void;
 };
 
 type ApiCB<T> =
@@ -220,7 +221,7 @@ type ApiCB<T> =
 
 type ApiFnExtraParams<T> = {
   onSuccess?: ApiOnSuccess<T>;
-  onError?: (e: any) => void;
+  handleError?: (e: any) => void;
 };
 
 type ApiFnRet<T> = [string | null, ApiCB<T>, boolean];
@@ -242,39 +243,44 @@ export const useApi: IntersectionToRenderedIntersectionApi<ApiMethod> = <
   method: T,
   extraParams?: ApiFnExtraParams<T>,
 ) => {
-  const [loading, setLoading] = useState(true);
+  const fnExtraParams = extraParams;
+  // FIXME: only works for one request at a time
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fnOnSuccess = extraParams?.onSuccess;
+  const sendReq: ApiCB<T> = useCallback(
+    async (
+      requestParameters: EndpointToReqParam<T> | undefined,
+      extraParams?: ApiCBExtraParams<T>,
+    ) => {
+      setLoading(true);
+      setError(null);
 
-  const sendReq: ApiCB<T> = async (
-    requestParameters: EndpointToReqParam<T> | undefined,
-    extraParams?: ApiCBExtraParams<T>,
-  ) => {
-    setLoading(true);
-    setError(null);
-    const onSuccess = extraParams?.onSuccess;
-    const options = extraParams?.options;
-    await withApi(
-      async (api) => {
-        if (requestParameters !== undefined) {
-          const response = await (api[method] as any)(
-            requestParameters,
-            options,
-          );
-          fnOnSuccess && fnOnSuccess(response);
-          onSuccess && onSuccess(response);
-        } else {
-          const response = await (api[method] as any)(options);
-          fnOnSuccess && fnOnSuccess(response);
-          onSuccess && onSuccess(response);
-        }
-      },
-      setError,
-      extraParams?.onError,
-    );
-    setLoading(false);
-  };
+      const fnOnSuccess = fnExtraParams?.onSuccess;
+      const onSuccess = extraParams?.onSuccess;
+      const options = extraParams?.options;
+      await withApi(
+        async (api) => {
+          if (requestParameters !== undefined) {
+            const response = await (api[method] as any)(
+              requestParameters,
+              options,
+            );
+            fnOnSuccess && fnOnSuccess(response);
+            onSuccess && onSuccess(response);
+          } else {
+            const response = await (api[method] as any)(options);
+            fnOnSuccess && fnOnSuccess(response);
+            onSuccess && onSuccess(response);
+          }
+        },
+        setError as (error: string) => void,
+        extraParams?.handleError,
+      );
+      setLoading(false);
+    },
+    [method, ...Object.values(fnExtraParams ?? {})], // eslint-disable-line react-hooks/exhaustive-deps
+  );
 
   const res: ApiFnRet<T> = [error, sendReq, loading];
 
@@ -309,8 +315,7 @@ type ApiStateFnExtraParams<T> = {
   options?: EndpointToOptions<T>;
   extraDeps?: any[];
   onSuccess?: ApiOnSuccess<T>;
-  onError?: (e: any) => void;
-  enable?: boolean;
+  handleError?: (e: any) => void;
 };
 
 // https://github.com/microsoft/TypeScript/issues/27808
@@ -319,12 +324,15 @@ type ApiStateFn<OneOfPossibleOptions> =
   EndpointToReqParam<OneOfPossibleOptions> extends undefined
     ? <const T extends OneOfPossibleOptions>(
         method: T,
-        requestParameters?: EndpointToReqParam<T>,
+        // if requestParameters is null, no requests are made
+        // if requestParameters is undefined, the endpoint doesn't need them
+        requestParameters?: EndpointToReqParam<T> | null,
         extraParams?: ApiStateFnExtraParams<T>,
       ) => ApiStateFnRet<T>
     : <const T extends OneOfPossibleOptions>(
         method: T,
-        requestParameters: EndpointToReqParam<T>,
+        // if requestParameters is null, no requests are made
+        requestParameters: EndpointToReqParam<T> | null,
         extraParams?: ApiStateFnExtraParams<T>,
       ) => ApiStateFnRet<T>;
 
@@ -338,7 +346,7 @@ export const useApiState: IntersectionToRenderedIntersectionApiState<
   ApiMethod
 > = <T extends ApiMethod>(
   method: T,
-  requestParameters: EndpointToReqParam<T> | undefined,
+  requestParameters: EndpointToReqParam<T> | null | undefined,
   extraParams?: ApiStateFnExtraParams<T>,
 ) => {
   type Data = ApiReturnType<T>;
@@ -348,7 +356,7 @@ export const useApiState: IntersectionToRenderedIntersectionApiState<
 
   const onSuccess = extraParams?.onSuccess;
   const sendReq: () => void = () => {
-    if (extraParams?.enable === false) {
+    if (requestParameters === null) {
       return;
     }
     cb(
@@ -366,7 +374,6 @@ export const useApiState: IntersectionToRenderedIntersectionApiState<
 
   useDeepCompareEffectNoCheck(sendReq, [
     requestParameters,
-    extraParams?.enable,
     extraParams?.extraDeps,
   ]);
 
@@ -400,4 +407,53 @@ export const ErrorWidget = ({
       )
     );
   });
+};
+
+export const useMediaUploadJob = ({
+  setInfo,
+  setError,
+  onJobFinished,
+  onJobFailed,
+}: {
+  setInfo: (info: string) => void;
+  setError: (error: string) => void;
+  onJobFinished?: (jobId: string) => void;
+  onJobFailed?: (jobId: string) => void;
+}) => {
+  const uploadPollId = useRef<NodeJS.Timeout | undefined>(undefined);
+
+  const setupMediaUpPolling = useCallback(
+    (jobId: string) => {
+      // Poll every 5 seconds
+      uploadPollId.current = setInterval(async () => {
+        try {
+          const response = await Api.apiJobIdStatusGet({ id: jobId });
+          const jobStatus = response.data;
+
+          if (JobStatus.JobFinished === jobStatus) {
+            clearInterval(uploadPollId.current);
+            setInfo("Finished compressing files.");
+            onJobFinished && onJobFinished(jobId);
+          } else if (JobStatus.JobFailed === jobStatus) {
+            clearInterval(uploadPollId.current);
+            setError("File upload failed.");
+            onJobFailed && onJobFailed(jobId);
+          } else if (JobStatus.JobRunning === jobStatus) {
+            setInfo("Compressing files...");
+          } else if (JobStatus.JobPending === jobStatus) {
+            setInfo("Starting file compression...");
+          }
+        } catch (e) {
+          setError(handleApiErr(e));
+        }
+      }, 5000);
+    },
+    [uploadPollId, setInfo, setError, onJobFinished, onJobFailed],
+  );
+
+  useEffect(() => {
+    return () => clearInterval(uploadPollId.current);
+  }, []);
+
+  return setupMediaUpPolling;
 };

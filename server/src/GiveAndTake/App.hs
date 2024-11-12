@@ -19,8 +19,8 @@ import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.Fixes ()
 import GiveAndTake.Handlers
-import GiveAndTake.Job (jobRunner)
-import GiveAndTake.JobCon (createJobCon)
+import GiveAndTake.Job.Con (createJobCon)
+import GiveAndTake.Job.Run (jobRunner)
 import GiveAndTake.Logging
 import GiveAndTake.Prelude
 import GiveAndTake.Types

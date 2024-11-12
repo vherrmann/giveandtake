@@ -11,9 +11,9 @@ import Typography from "@mui/material/Typography";
 import { useAuth } from "../providers/auth";
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state";
 import LogoutIcon from "@mui/icons-material/Logout";
-import { AvatarWidget } from "./AvatarWidget";
+import { UserAvatarWidget } from "./UserAvatarWidget";
 import { useAuthedState } from "../ProtectedRoute";
-import { formatDate, userToUserPublic } from "../utils";
+import { formatDate } from "../utils";
 import { LinkWidget } from "./LinkWidget";
 
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -27,11 +27,7 @@ const UserWidget = () => {
     <Card sx={{ width: "100%" }}>
       <CardHeader
         avatar={
-          <AvatarWidget
-            nolink
-            userId={userId}
-            userPublic={userToUserPublic(user)}
-          />
+          <UserAvatarWidget userId={userId} userPublic={user} disableLink />
         }
         title={<Typography sx={{ fontWeight: "bold" }}>{user.name}</Typography>}
         subheader={"Joined on " + formatDate(user.createdAt)}
@@ -53,11 +49,7 @@ export const AvatarMenu = ({
       {(popupState) => (
         <>
           <IconButton aria-label="share" {...bindTrigger(popupState)}>
-            <AvatarWidget
-              nolink
-              userId={userId}
-              userPublic={{ name: user.name, createdAt: user.createdAt }}
-            />
+            <UserAvatarWidget disableLink userId={userId} userPublic={user} />
           </IconButton>
           <Menu {...bindMenu(popupState)} {...popupBarStyle}>
             <LinkWidget to={"/user/" + userId}>

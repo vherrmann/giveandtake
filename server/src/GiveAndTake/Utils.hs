@@ -7,7 +7,7 @@ import Crypto.Random (getRandomBytes)
 import Data.ByteString.Base64.URL as U (encodeBase64)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
-import Data.Time (UTCTime)
+import Data.Time (UTCTime, getCurrentTime)
 import Data.Time.Clock.System
 import Data.UUID (UUID)
 import Data.UUID qualified as U
@@ -16,16 +16,19 @@ import GiveAndTake.Prelude
 
 import Data.Coerce
 import Database.Persist qualified as P
+import GHC.Base (Symbol)
 import GiveAndTake.Types
 import System.Directory qualified as D
 import System.FilePath qualified as F
 
 getUTCTime :: (MonadIO m) => m UTCTime
-getUTCTime = liftIO $ systemToUTCTime <$> getSystemTime
+getUTCTime = liftIO getCurrentTime
 
 -- TODO: Increase hash strength from time to time
-hashToken :: (MonadIO m) => Int -> Text -> m Text
-hashToken strength tok = liftIO (T.decodeUtf8 <$> hashPassword strength (T.encodeUtf8 tok))
+hashToken :: (MonadIO m) => Text -> m Text
+hashToken tok = liftIO (T.decodeUtf8 <$> hashPassword strength (T.encodeUtf8 tok))
+ where
+  strength = 12
 
 validateToken :: Text -> Text -> Bool
 validateToken tok hash = validatePassword (T.encodeUtf8 tok) (T.encodeUtf8 hash)
@@ -55,3 +58,5 @@ docsUrl uconfig path = [fmt|http://{uconfig.docsBaseUrl}/{T.intercalate "/" path
 type instance PyFClassify (P.Key _a) = 'PyFString
 instance (Coercible (P.Key a) UUID) => PyFToString (P.Key a) where
   pyfToString = U.toString . coerce @(P.Key a) @UUID
+
+type Doc (str :: Symbol) (a :: Type) = a

@@ -1,8 +1,10 @@
 import React, { useState } from "react";
-import { Button, Stack, TextField, Tooltip } from "@mui/material";
+import { Button, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Api } from "../api";
 import { useSearchParams } from "react-router-dom";
 import { handleApiErr } from "../utils";
+import { userNameMaxLength } from "../consts";
+import { LinkWidget } from "../widgets/LinkWidget";
 
 interface SignupData {
   name: string;
@@ -21,13 +23,14 @@ export const Signup = (): JSX.Element => {
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [succeeded, setSucceeded] = useState<boolean>(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const secret = searchParams.get("secret");
 
   const handleChangeSD = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // limit size of username to 24 characters
-    if (e.target.name === "name" && e.target.value.length > 20) {
+    // limit size of username to 20 characters
+    if (e.target.name === "name" && e.target.value.length > userNameMaxLength) {
       return;
     }
     setSignupData({
@@ -66,8 +69,7 @@ export const Signup = (): JSX.Element => {
       });
       setInfo("Sending verification email!");
       setError("");
-
-      /* setupVEmailPolling(jobId); */
+      setSucceeded(true);
     } catch (e: any) {
       setError(handleApiErr(e));
     } finally {
@@ -129,6 +131,20 @@ export const Signup = (): JSX.Element => {
         <Button type="submit" variant="contained" disabled={loading}>
           Sign up
         </Button>
+        {succeeded && (
+          <Typography>
+            You should receive an email with a verification link. Please click
+            on it to complete the signup process. Click{" "}
+            <LinkWidget
+              underline={"always"}
+              to={`/requestEmailVerif?email=${encodeURIComponent(signupData.email)}`}
+              color="primary"
+            >
+              here
+            </LinkWidget>{" "}
+            to request a new email click.
+          </Typography>
+        )}
         {error && <p style={{ color: "red" }}>Error: {error}</p>}
         {info && <p style={{ color: "green" }}>{info}</p>}
       </Stack>

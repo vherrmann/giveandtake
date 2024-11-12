@@ -9,22 +9,25 @@ export default function PostRoute() {
   if (!postId) {
     throw new Error("No postId provided for useParams");
   }
-  const [errorP, post, { loading }] = useApiState(DApi.apiPostsIdGet, {
+  const [errorP, post, { loading, refetch }] = useApiState(DApi.apiPostsIdGet, {
     id: postId,
   });
 
   return (
     <>
       <ErrorWidget errors={[errorP]} />
-      {post && !loading ? (
+      {post ? (
         <PostWidget
           post={post}
           postId={postId}
           key={postId}
           onDelete={() => navigate("/")}
+          refetch={refetch}
         />
-      ) : (
+      ) : loading ? (
         "Loading..."
+      ) : (
+        ""
       )}
     </>
   );

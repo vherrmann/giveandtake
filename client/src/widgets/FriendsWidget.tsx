@@ -1,5 +1,4 @@
 import {
-  CardContent,
   CardHeader,
   Divider,
   IconButton,
@@ -30,36 +29,34 @@ export const FriendsWidget = () => {
 
       <ErrorWidget errors={[errorFr, errorDFr]} />
       <Divider />
-      <CardContent>
-        {friends === null ? (
-          <Typography sx={{ margin: 1 }} align="center">
-            Loading...
-          </Typography>
-        ) : friends.length === 0 ? (
-          <Typography sx={{ margin: 1 }} align="center">
-            No friends D: Add some!
-          </Typography>
-        ) : (
-          <List>
-            {friends.map(({ key: friendId, value: friend }) => (
-              <ListUserItem
-                userId={friendId}
-                userPublic={friend}
-                key={friendId}
-                secondaryAction={
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={() => deleteFriend({ friendId })}
-                  >
-                    <PersonRemoveIcon />
-                  </IconButton>
-                }
-              />
-            ))}
-          </List>
-        )}
-      </CardContent>
+      {friends === null ? (
+        <Typography sx={{ margin: 1 }} align="center">
+          Loading...
+        </Typography>
+      ) : friends.length === 0 ? (
+        <Typography sx={{ margin: 1 }} align="center">
+          No friends D: Add some!
+        </Typography>
+      ) : (
+        <List>
+          {friends.map(({ key: friendId, value: friend }) => (
+            <ListUserItem
+              userId={friendId}
+              userPublic={friend}
+              key={friendId}
+              secondaryAction={
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => deleteFriend({ friendId })}
+                >
+                  <PersonRemoveIcon />
+                </IconButton>
+              }
+            />
+          ))}
+        </List>
+      )}
     </StandardCard>
   );
 };

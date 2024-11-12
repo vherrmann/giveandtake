@@ -1,73 +1,21 @@
 {-# LANGUAGE OverloadedRecordDot #-}
 
-module GiveAndTake.Job where
+module GiveAndTake.Job.Run where
 
-import Database.Persist ((=.), (==.))
+import Database.Persist ((+=.), (=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.DB
-import GiveAndTake.Email
-import GiveAndTake.JobCon
+import GiveAndTake.Job.Con
+import GiveAndTake.Job.Utils
 import GiveAndTake.Media
 import GiveAndTake.Prelude
-import GiveAndTake.Types
 import GiveAndTake.Utils
-import Network.Mail.SMTP qualified as MS
+import GiveAndTake.VerifyEmail (runEmailVerification)
 import UnliftIO
 import UnliftIO.Concurrent qualified as UC
 
-type HasJob m = (HasUConfig m, HasDBPool m, MonadIO m, HasJobCon m)
-
--- withConnection :: (MonadIO m, HasDBPool m) => (PS.Connection -> IO a) -> m a
--- withConnection f = do
---   pool <- askM @(Pool PS.SqlBackend)
---   mRes <- liftIO $ withResource pool $ maybe (pure Nothing) (fmap Just . f) . PS.getSimpleConn
---   case mRes of
---     Nothing -> error "Impossible: PS.getSimpleConn returned Nothing."
---     Just res -> pure res
-
-createJob :: (HasHandler m) => GATJob -> m JobId
-createJob gatjob = do
-  ct <- getUTCTime
-  -- FIXME: start job
-  jobId <-
-    runDB $
-      insertUUID
-        Job
-          { payload = gatjob
-          , status = JobPending
-          , createdAt = ct
-          , startedAt = Nothing
-          , endedAt = Nothing
-          , jobError = Nothing
-          , result = Nothing
-          }
-  nudgeJobRunner
-  pure jobId
-
--- FIXME: report success/failure, Maybe?
-cancelJob :: (HasHandler m) => Job -> m ()
-cancelJob job = todo
-
 runJob :: (HasJob m, HasMediaJob m) => GATJob -> m JobResult
-runJob (GATJobVerifyEmail val) = do
-  uconfig <- askM @UConfig
-  let url = authUrl uconfig [[fmt|verifyemail?secret={val.secret}&userId={val.userId}|]]
-      emailPlainText =
-        [fmtTrim|
-             Hello {val.userName}!
-
-             Please verify your email address for {uconfig.serviceName} by clicking on the following link:
-             Do not click this link if you have not created an account at {uconfig.serviceName}.
-             {url}
-             |]
-  sendMail
-    Mail
-      { to = [MS.Address (Just val.userName) val.userEmail]
-      , subject = "Verify your email"
-      , plainBody = emailPlainText
-      , htmlBody = Nothing
-      }
-  pure $ GATJobResultVerifyEmail ()
+runJob (GATJobVerifyEmail val) = runEmailVerification val
 runJob (GATJobMediaUpload info) = runMediaJob info
 
 -- FIXME: give jobs time to finish before shutting down

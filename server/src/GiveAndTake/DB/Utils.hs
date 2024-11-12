@@ -84,6 +84,27 @@ insertUUID d = do
   P.insertKey (coerce newUUID) d
   pure $ coerce newUUID
 
+upsertUUIDBy ::
+  ( P.PersistEntityBackend record ~ P.BaseBackend backend
+  , PS.BaseBackend backend ~ PS.SqlBackend
+  , P.PersistStoreWrite backend
+  , MonadIO m
+  , P.PersistEntity record
+  , Coercible (P.Key record) UUID
+  , PS.PersistUniqueRead backend
+  ) =>
+  P.Unique record ->
+  record ->
+  [P.Update record] ->
+  ReaderT backend m (P.Key record)
+upsertUUIDBy unique d updates = do
+  mEntity <- P.getBy unique
+  case mEntity of
+    Just entity -> do
+      P.update entity.key updates
+      pure entity.key
+    Nothing -> insertUUID d
+
 typeName :: forall a. (Typeable a) => Text
 typeName = show . typeRep $ Proxy @a
 

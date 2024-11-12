@@ -16,6 +16,7 @@ import Servant.Auth.Server (SetCookie)
 import Servant.Multipart (FromMultipart, MultipartForm)
 import Servant.Multipart qualified as SM
 import Text.Feed.Types qualified as Feed
+import Prelude qualified as P
 
 --- Api Utils
 
@@ -46,7 +47,7 @@ data NewPost = NewPost
   deriving anyclass (FromJSON, ToJSON)
 
 data VerifyEmail = VerifyEmail
-  { user :: UserId
+  { id :: EmailConfirmId
   , secret :: Text
   }
   deriving stock (Show, Generic)
@@ -77,12 +78,13 @@ data SuccessLoginResponse = SuccessLoginResponse
 data UserPublic = UserPublic
   { name :: Text
   , createdAt :: UTCTime
+  , avatar :: Maybe MediaId
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
 userToPublic :: DB.User -> UserPublic
-userToPublic DB.User{..} = UserPublic{name, createdAt}
+userToPublic DB.User{..} = UserPublic{name, createdAt, avatar}
 
 userEToWPublic :: Entity DB.User -> WithKey User UserPublic
 userEToWPublic ent = WithKey ent.key $ userToPublic ent.val
@@ -107,6 +109,13 @@ data FriendsRequestGetResponse = FriendsRequestGetResponse
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
+data ViewablePostData = ViewablePostData
+  { post :: DB.Post
+  , liked :: Bool
+  }
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
 data LockedHiddenPostData = LockedHiddenPostData
   { title :: Text
   , user :: UserId
@@ -116,7 +125,7 @@ data LockedHiddenPostData = LockedHiddenPostData
   deriving anyclass (FromJSON, ToJSON)
 
 data UnlockedHiddenPostData = UnlockedHiddenPostData
-  { post :: DB.Post
+  { post :: ViewablePostData
   , unlockedWithPost :: WithKey Post Post
   }
   deriving stock (Show, Generic)
@@ -127,13 +136,17 @@ data HiddenPostData = LockedHiddenPost LockedHiddenPostData | UnlockedHiddenPost
   deriving anyclass (FromJSON, ToJSON)
 
 data UnhiddenPostData = UnhiddenPostData
-  { post :: DB.Post
+  { post :: ViewablePostData
   , usedToUnlock :: [WithKey Post Post] -- should only be nonempty if the post is requested by the posts owner
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data ApiPost = HiddenPost HiddenPostData | UnhiddenPost UnhiddenPostData
+data DeletedPostData = DeletedPostData {user :: UserId, createdAt :: UTCTime}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ApiPost = HiddenPost HiddenPostData | UnhiddenPost UnhiddenPostData | DeletedPost DeletedPostData
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
@@ -172,7 +185,37 @@ data ApiGroup = ApiGroup
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
+data ApiUserSettings = ApiUserSettings {name :: Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ChangePassword = ChangePassword {newPassword :: Text, oldPassword :: Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data ChangeEmailAddress = ChangeEmailAddress {newEmail :: Text, password :: Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data UploadAvatar = UploadAvatar
+  { file :: SM.FileData SM.Tmp
+  }
+  deriving stock (Show, Generic)
+
+instance FromMultipart SM.Tmp UploadAvatar where
+  fromMultipart multipartData = pure UploadAvatar{file = P.head multipartData.files}
+
+data EmailVerificationRequest = EmailVerificationRequest {email :: Text}
+  deriving stock (Show, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
 --- Api Types
+
+type PostsLikeApi =
+  "like"
+    :> ( (S.Capture "id" PostId :> S.Put '[JSON] ())
+          :<|> (S.Capture "id" PostId :> S.Delete '[JSON] ())
+       )
 
 type PostsApi =
   "posts"
@@ -182,12 +225,23 @@ type PostsApi =
           :<|> ("tradeables" :> S.Capture "user" UserId :> S.Get '[JSON] [WithKey Post DB.Post])
           :<|> ("trade" :> S.Capture "withPost" PostId :> S.Capture "forPost" PostId :> S.Post '[JSON] ())
           :<|> ("feed" :> S.Get '[JSON] [WithKey Post ApiPost])
+          :<|> PostsLikeApi
+       )
+
+type UserSettingsApi =
+  "settings"
+    :> ( ("basic" :> (S.Get '[JSON] ApiUserSettings :<|> (S.ReqBody '[JSON] ApiUserSettings :> S.Put '[JSON] ())))
+          :<|> ("password" :> S.ReqBody '[JSON] ChangePassword :> S.Put '[JSON] ())
+          :<|> ("email" :> S.ReqBody '[JSON] ChangeEmailAddress :> S.Put '[JSON] (Maybe JobId))
+          :<|> ("avatar" :> MultipartForm SM.Tmp UploadAvatar :> S.Post '[JSON] JobId)
+          :<|> ("avatar" :> S.Delete '[JSON] ())
        )
 
 type UsersApi =
   "users"
     :> ( (S.Capture "id" UserId :> S.Get '[JSON] UserPublic)
           :<|> (S.Capture "id" UserId :> "posts" :> S.Get '[JSON] [WithKey Post ApiPost])
+          :<|> UserSettingsApi
        )
 
 type MediaApi =
@@ -253,7 +307,7 @@ type GroupsApi =
                         :<|> (S.Capture "id" GroupId :> S.Capture "userId" UserId :> "reject" :> S.Post '[JSON] ())
                      )
                )
-          :<|> ("roles" :> (S.ReqBody '[JSON] ChangeGroupRole :> S.Post '[JSON] ()))
+          :<|> ("roles" :> (S.ReqBody '[JSON] ChangeGroupRole :> S.Put '[JSON] ()))
           :<|> ( "member"
                   :> ( (S.Capture "id" GroupId :> "add" :> S.Capture "userId" UserId :> S.Post '[JSON] ())
                         :<|> (S.Capture "id" GroupId :> "remove" :> S.Capture "userId" UserId :> S.Delete '[JSON] ())
@@ -303,8 +357,15 @@ type AuthApi =
                   :> S.Post '[JSON] JobId
                )
           :<|> ( "verifyemail"
-                  :> S.ReqBody '[JSON] VerifyEmail
-                  :> S.Post '[JSON] ()
+                  :> ( ( "request"
+                          :> S.ReqBody '[JSON] EmailVerificationRequest
+                          :> S.Post '[JSON] ()
+                       )
+                        :<|> ( "finish"
+                                :> S.ReqBody '[JSON] VerifyEmail
+                                :> S.Post '[JSON] ()
+                             )
+                     )
                )
           :<|> ("check" :> Auth '[Cookie] (Entity DB.User) :> S.Get '[JSON] CheckResponse)
        )

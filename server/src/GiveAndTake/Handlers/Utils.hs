@@ -3,6 +3,7 @@
 module GiveAndTake.Handlers.Utils where
 
 import Control.Monad.Error.Class (MonadError (..))
+import Data.ByteString.Lazy.Char8 qualified as BL
 import Data.Text.Encoding qualified as T
 import Database.Persist ((<-.), (==.))
 import Database.Persist qualified as P
@@ -12,7 +13,7 @@ import GiveAndTake.DB
 import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Prelude
 import GiveAndTake.Types
-import GiveAndTake.Utils (getUTCTime)
+import GiveAndTake.Utils (Doc, getUTCTime, validateTokenEither)
 import Servant (err303)
 import Servant qualified as S
 
@@ -124,8 +125,6 @@ type family (-->) (l :: [Type]) (a :: Type) where
   '[] --> a = a
   (x ': xs) --> a = x -> (xs --> a)
 
-type Doc (str :: Symbol) (a :: Type) = a
-
 -- userId2 traded a post for postId1 or someone else traded postId1 vor some post of userId2
 postWasTradedWith :: (HasHandler m) => PostId -> UserId -> m Bool
 postWasTradedWith postId1 userId2 = runDB do
@@ -164,31 +163,46 @@ dbPostToApiPost :: (HasHandler m) => UserId -> Entity DB.Post -> m (WithKey Post
 dbPostToApiPost requestingUserId dbPostEnt = do
   let dbPost = dbPostEnt.val
       postUserId = dbPost.user
+      getLiked = runDB $ P.existsBy (UniquePostHeartPostUser dbPostEnt.key requestingUserId)
 
   ct <- getUTCTime
   apiPost <-
-    if postUserId == requestingUserId
-      then do
-        tradedWithPostIds <- getPostIdsTradedWith dbPostEnt.key
-        tradedWithPostEnts <- runDB $ P.selectList [PostId <-. tradedWithPostIds] []
-        pure $ UnhiddenPost $ UnhiddenPostData dbPost (entityToWithKey <$> tradedWithPostEnts)
-      else do
-        -- hide the last three posts
-
-        hiddenP <- hiddenPostP dbPostEnt.entityKey postUserId
-        if hiddenP
-          then do
-            tradedForM <- postTradedForOf dbPostEnt.key requestingUserId
-            HiddenPost <$> case tradedForM of
-              Just tradedForPostId -> do
-                -- FIXME: post could be deleted
-                tradedForPost <- getByKeySE @Post tradedForPostId
-                pure $ UnlockedHiddenPost $ UnlockedHiddenPostData{post = dbPost, unlockedWithPost = WithKey tradedForPostId tradedForPost}
-              Nothing ->
-                pure $
-                  let DB.Post{..} = dbPost
-                   in LockedHiddenPost LockedHiddenPostData{title, user, createdAt = ct}
-          else pure $ UnhiddenPost $ UnhiddenPostData dbPost []
+    if
+      | dbPost.deleted -> pure $ DeletedPost DeletedPostData{user = dbPost.user, createdAt = ct}
+      | postUserId == requestingUserId -> do
+          tradedWithPostIds <- getPostIdsTradedWith dbPostEnt.key
+          tradedWithPostEnts <- runDB $ P.selectList [PostId <-. tradedWithPostIds] []
+          liked <- getLiked
+          pure $
+            UnhiddenPost
+              UnhiddenPostData
+                { post = ViewablePostData{post = dbPost, liked}
+                , usedToUnlock = entityToWithKey <$> tradedWithPostEnts
+                }
+      | otherwise -> do
+          -- hide the last three posts
+          hiddenP <- hiddenPostP dbPostEnt.entityKey postUserId
+          if hiddenP
+            then do
+              tradedForM <- postTradedForOf dbPostEnt.key requestingUserId
+              HiddenPost <$> case tradedForM of
+                Just tradedForPostId -> do
+                  -- FIXME: post could be deleted
+                  tradedForPost <- getByKeySE @Post tradedForPostId
+                  liked <- getLiked
+                  pure $
+                    UnlockedHiddenPost
+                      UnlockedHiddenPostData
+                        { post = ViewablePostData{post = dbPost, liked}
+                        , unlockedWithPost = WithKey tradedForPostId tradedForPost
+                        }
+                Nothing ->
+                  pure $
+                    let DB.Post{..} = dbPost
+                     in LockedHiddenPost LockedHiddenPostData{title, user, createdAt = ct}
+            else do
+              liked <- getLiked
+              pure $ UnhiddenPost UnhiddenPostData{post = ViewablePostData{post = dbPost, liked}, usedToUnlock = []}
   pure WithKey{key = dbPostEnt.key, value = apiPost}
 
 postIdsToApiPostsForUserWithCheck :: (HasHandler m) => UserId -> [PostId] -> m [WithKey Post ApiPost]
@@ -196,3 +210,9 @@ postIdsToApiPostsForUserWithCheck userId postIds = do
   postList <- selectByKey postIds
   for_ postList \post -> checkIsFriendOrEq userId post.val.user
   traverse (dbPostToApiPost userId) postList
+
+withValidateTokenSE :: (HasHandler m) => Text -> Text -> m a -> m a
+withValidateTokenSE token hash m = case validateTokenEither token hash of
+  Left errStr -> throwError S.err500{S.errBody = "Server error while checking hash: " <> BL.pack errStr}
+  Right False -> throwError S.err401{S.errBody = "Wrong password."}
+  Right True -> m

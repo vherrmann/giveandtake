@@ -1,6 +1,6 @@
 module GiveAndTake.Handlers.Posts where
 
-import Data.List (zip)
+import Data.List (zip, zipWith)
 import Data.String (String)
 import Data.Text qualified as T
 import Database.Persist ((=.))
@@ -9,6 +9,7 @@ import GiveAndTake.Api
 import GiveAndTake.DB
 import GiveAndTake.DB.Types qualified as DB
 import GiveAndTake.Handlers.Utils
+import GiveAndTake.Media
 import GiveAndTake.Prelude
 import GiveAndTake.Types
 import GiveAndTake.Utils
@@ -24,6 +25,7 @@ postsHandler userEnt =
     :<|> getTradeablePostsH userEnt
     :<|> postTradePostsH userEnt
     :<|> getPostsFeedH userEnt
+    :<|> postsLikeHandler userEnt
 
 getPostsFeedH :: (HasHandler m) => Entity User -> m [WithKey Post ApiPost]
 getPostsFeedH userEntity = traverse (dbPostToApiPost userEntity.key) =<< getFeedPosts userEntity.key
@@ -41,7 +43,6 @@ getPostH userEnt postId = do
 
 createPostH :: (HasHandler m) => Entity User -> NewPost -> m PostId
 createPostH user newpost = do
-  uconf :: UConfig <- askM
   media <- traverse getByKeySE newpost.media
 
   when (T.length newpost.title > 24) $
@@ -50,27 +51,7 @@ createPostH user newpost = do
   unless (all ((.isCompressed)) media) $
     throwError S.err400{S.errBody = "Some media aren't completely compressed yet."}
 
-  mediaIds <- for (zip media newpost.media) \(medium, mediaId) -> do
-    -- Check if draft, if the medium is not a draft, it is already used by another post
-    if medium.isDraft
-      then runDB $ P.update mediaId [MediaIsDraft =. False]
-      else do
-        -- copy files (each post should have unique media files, so that we can easily delete them)
-        newMediaId <-
-          runDB $
-            insertUUID $
-              Media
-                { user = medium.user -- should be equal to entityKey user
-                , mimeType = medium.mimeType
-                , isDraft = False
-                , isCompressed = False
-                , createdAt = medium.createdAt
-                }
-        -- Move file
-        let mediaPath = [fmt|{uconf.mediaDir}/{mediaId}|]
-        let newMediaPath = [fmt|{uconf.mediaDir}/{newMediaId}|]
-        liftIO $ D.copyFile mediaPath newMediaPath
-    pure mediaId
+  mediaIds <- for (zipWith P.Entity newpost.media media) draftToMedia
 
   ct <- getUTCTime
   runDB $
@@ -98,20 +79,7 @@ deletePostH userEnt postId = do
       , DB.PostDeleted =. True
       ]
   -- Delete media
-  uconf :: UConfig <- askM
-  for_ post.media \mediaId -> do
-    mmedia <- runDB (P.get mediaId)
-    case mmedia of
-      Nothing -> pure () -- FIXME
-      Just _ -> do
-        runDB $ P.delete mediaId
-        let mediaPath = [fmt|{uconf.mediaDir}/{mediaId}|]
-        existsP <- liftIO $ D.doesFileExist mediaPath
-        if existsP
-          then liftIO $ D.removeFile mediaPath
-          else -- FIXME: proper logging system
-            putStrLn @String [fmt|"File {mediaPath} does not exist when trying to delete it."|]
-        runDB $ P.delete mediaId
+  deleteMedia post.media
 
 getTradeablePostsH :: (HasHandler m) => Entity User -> UserId -> m [WithKey' DB.Post]
 getTradeablePostsH userEnt postUser = do
@@ -144,3 +112,24 @@ postTradePostsH userEnt post1Id post2Id = do
         , user2 = post2.user
         , createdAt = ct
         }
+
+postsLikeHandler :: Entity User -> RServer m PostsLikeApi
+postsLikeHandler userEnt =
+  likePostH userEnt
+    :<|> unlikePostH userEnt
+
+unlikePostH :: (HasHandler m) => Entity User -> PostId -> m ()
+unlikePostH userEnt postId = do
+  post <- getByKeySE @DB.Post postId
+  -- NOTE: users should not be equal
+  checkIsFriend userEnt.key post.user
+  -- FIXME: throw error if heart not found?
+  runDB $ P.deleteBy $ UniquePostHeartPostUser postId userEnt.key
+
+likePostH :: (HasHandler m) => Entity User -> PostId -> m ()
+likePostH userEnt postId = do
+  post <- getByKeySE @DB.Post postId
+  -- NOTE: users should not be equal
+  checkIsFriend userEnt.key post.user
+  ct <- getUTCTime
+  void $ runDB $ P.insert PostHeart{user = userEnt.key, post = postId, createdAt = ct}

@@ -119,7 +119,9 @@ instance (Typeable a, Coercible (P.Key a) UUID, ToSchema b) => ToSchema (WithKey
   declareNamedSchema _ = SO.declareNamedSchema (Proxy @(WithUUID b))
 
 instance ToSchema DB.Post
+instance ToSchema ViewablePostData
 instance ToSchema LockedHiddenPostData
+instance ToSchema DeletedPostData
 instance ToSchema HiddenPostData
 instance ToSchema UnhiddenPostData
 instance ToSchema ApiPost
@@ -153,6 +155,10 @@ instance ToSchema DB.GroupRole
 instance ToSchema ChangeGroupRole
 instance ToSchema ApiGroupMember
 instance ToSchema ApiGroup
+instance ToSchema ApiUserSettings
+instance ToSchema ChangePassword
+instance ToSchema ChangeEmailAddress
+instance ToSchema EmailVerificationRequest
 
 main :: IO ()
 main =

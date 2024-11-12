@@ -100,6 +100,12 @@ data GroupRole = GroupRoleNoRole | GroupRoleAdmin
 derivePersistField "GroupRole"
 type instance PyFClassify GroupRole = 'PyFString
 
+-- Email verification
+data ECReason = ECReasonSignup | ECReasonChangeEmail
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+derivePersistField "ECReason"
+
 instance Ord GroupRole where
   GroupRoleNoRole <= GroupRoleNoRole = True
   GroupRoleNoRole <= GroupRoleAdmin = True
@@ -126,10 +132,10 @@ User
     Id UUID primary unique
     name Text unique
     email Text unique
-    -- emailConfirmed Bool
     passwordHash Text
     fullyAuthenticated Bool
     createdAt UTCTime
+    avatar (Maybe MediaId)
 
     UniqueUserName name
     UniqueUserEmail email
@@ -150,13 +156,14 @@ FriendRequest
     deriving Generic
 
 EmailConfirm
+    Id UUID primary unique
     user UserId
+    email Text
     isConfirmed Bool
     secretHash Text
     confirmedAt (Maybe UTCTime)
-    count Int
     sentAt UTCTime
-    UniqueEmailConfirmUser user
+    reason ECReason
     deriving Generic
 
 Media
@@ -212,6 +219,7 @@ Group
     name Text
     owner UserId
     createdAt UTCTime
+    avatar (Maybe MediaId)
     deriving Generic
 
 GroupMember
@@ -227,6 +235,13 @@ GroupJoinRequest
     to GroupId
     createdAt UTCTime
     UniqueGroupJoinRequest from to
+    deriving Generic
+
+PostHeart
+    post PostId
+    user UserId
+    createdAt UTCTime
+    UniquePostHeartPostUser post user
     deriving Generic
 
 -- SessionConfig
@@ -246,14 +261,21 @@ data MediaUploadFile = MediaUploadFile {name :: Text, mediaId :: MediaId, cType 
   deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
-data GATJobMediaUploadData = GATJobMediaUploadData {files :: [MediaUploadFile], userId :: UserId}
+data MUReason = MUReasonPost | MUReasonUserAvatar
   deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 
--- Email verification
-data GATJobVerifyEmailData = GATJobVerifyEmailData
-  { secret :: Text
+data GATJobMediaUploadData = GATJobMediaUploadData
+  { files :: [MediaUploadFile]
   , userId :: UserId
+  , reason :: MUReason
+  }
+  deriving stock (Eq, Show, Read, Generic)
+  deriving anyclass (FromJSON, ToJSON)
+
+data GATJobVerifyEmailData = GATJobVerifyEmailData
+  { id :: EmailConfirmId
+  , secret :: Text
   , userName :: Text
   , userEmail :: Text
   }
@@ -276,7 +298,7 @@ data JobResult
   deriving anyclass (FromJSON, ToJSON)
 derivePersistField "JobResult"
 
-data JobStatus = JobPending | JobRunning | JobFinished | JobFailed
+data JobStatus = JobPending | JobRunning | JobFinished | JobFailed -- TODO: | JobCancelled
   deriving stock (Eq, Show, Read, Generic)
   deriving anyclass (FromJSON, ToJSON)
 derivePersistField "JobStatus"

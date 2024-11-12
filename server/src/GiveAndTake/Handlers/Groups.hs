@@ -162,6 +162,7 @@ createGroupH userEnt newGroup = do
             { name = newGroup.name
             , owner = userEnt.key
             , createdAt = ct
+            , avatar = Nothing
             }
       P.insert_ $
         GroupMember
