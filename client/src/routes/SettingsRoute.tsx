@@ -24,6 +24,7 @@ import { useAuth } from "../providers/auth";
 
 // FIXME: clean this up
 const BasicSettingsWidget = () => {
+  const { refetchAuth } = useAuth();
   const [errorBS, fetchSettings, fsIsPending] = useApi(
     DApi.apiUsersSettingsBasicGet,
   );
@@ -34,9 +35,10 @@ const BasicSettingsWidget = () => {
     fetchSettings(undefined, {
       onSuccess: (s) => {
         setSettings(s.data);
+        refetchAuth();
       },
     });
-  }, [fetchSettings]);
+  }, [fetchSettings, refetchAuth]);
 
   const [errorSS, submitSettings, ssIsPending] = useApi(
     DApi.apiUsersSettingsBasicPut,
@@ -202,26 +204,32 @@ const ChangeAvatarWidget = () => {
   const { refetchAuth } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string>("");
+  const [isPending, setIsPending] = useState<boolean>(false);
 
-  const [errorUA, uploadAvatar, uaIsPending] = useApi(
-    DApi.apiUsersSettingsAvatarPost,
-  );
+  const [errorUA, uploadAvatar] = useApi(DApi.apiUsersSettingsAvatarPost);
 
   const onJobFinished = useCallback(() => {
     setInfo("Changed avatar successfully");
+    setIsPending(false);
     refetchAuth();
-  }, [refetchAuth]);
+  }, [refetchAuth, setInfo]);
+
+  const onJobFailed = useCallback(() => {
+    setIsPending(false);
+  }, []);
 
   const setupMediaUpPolling = useMediaUploadJob({
     setInfo,
     setError,
     onJobFinished,
+    onJobFailed,
   });
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
     setInfo("Uploading media");
+    setIsPending(true);
     uploadAvatar(
       { uploadAvatar: { file: files[0] } },
       { onSuccess: (response) => setupMediaUpPolling(response.data) },
@@ -243,7 +251,7 @@ const ChangeAvatarWidget = () => {
           variant="contained"
           tabIndex={-1}
           startIcon={<CloudUploadIcon />}
-          disabled={uaIsPending}
+          disabled={isPending}
         >
           Upload media
           <VisuallyHiddenInput type="file" onChange={handleFileChange} />

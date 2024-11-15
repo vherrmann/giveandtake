@@ -44,6 +44,7 @@ export function useLocalStorage<T>(
 ): [T, React.Dispatch<React.SetStateAction<T>>] {
   // Initialize state with value from localStorage or fallback to initialValue
   const [storedValue, setStoredValue] = useState<T>(() => {
+    // TODO: note if key has already been used before
     try {
       const item = window.localStorage.getItem(key);
       // Parse stored JSON string or return initial value
@@ -57,6 +58,7 @@ export function useLocalStorage<T>(
   // Update localStorage whenever state changes
   useDeepCompareEffectNoCheck(() => {
     try {
+      // TODO: check if types are equal, throw error if not
       window.localStorage.setItem(key, JSON.stringify(storedValue));
     } catch (error) {
       console.error("Failed to save data to localStorage", error);

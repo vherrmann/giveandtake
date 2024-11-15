@@ -158,7 +158,7 @@ in
       users.users."${cfg.user}" = {
         description = "Give'n'take";
         group = "${cfg.group}";
-        isSystemUser = true;
+        isNormalUser = true; # We want to have a history of the postgresql commands
       };
 
       environment.systemPackages = [ gatPkgs.backend ];

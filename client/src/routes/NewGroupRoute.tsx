@@ -2,7 +2,7 @@ import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 
 // import styles
-import { handleApiErr, useLocalStorage } from "../utils";
+import { handleApiErr } from "../utils";
 import { Api } from "../api";
 import { useNavigate } from "react-router-dom";
 
@@ -10,9 +10,9 @@ export default function NewGroupRoute() {
   const emptyState = {
     name: "",
   };
-  const [state, setState] = useLocalStorage<{
+  const [state, setState] = useState<{
     name: string;
-  }>("newPostState", emptyState);
+  }>(emptyState);
 
   const [error, setError] = useState<string>("");
 

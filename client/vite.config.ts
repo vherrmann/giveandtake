@@ -25,6 +25,7 @@ const eslintBaseConfig: EsLintOptions["baseConfig"] = {
 
 export default {
   publicDir: "public",
+  build: { sourcemap: true }, // FIXME: remove this when finished debugging
   plugins: [
     react(),
     checker({
