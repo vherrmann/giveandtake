@@ -4,8 +4,10 @@ import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../providers/auth";
 import { Link } from "react-router-dom";
 import { PasswordInput } from "../widgets/PasswordInput";
+import { useTitle } from "../utils";
 
 export const Login = () => {
+  useTitle("Login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);

@@ -2,11 +2,12 @@ import { Button, Stack, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 
 // import styles
-import { handleApiErr } from "../utils";
+import { handleApiErr, useTitle } from "../utils";
 import { Api } from "../api";
 import { useNavigate } from "react-router-dom";
 
 export default function NewGroupRoute() {
+  useTitle("Create new group");
   const emptyState = {
     name: "",
   };

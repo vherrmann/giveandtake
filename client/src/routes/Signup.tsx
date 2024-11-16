@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Stack, TextField, Tooltip, Typography } from "@mui/material";
 import { Api } from "../api";
 import { useSearchParams } from "react-router-dom";
-import { handleApiErr } from "../utils";
+import { handleApiErr, useTitle } from "../utils";
 import { userNameMaxLength } from "../consts";
 import { LinkWidget } from "../widgets/LinkWidget";
 
@@ -13,6 +13,7 @@ interface SignupData {
 }
 
 export const Signup = (): JSX.Element => {
+  useTitle(`Signup`);
   const [signupData, setSignupData] = useState<SignupData>({
     name: "",
     email: "",

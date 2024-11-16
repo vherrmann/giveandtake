@@ -2,41 +2,45 @@ import { CardMedia, useTheme } from "@mui/material";
 import { SwiperGallery } from "./SwiperGallery";
 import { Api } from "../api";
 import { useCallback, useEffect, useState } from "react";
-import { ErrorWidget, handleApiErr } from "../utils";
+import { ApiResultState, handleApiErr } from "../utils";
 
 export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
+  type FileResType = { id: string; apiResState: ApiResultState<File> };
   const theme = useTheme();
-  const [files, setFiles] = useState<(File | null)[]>(
-    fileIds.map((_: string) => null),
+  const [files, setFiles] = useState<FileResType[]>(
+    fileIds.map((fileId: string) => ({
+      id: fileId,
+      apiResState: { loading: true, error: "", data: null },
+    })),
   );
-  const [error, setError] = useState<string>("");
-
-  const fetchFiles = useCallback(async () => {
+  const fetchFile = useCallback(async (i: number, fileId: string) => {
+    const setFile = (file: ApiResultState<File>) => {
+      setFiles((prevFiles) => {
+        const newFiles = [...prevFiles];
+        newFiles[i] = { id: fileId, apiResState: file };
+        return newFiles;
+      });
+    };
+    setFile({ loading: true, error: "", data: null });
     try {
-      const responses = await Promise.all(
-        fileIds.map(async (fileId: string) => {
-          try {
-            const file = Api.apiMediaIdGet({ id: fileId });
-            return file;
-          } catch (_err) {
-            // FIXME: add error handling
-            return null;
-          }
-        }),
-      );
-      setFiles(responses.map((response) => response?.data ?? null));
-    } catch (err) {
-      setError("Failed to fetch posts: " + handleApiErr(err));
+      const response = await Api.apiMediaIdGet({ id: fileId });
+      setFile({ loading: false, error: "", data: response.data });
+    } catch (e) {
+      setFile({ loading: false, error: handleApiErr(e), data: null });
     }
-  }, [fileIds]);
+  }, []);
 
   useEffect(() => {
-    fetchFiles();
-  }, [fetchFiles]);
+    fileIds.forEach((fileId: string, i: number, _) => {
+      fetchFile(i, fileId);
+    });
+  }, [fileIds, fetchFile]);
 
   if (files.length === 0) {
     return null;
   }
+
+  // FIXME: cancel download when changing location?
 
   return (
     <CardMedia
@@ -44,10 +48,7 @@ export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
         ["--swiper-theme-color" as any]: theme.palette.primary.main,
       }}
     >
-      <SwiperGallery
-        files={files.map((file, i) => ({ id: fileIds[i], file }))}
-      />
-      <ErrorWidget errors={[error]} />
+      <SwiperGallery files={files} />
     </CardMedia>
   );
 };

@@ -21,6 +21,7 @@ import ReactPlayer, { ReactPlayerProps } from "react-player";
 import CloseIcon from "@mui/icons-material/Close";
 import "./react-player.css"; /* https://stackoverflow.com/questions/26979003/space-after-html5s-video-tag */
 import { Img } from "./Img";
+import { ApiResultState, ErrorWidget } from "../utils";
 
 const UncontrolledVideoPlayer = ({
   file,
@@ -71,7 +72,7 @@ const UncontrolledVideoPlayer = ({
 export const SwiperGallery = ({
   files,
 }: {
-  files: { id: string; file: File | null }[];
+  files: { id: string; apiResState: ApiResultState<File> }[];
 }) => {
   const paginationRef = useRef<HTMLDivElement>(null);
   const paginationFSRef = useRef<HTMLDivElement>(null);
@@ -83,36 +84,40 @@ export const SwiperGallery = ({
 
   const slides = (fullscreenp: boolean) => {
     return files
-      .map(({ file }) => {
-        if (!file) {
+      .map(({ apiResState }) => {
+        if (apiResState.data) {
+          const file = apiResState.data;
+          const localFileUrl = URL.createObjectURL(file);
+          const fileType = file.type; // Get the MIME type
+          if (fileType.startsWith("image/")) {
+            return (
+              <Img
+                media={file}
+                alt="" // FIXME
+                cover={!fullscreenp}
+              />
+            );
+          } else if (fileType.startsWith("video/")) {
+            return fullscreenp ? (
+              <ReactPlayer
+                url={localFileUrl}
+                className="ReactPlayer"
+                controls
+                width="auto"
+                height="auto"
+              />
+            ) : (
+              <UncontrolledVideoPlayer file={file} playing={!swiperFSOpen} />
+            );
+          } else {
+            // FIXME: remove from list (remove at addition)
+            throw new Error("This is neither an image nor a video.");
+          }
+        }
+        if (apiResState.loading) {
           return "Loading...";
         }
-        const localFileUrl = URL.createObjectURL(file);
-        const fileType = file.type; // Get the MIME type
-        if (fileType.startsWith("image/")) {
-          return (
-            <Img
-              media={file}
-              alt="" // FIXME
-              cover={!fullscreenp}
-            />
-          );
-        } else if (fileType.startsWith("video/")) {
-          return fullscreenp ? (
-            <ReactPlayer
-              url={localFileUrl}
-              className="ReactPlayer"
-              controls
-              width="auto"
-              height="auto"
-            />
-          ) : (
-            <UncontrolledVideoPlayer file={file} playing={!swiperFSOpen} />
-          );
-        } else {
-          // FIXME: remove from list (remove at addition)
-          throw new Error("This is neither an image nor a video.");
-        }
+        return <ErrorWidget errors={[apiResState.error]} />;
       })
       .map((slide, i) => (
         <SwiperSlide

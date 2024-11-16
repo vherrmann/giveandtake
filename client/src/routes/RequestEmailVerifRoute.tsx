@@ -6,11 +6,12 @@ import {
   Typography,
 } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
-import { DApi, ErrorWidget, useApi } from "../utils";
+import { DApi, ErrorWidget, useApi, useTitle } from "../utils";
 import { FormContainer, TextFieldElement } from "react-hook-form-mui";
 import { StandardCard } from "../widgets/StandardCard";
 
 export const RequestEmailVerifRoute = () => {
+  useTitle(`Request email verification`);
   const [searchParams] = useSearchParams();
   const emailInitial = searchParams.get("email");
 

@@ -6,7 +6,13 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { DApi, ErrorWidget, useApi, useMediaUploadJob } from "../utils";
+import {
+  DApi,
+  ErrorWidget,
+  useApi,
+  useMediaUploadJob,
+  useTitle,
+} from "../utils";
 import {
   ChangeEvent,
   FormEvent,
@@ -35,7 +41,6 @@ const BasicSettingsWidget = () => {
     fetchSettings(undefined, {
       onSuccess: (s) => {
         setSettings(s.data);
-        refetchAuth();
       },
     });
   }, [fetchSettings, refetchAuth]);
@@ -48,7 +53,12 @@ const BasicSettingsWidget = () => {
     if (settings) {
       submitSettings(
         { apiUserSettings: settings },
-        { onSuccess: () => fetchSettings() },
+        {
+          onSuccess: () => {
+            fetchSettings();
+            refetchAuth();
+          },
+        },
       );
       // FIXME: inform about needing to logout and in
     }
@@ -264,6 +274,7 @@ const ChangeAvatarWidget = () => {
 };
 
 export const SettingsRoute = () => {
+  useTitle(`Settings`);
   return (
     <Stack spacing={2} alignItems="center">
       <BasicSettingsWidget />

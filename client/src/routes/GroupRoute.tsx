@@ -36,6 +36,7 @@ import {
   useApi,
   useApiState,
   user1IsHigher,
+  useTitle,
 } from "../utils";
 import { LinkWidget } from "../widgets/LinkWidget";
 import { StandardCard } from "../widgets/StandardCard";
@@ -95,6 +96,7 @@ const GroupPublicInfoWidget = ({
   groupId: string;
   groupPublic: GroupPublic;
 }) => {
+  useTitle(`Group ${groupPublic.name}`);
   const [errorGReq, groupJoinReqs, { refetch }] = useApiState(
     DApi.apiGroupsRequestGet,
   );

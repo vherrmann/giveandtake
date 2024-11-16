@@ -4,62 +4,64 @@ import { ViewablePostWidget } from "./ViewablePostWidget";
 import { UnviewablePostWidget } from "./UnviewablePostWidget";
 import { PostCard } from "./PostCard";
 import { Box } from "@mui/material";
+import { ComponentProps } from "react";
+import { PostLikeCard } from "./PostLikeCard";
+import { apiPostSwitch } from "../utils";
 
 export const PostWidget = ({
   post,
   postId,
   refetch,
   onDelete,
+  postLikeCardProps,
 }: {
   post: ApiPost;
   postId: string | null;
   refetch: () => void;
   onDelete?: (postId: string) => void;
+  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
 }) => {
-  switch (post.tag) {
-    case "UnhiddenPost":
-      return (
-        <ViewablePostWidget
-          vpost={post.contents.post}
-          postId={postId}
-          onDelete={onDelete}
-          usedToUnlock={post.contents.usedToUnlock}
-          refetch={refetch}
-        />
-      );
-    case "DeletedPost":
-      return (
-        <PostCard
-          userId={post.contents.user}
-          title={
-            <Box component="span" sx={{ fontStyle: "italic" }}>
-              Deleted Post
-            </Box>
-          }
-          createdAt={post.contents.createdAt}
-        />
-      );
-    case "HiddenPost":
-      const hpData = post.contents;
-      switch (hpData.tag) {
-        case "UnlockedHiddenPost":
-          return (
-            <ViewablePostWidget
-              vpost={hpData.contents.post}
-              postId={postId}
-              onDelete={onDelete}
-              unlockedWithPost={hpData.contents.unlockedWithPost}
-              refetch={refetch}
-            />
-          );
-        case "LockedHiddenPost":
-          return (
-            <UnviewablePostWidget
-              post={hpData.contents}
-              postId={postId}
-              refetch={refetch}
-            />
-          );
-      }
-  }
+  return apiPostSwitch({
+    post,
+    onUnhidden: (data) => (
+      <ViewablePostWidget
+        vpost={data.post}
+        postId={postId}
+        onDelete={onDelete}
+        usedToUnlock={data.usedToUnlock}
+        refetch={refetch}
+        postLikeCardProps={postLikeCardProps}
+      />
+    ),
+    onDeleted: (data) => (
+      <PostCard
+        userId={data.user}
+        title={
+          <Box component="span" sx={{ fontStyle: "italic" }}>
+            Deleted Post
+          </Box>
+        }
+        createdAt={data.createdAt}
+        {...postLikeCardProps}
+      />
+    ),
+    onUnlocked: (data) => (
+      <ViewablePostWidget
+        vpost={data.post}
+        postId={postId}
+        onDelete={onDelete}
+        unlockedWithPost={data.unlockedWithPost}
+        refetch={refetch}
+        postLikeCardProps={postLikeCardProps}
+      />
+    ),
+    onLocked: (data) => (
+      <UnviewablePostWidget
+        post={data}
+        postId={postId}
+        refetch={refetch}
+        postLikeCardProps={postLikeCardProps}
+      />
+    ),
+  });
 };

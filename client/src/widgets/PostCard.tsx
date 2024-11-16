@@ -1,5 +1,5 @@
 import { CardHeader, Typography } from "@mui/material";
-import { ReactNode } from "react";
+import { ComponentProps, ReactNode } from "react";
 
 // import styles
 import { formatDate } from "../utils";
@@ -12,15 +12,17 @@ export const PostCard = ({
   createdAt,
   headerActions,
   content,
+  postLikeCardProps,
 }: {
   userId: string;
   title: ReactNode;
   createdAt: string;
   headerActions?: ReactNode;
   content?: ReactNode;
+  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
 }) => {
   return (
-    <PostLikeCard>
+    <PostLikeCard {...postLikeCardProps}>
       <CardHeader
         avatar={<UserAvatarWidget userId={userId} />}
         action={headerActions}

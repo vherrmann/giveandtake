@@ -3,13 +3,15 @@ import {
   Button,
   CardContent,
   CardHeader,
-  Grid,
+  Paper,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Typography,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ChangeEvent, useCallback, useState } from "react";
+import { ChangeEvent, ReactNode, useCallback, useState } from "react";
 
 // import styles
 import {
@@ -18,6 +20,7 @@ import {
   handleApiErr,
   useLocalStorage,
   useMediaUploadJob,
+  useTitle,
   withApi,
 } from "../utils";
 import { PostWidget } from "../widgets/PostWidget";
@@ -29,7 +32,29 @@ import { StandardCard } from "../widgets/StandardCard";
 
 const useless = () => {};
 
+// https://mui.com/material-ui/react-tabs/
+interface TabPanelProps {
+  children?: ReactNode;
+  index: number;
+  activeTab: number;
+}
+function CustomTabPanel(props: TabPanelProps) {
+  const { children, activeTab: value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
+    </div>
+  );
+}
+
 export default function NewPostRoute() {
+  useTitle("Create new post");
   const emptyState = {
     title: "",
     fileIds: [],
@@ -45,6 +70,7 @@ export default function NewPostRoute() {
   const { userId } = useAuthedState();
   const [error, setError] = useState<string>("");
   const [info, setInfo] = useState<string>("");
+  const [activeTab, setActiveTab] = useState(0);
 
   const [searchParams] = useSearchParams();
   const tradeFor = searchParams.get("tradeFor");
@@ -167,9 +193,19 @@ export default function NewPostRoute() {
   };
 
   return (
-    <Grid container spacing={2}>
-      <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
-        <StandardCard>
+    <Paper>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Tabs
+          value={activeTab}
+          onChange={(_e, i) => setActiveTab(i)}
+          variant="fullWidth"
+        >
+          <Tab label="Input" />
+          <Tab label="Preview" />
+        </Tabs>
+      </Box>
+      <CustomTabPanel activeTab={activeTab} index={0}>
+        <StandardCard variant="outlined">
           <CardHeader
             title={
               <Typography variant="h5" align="center">
@@ -226,8 +262,8 @@ export default function NewPostRoute() {
             </form>
           </CardContent>
         </StandardCard>
-      </Grid>
-      <Grid item xs sx={{ display: "flex", justifyContent: "center" }}>
+      </CustomTabPanel>
+      <CustomTabPanel activeTab={activeTab} index={1}>
         <Box // without the Box the postwidget is fitted to the grid
         >
           <PostWidget
@@ -235,9 +271,10 @@ export default function NewPostRoute() {
             key={"NewPost"}
             postId={null}
             refetch={useless}
+            postLikeCardProps={{ variant: "outlined" }}
           />
         </Box>
-      </Grid>
-    </Grid>
+      </CustomTabPanel>
+    </Paper>
   );
 }

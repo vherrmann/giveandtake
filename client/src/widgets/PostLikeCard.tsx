@@ -1,7 +1,10 @@
 import { Card } from "@mui/material";
-import { ReactNode } from "react";
+import { ComponentProps, ReactNode } from "react";
 
-export const PostLikeCard = ({ children }: { children: ReactNode }) => {
+export const PostLikeCard = ({
+  children,
+  ...props
+}: { children?: ReactNode } & ComponentProps<typeof Card>) => {
   return (
     <Card
       sx={{
@@ -13,7 +16,9 @@ export const PostLikeCard = ({ children }: { children: ReactNode }) => {
           xl: "25vw",
         },
         height: "auto",
+        ...props.sx,
       }}
+      {...props}
     >
       {children}
     </Card>

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Api } from "../api";
-import { handleApiErr } from "../utils";
+import { handleApiErr, useTitle } from "../utils";
 
 export const VerifyEmail = () => {
+  useTitle(`Verify Email`);
   const [searchParams] = useSearchParams();
   const secret = searchParams.get("secret");
   const id = searchParams.get("id");

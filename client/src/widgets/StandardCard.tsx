@@ -1,5 +1,4 @@
-import { Card, CardTypeMap } from "@mui/material";
-import { DefaultComponentProps } from "@mui/material/OverridableComponent";
+import { Card } from "@mui/material";
 import { ComponentProps } from "react";
 
 export const StandardCard = (props: ComponentProps<typeof Card>) => {

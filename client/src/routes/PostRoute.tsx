@@ -1,6 +1,12 @@
 import { useNavigate, useParams } from "react-router";
 import { PostWidget } from "../widgets/PostWidget";
-import { DApi, ErrorWidget, useApiState } from "../utils";
+import {
+  apiPostToTitle,
+  DApi,
+  ErrorWidget,
+  useApiState,
+  useTitle,
+} from "../utils";
 
 export default function PostRoute() {
   const { postId } = useParams<{ postId: string }>();
@@ -12,6 +18,7 @@ export default function PostRoute() {
   const [errorP, post, { loading, refetch }] = useApiState(DApi.apiPostsIdGet, {
     id: postId,
   });
+  useTitle(`Post ${post && apiPostToTitle(post)}`);
 
   return (
     <>

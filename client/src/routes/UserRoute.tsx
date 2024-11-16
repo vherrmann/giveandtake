@@ -11,7 +11,7 @@ import { useParams } from "react-router";
 import { useCallback, useEffect, useState } from "react";
 import { UserAvatarWidget } from "../widgets/UserAvatarWidget";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { formatDate, handleApiErr } from "../utils";
+import { formatDate, handleApiErr, useTitle } from "../utils";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import PersonRemoveIcon from "@mui/icons-material/PersonRemove";
 import { useAuthedState } from "../ProtectedRoute";
@@ -20,6 +20,7 @@ import { StandardCard } from "../widgets/StandardCard";
 
 const UserWidget = ({ userId }: { userId: string }) => {
   const [userPublic, setUserPublic] = useState<UserPublic | null>(null);
+  useTitle(`User ${userPublic && userPublic.name}`);
   const { userId: myUserId } = useAuthedState();
   const [myFriendp, setMyFriendp] = useState<boolean | null>(null);
   const [friendReqExists, setFriendReqExists] = useState<boolean | null>(null);

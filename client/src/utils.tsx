@@ -1,6 +1,18 @@
 import { format } from "date-fns";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Api, ApiGroup, GroupRole, JobStatus, User, UserPublic } from "./api";
+import {
+  Api,
+  ApiGroup,
+  ApiPost,
+  DeletedPostData,
+  GroupRole,
+  JobStatus,
+  LockedHiddenPostData,
+  UnhiddenPostData,
+  UnlockedHiddenPostData,
+  User,
+  UserPublic,
+} from "./api";
 import { AxiosPromise } from "axios";
 import { Typography } from "@mui/material";
 import { useDeepCompareEffectNoCheck } from "use-deep-compare-effect";
@@ -459,3 +471,74 @@ export const useMediaUploadJob = ({
 
   return setupMediaUpPolling;
 };
+
+export type ApiResultState<T> =
+  | {
+      loading: false;
+      error: "";
+      data: T;
+    }
+  | {
+      loading: false;
+      error: string;
+      data: null;
+    }
+  | {
+      loading: true;
+      error: "";
+      data: null;
+    };
+
+export function useTitle(name: string): void;
+export function useTitle(fn: () => string): void;
+export function useTitle(arg: string | (() => string)) {
+  useEffect(() => {
+    if (typeof arg === "string") {
+      document.title = "Give'n'take - " + arg;
+    } else {
+      document.title = "Give'n'take - " + arg();
+    }
+    return () => {
+      document.title = "Give'n'take";
+    };
+  }, [arg]);
+}
+
+export function apiPostSwitch<T>({
+  post,
+  onUnhidden,
+  onDeleted,
+  onUnlocked,
+  onLocked,
+}: {
+  post: ApiPost;
+  onUnhidden: (data: UnhiddenPostData) => T;
+  onDeleted: (data: DeletedPostData) => T;
+  onUnlocked: (data: UnlockedHiddenPostData) => T;
+  onLocked: (data: LockedHiddenPostData) => T;
+}) {
+  switch (post.tag) {
+    case "UnhiddenPost":
+      return onUnhidden(post.contents);
+    case "DeletedPost":
+      return onDeleted(post.contents);
+    case "HiddenPost":
+      const hpData = post.contents;
+      switch (hpData.tag) {
+        case "UnlockedHiddenPost":
+          return onUnlocked(hpData.contents);
+        case "LockedHiddenPost":
+          return onLocked(hpData.contents);
+      }
+  }
+}
+
+export function apiPostToTitle(post: ApiPost) {
+  return apiPostSwitch({
+    post,
+    onUnhidden: (data) => data.post.post.title,
+    onDeleted: () => "Deleted",
+    onUnlocked: (data) => data.post.post.title,
+    onLocked: (data) => data.title,
+  });
+}

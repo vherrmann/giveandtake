@@ -16,7 +16,7 @@ import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpen from "@mui/icons-material/LockOpen";
-import { useState } from "react";
+import { ComponentProps, useState } from "react";
 
 // import styles
 import { DApi, ErrorWidget, handleApiErr, useApiState } from "../utils";
@@ -29,10 +29,12 @@ export const UnviewablePostWidget = ({
   post,
   postId,
   refetch,
+  postLikeCardProps,
 }: {
   post: LockedHiddenPostData;
   postId: string | null;
   refetch: () => void;
+  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
 }) => {
   const [unlockDOpen, setUnlockDOpen] = useState(false);
   const handleClose = (_: string) => {
@@ -175,6 +177,7 @@ export const UnviewablePostWidget = ({
         </>
       }
       content={<></>}
+      postLikeCardProps={postLikeCardProps}
     />
   );
 };
