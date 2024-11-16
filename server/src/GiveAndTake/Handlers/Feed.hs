@@ -1,5 +1,6 @@
 module GiveAndTake.Handlers.Feed where
 
+import Data.Aeson qualified as A
 import Data.Text qualified as T
 import Data.Time (UTCTime)
 import Data.Time qualified as C
@@ -37,7 +38,7 @@ postToAtomEntry uconfig postEnt user =
         }
 
 fUrl :: UConfig -> UserId -> Text -> Text
-fUrl uconfig userId token = authUrl uconfig ["api", "feed", show userId, token]
+fUrl uconfig userId token = authUrl uconfig ["api", "feed", show userId.unUserKey, token]
 
 generateAtomFeed :: (HasHandler m) => WithKey' User -> Text -> [P.Entity DB.Post] -> m Atom.Feed
 generateAtomFeed user token posts = do

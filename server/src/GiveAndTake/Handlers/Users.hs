@@ -37,7 +37,8 @@ userSettingsHandler userEnt =
 
 getUserSettingsH :: Entity User -> RHandler m ApiUserSettings
 getUserSettingsH userEnt = do
-  pure $ ApiUserSettings{name = userEnt.val.name}
+  upToDateUser <- getByKeySE userEnt.key
+  pure $ ApiUserSettings{name = upToDateUser.name}
 
 updateUserSettingsH :: Entity User -> ApiUserSettings -> RHandler m ()
 -- We use record wildcards for warnings about unused fields
