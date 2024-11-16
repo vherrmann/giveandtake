@@ -48,5 +48,19 @@ getMediaH userEnt mediaId req onResponse = do
       origLookupFile = W.ssLookupFile defConfig
       -- Insert the mediaId as the constant piece to the lookup function
       authorizedLookupFile = origLookupFile . const [uuidPiece]
-      config = defConfig{W.ssLookupFile = authorizedLookupFile, W.ssGetMimeType = const (pure mimeType)}
+      config =
+        W.StaticSettings
+          { W.ssLookupFile = authorizedLookupFile
+          , W.ssGetMimeType = const (pure mimeType)
+          , -- Agressive Caching
+            W.ssMaxAge = W.MaxAgeSeconds (60 * 60 * 24 * 365)
+          , W.ssUseHash = False
+          , -- No extra stuff
+            W.ssListing = Nothing
+          , W.ssIndices = []
+          , W.ssMkRedirect = const id
+          , W.ssRedirectToIndex = False
+          , W.ssAddTrailingSlash = False
+          , W.ss404Handler = Nothing
+          }
   liftIO $ S.unTagged (S.serveDirectoryWith config) req onResponse
