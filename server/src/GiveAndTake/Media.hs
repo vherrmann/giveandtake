@@ -92,12 +92,12 @@ compressAndConvertVideo tmpPath newTmpPath =
     )
 {- FOURMOLU_ENABLE -}
 
-type HasMediaJob m = (HasUConfig m, HasDBPool m, MonadIO m, MonadMask m, MonadCatch m)
+type HasMediaJob m = (HasUConfig m, HasDBPool m, MonadIO m, MonadMask m, MonadCatch m, MonadUnliftIO m)
 
 runMediaJob :: (HasMediaJob m) => GATJobMediaUploadData -> m JobResult
 runMediaJob (GATJobMediaUploadData{files, userId, reason}) = do
   uconfig <- askM @UConfig
-  for_ files \file -> do
+  forConcurrently_ files \file -> do
     let origPath = mediaPathOrig uconfig file.mediaId
     let newTmpPathTemplate = case file.cType of
           MimeImage -> "image.webp"

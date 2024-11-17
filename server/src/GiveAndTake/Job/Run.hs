@@ -2,7 +2,7 @@
 
 module GiveAndTake.Job.Run where
 
-import Database.Persist ((+=.), (=.), (==.))
+import Database.Persist ((=.), (==.))
 import Database.Persist qualified as P
 import GiveAndTake.DB
 import GiveAndTake.Job.Con
@@ -19,7 +19,7 @@ runJob (GATJobVerifyEmail val) = runEmailVerification val
 runJob (GATJobMediaUpload info) = runMediaJob info
 
 -- FIXME: give jobs time to finish before shutting down
-jobRunner :: (HasJob m, HasMediaJob m, MonadUnliftIO m, MonadLogger m) => Int -> m ()
+jobRunner :: (HasJob m, HasMediaJob m, MonadLogger m) => Int -> m ()
 jobRunner jobLimit = runJobLoop
  where
   runJobLoop = do
