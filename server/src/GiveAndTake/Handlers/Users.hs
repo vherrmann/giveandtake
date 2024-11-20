@@ -12,7 +12,6 @@ import GiveAndTake.Utils (hashToken)
 import GiveAndTake.VerifyEmail (startVerifyEmailJob, verifyEmailOnSuccess)
 import Servant ((:<|>) (..))
 import Servant qualified as S
-import Servant.Multipart qualified as SM
 
 usersHandler :: Entity User -> RServer m UsersApi
 usersHandler userEnt = getUserPublicH :<|> getUserPostsH userEnt :<|> userSettingsHandler userEnt
@@ -25,7 +24,7 @@ getUserPublicH userId = do
 getUserPostsH :: (HasHandler m) => Entity User -> UserId -> m [WithKey Post ApiPost]
 getUserPostsH userEnt requestedUserId = do
   checkIsFriendOrEq userEnt.key requestedUserId
-  getUserApiPosts requestedUserId
+  getUserApiPosts userEnt requestedUserId
 
 userSettingsHandler :: Entity User -> RServer m UserSettingsApi
 userSettingsHandler userEnt =

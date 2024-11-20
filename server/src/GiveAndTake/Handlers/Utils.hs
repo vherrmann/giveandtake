@@ -113,10 +113,10 @@ getFeedPosts userId = do
 getUserPosts :: (HasHandler m) => UserId -> m [P.Entity DB.Post]
 getUserPosts requestedUserId = runDB $ P.selectList [PostUser ==. requestedUserId] [P.Desc PostCreatedAt]
 
-getUserApiPosts :: (HasHandler m) => UserId -> m [WithKey Post ApiPost]
-getUserApiPosts requestedUserId = do
+getUserApiPosts :: (HasHandler m) => Entity User -> UserId -> m [WithKey Post ApiPost]
+getUserApiPosts userEnt requestedUserId = do
   postList <- getUserPosts requestedUserId
-  traverse (dbPostToApiPost requestedUserId) postList
+  traverse (dbPostToApiPost userEnt.key) postList
 
 redirect303 :: (MonadError S.ServerError m) => Text -> m a
 redirect303 url = throwError $ err303{S.errHeaders = [("Location", T.encodeUtf8 url)]}
