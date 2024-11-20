@@ -1,10 +1,16 @@
 import { CardMedia, useTheme } from "@mui/material";
-import { SwiperGallery } from "./SwiperGallery";
+import { SwiperActions, SwiperGallery } from "./SwiperGallery";
 import { Api } from "../api";
 import { useCallback, useEffect, useState } from "react";
 import { ApiResultState, handleApiErr } from "../utils";
 
-export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
+export const MediaPostWidget = ({
+  fileIds,
+  actions,
+}: {
+  fileIds: string[];
+  actions?: SwiperActions;
+}) => {
   type FileResType = { id: string; apiResState: ApiResultState<File> };
   const theme = useTheme();
   const [files, setFiles] = useState<FileResType[]>(
@@ -31,10 +37,11 @@ export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
   }, []);
 
   useEffect(() => {
+    setFiles([]);
     fileIds.forEach((fileId: string, i: number, _) => {
       fetchFile(i, fileId);
     });
-  }, [fileIds, fetchFile]);
+  }, [fileIds, fetchFile, setFiles]);
 
   if (files.length === 0) {
     return null;
@@ -46,9 +53,11 @@ export const MediaPostWidget = ({ fileIds }: { fileIds: string[] }) => {
     <CardMedia
       sx={{
         ["--swiper-theme-color" as any]: theme.palette.primary.main,
+        maxHeight: "100%",
+        maxWidth: "100%",
       }}
     >
-      <SwiperGallery files={files} />
+      <SwiperGallery files={files} actions={actions} />
     </CardMedia>
   );
 };

@@ -5,21 +5,21 @@ import { UnviewablePostWidget } from "./UnviewablePostWidget";
 import { PostCard } from "./PostCard";
 import { Box } from "@mui/material";
 import { ComponentProps } from "react";
-import { PostLikeCard } from "./PostLikeCard";
 import { apiPostSwitch } from "../utils";
+import { StandardCard } from "./StandardCard";
 
 export const PostWidget = ({
   post,
   postId,
   refetch,
   onDelete,
-  postLikeCardProps,
+  cardProps,
 }: {
   post: ApiPost;
   postId: string | null;
   refetch: () => void;
   onDelete?: (postId: string) => void;
-  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
+  cardProps?: ComponentProps<typeof StandardCard>;
 }) => {
   return apiPostSwitch({
     post,
@@ -30,7 +30,7 @@ export const PostWidget = ({
         onDelete={onDelete}
         usedToUnlock={data.usedToUnlock}
         refetch={refetch}
-        postLikeCardProps={postLikeCardProps}
+        cardProps={cardProps}
       />
     ),
     onDeleted: (data) => (
@@ -42,7 +42,7 @@ export const PostWidget = ({
           </Box>
         }
         createdAt={data.createdAt}
-        {...postLikeCardProps}
+        {...cardProps}
       />
     ),
     onUnlocked: (data) => (
@@ -52,7 +52,7 @@ export const PostWidget = ({
         onDelete={onDelete}
         unlockedWithPost={data.unlockedWithPost}
         refetch={refetch}
-        postLikeCardProps={postLikeCardProps}
+        cardProps={cardProps}
       />
     ),
     onLocked: (data) => (
@@ -60,7 +60,7 @@ export const PostWidget = ({
         post={data}
         postId={postId}
         refetch={refetch}
-        postLikeCardProps={postLikeCardProps}
+        cardProps={cardProps}
       />
     ),
   });

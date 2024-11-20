@@ -51,7 +51,7 @@ cmdApp (NewAuthCode codeType) = do
     uconfig <- askM @UConfig
     let url :: Text = case codeType of
             ACTSignup -> authUrl uconfig ["signup"]
-    putStrLn @Text [fmt|Url: {url}?secret={secret}|]
+    putStrLn @Text [fmt|Url:\n{url}?secret={secret}|]
 
 main :: IO ()
 main = do

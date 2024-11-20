@@ -3,6 +3,7 @@ import {
   Button,
   CardContent,
   CardHeader,
+  IconButton,
   Paper,
   Stack,
   Tab,
@@ -11,10 +12,15 @@ import {
   Typography,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import { ChangeEvent, ReactNode, useCallback, useState } from "react";
 
 // import styles
 import {
+  arraySwap,
   ErrorWidget,
   getCurrDate,
   handleApiErr,
@@ -29,6 +35,7 @@ import { useAuthedState } from "../ProtectedRoute";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { VisuallyHiddenInput } from "../widgets/VisuallyHiddenInput";
 import { StandardCard } from "../widgets/StandardCard";
+import { MediaPostWidget } from "../widgets/MediaPostWidget";
 
 const useless = () => {};
 
@@ -53,29 +60,25 @@ function CustomTabPanel(props: TabPanelProps) {
   );
 }
 
-export default function NewPostRoute() {
-  useTitle("Create new post");
-  const emptyState = {
-    title: "",
-    fileIds: [],
-    body: "",
-  };
-  const [state, setState] = useLocalStorage<{
-    title: string;
-    body: string;
-    fileIds: string[];
-  }>("newPostState", emptyState);
-  const [uploadingMedia, setUploadingMedia] = useState(false);
-
-  const { userId } = useAuthedState();
-  const [error, setError] = useState<string>("");
+const UploadMediaWidget = ({
+  fileIds,
+  setFileIds,
+  setUploadingLoadingParent,
+}: {
+  fileIds: string[];
+  setFileIds: (fn: (ids: string[]) => string[]) => void;
+  setUploadingLoadingParent: (loading: boolean) => void;
+}) => {
+  const [uploadingMedia, setUploadingMedia_] = useState(false);
+  const setUploadingMedia = useCallback(
+    (x: boolean) => {
+      setUploadingLoadingParent(x);
+      setUploadingMedia_(x);
+    },
+    [setUploadingMedia_, setUploadingLoadingParent],
+  );
   const [info, setInfo] = useState<string>("");
-  const [activeTab, setActiveTab] = useState(0);
-
-  const [searchParams] = useSearchParams();
-  const tradeFor = searchParams.get("tradeFor");
-  const { state: locState } = useLocation();
-  const navigate = useNavigate();
+  const [error, setError] = useState<string>("");
 
   const onJobFinished = useCallback(
     async (jobId: string) => {
@@ -86,13 +89,10 @@ export default function NewPostRoute() {
         });
         const jobRes = response.data;
 
-        setState((state) => ({
-          ...state,
-          fileIds: jobRes.mediaIds,
-        }));
+        setFileIds((fileIds) => [...fileIds, ...jobRes.mediaIds]);
       }, setError);
     },
-    [setUploadingMedia, setState],
+    [setUploadingMedia, setFileIds],
   );
   const onJobFailed = useCallback(() => {
     setUploadingMedia(false);
@@ -105,16 +105,6 @@ export default function NewPostRoute() {
     onJobFailed,
   });
 
-  const handleChangeState = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // limit length of title to 24 characters
-    if (e.target.name === "title" && e.target.value.length > 24) {
-      return;
-    }
-    setState({
-      ...state,
-      [e.target.name]: e.target.value,
-    });
-  };
   const handleFileChange = useCallback(
     async (e: ChangeEvent<HTMLInputElement>) => {
       /* setMediaList(e.target.files); // FIXME: merge lists? */
@@ -135,6 +125,150 @@ export default function NewPostRoute() {
     },
     [setUploadingMedia, setInfo, setError, setupMediaUpPolling],
   );
+
+  const mediaActions = useCallback(
+    (i: number, _fullscreenp: boolean, slideTo: (index: number) => void) => {
+      const id = fileIds[i];
+      const mediaActionButtonSX = {
+        backgroundColor: "rgba(0,0,0,0.5)",
+        color: "white",
+        "&:hover": { backgroundColor: "rgba(0,0,0,0.8)" },
+      };
+
+      return (
+        <>
+          <label htmlFor="add-file-icon-button">
+            <VisuallyHiddenInput
+              type="file"
+              onChange={handleFileChange}
+              multiple
+              id="add-file-icon-button"
+            />
+            <IconButton
+              sx={{
+                ...mediaActionButtonSX,
+                position: "absolute",
+                bottom: 10,
+                right: 10,
+              }}
+              disabled={uploadingMedia}
+              component="span"
+            >
+              <AddCircleOutlineIcon />
+            </IconButton>
+          </label>
+          <Box
+            sx={{
+              position: "absolute",
+              top: 10,
+              right: 10,
+            }}
+          >
+            <IconButton
+              sx={{
+                ...mediaActionButtonSX,
+              }}
+              disabled={i === 0}
+              onClick={() => {
+                setFileIds((fileIds) => arraySwap(fileIds, i, i - 1));
+                slideTo(i - 1);
+              }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                ...mediaActionButtonSX,
+              }}
+              disabled={i === fileIds.length - 1}
+              onClick={() => {
+                setFileIds((fileIds) => arraySwap(fileIds, i, i + 1));
+                slideTo(i + 1);
+              }}
+            >
+              <ArrowForwardIcon />
+            </IconButton>
+            <IconButton
+              sx={{
+                ...mediaActionButtonSX,
+              }}
+              onClick={
+                () => {
+                  setFileIds((fileIds) => fileIds.filter((x) => x !== id));
+                } // FIXME: remove draft media from server
+              }
+            >
+              <DeleteIcon />
+            </IconButton>
+          </Box>
+        </>
+      );
+    },
+    [fileIds, setFileIds, uploadingMedia, handleFileChange],
+  );
+
+  return (
+    <>
+      {fileIds.length === 0 ? (
+        <Button
+          component="label"
+          variant="contained"
+          tabIndex={-1}
+          startIcon={<CloudUploadIcon />}
+          disabled={uploadingMedia}
+        >
+          Upload media
+          <VisuallyHiddenInput
+            type="file"
+            onChange={handleFileChange}
+            multiple
+          />
+        </Button>
+      ) : (
+        <Box sx={{ width: "100%" }}>
+          <MediaPostWidget fileIds={fileIds} actions={mediaActions} />
+        </Box>
+      )}
+
+      <Typography>{info}</Typography>
+      <ErrorWidget errors={[error]} />
+    </>
+  );
+};
+
+export default function NewPostRoute() {
+  useTitle("Create new post");
+  const emptyState = {
+    title: "",
+    fileIds: [],
+    body: "",
+  };
+  const [state, setState] = useLocalStorage<{
+    title: string;
+    body: string;
+    fileIds: string[];
+  }>("newPostState", emptyState);
+  const { userId } = useAuthedState();
+  const [error, setError] = useState<string>("");
+  const [info, setInfo] = useState<string>("");
+  const [activeTab, setActiveTab] = useState(0);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
+
+  const [searchParams] = useSearchParams();
+  const tradeFor = searchParams.get("tradeFor");
+  const { state: locState } = useLocation();
+  const navigate = useNavigate();
+
+  const handleChangeState = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // limit length of title to 24 characters
+    if (e.target.name === "title" && e.target.value.length > 24) {
+      return;
+    }
+    setState({
+      ...state,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const createPost = async (event: any) => {
     event.preventDefault();
@@ -224,21 +358,18 @@ export default function NewPostRoute() {
                   value={state.title}
                   onChange={handleChangeState}
                 />
-                <Button
-                  component="label"
-                  variant="contained"
-                  tabIndex={-1}
-                  startIcon={<CloudUploadIcon />}
-                  disabled={uploadingMedia}
-                >
-                  Upload media
-                  <VisuallyHiddenInput
-                    type="file"
-                    onChange={handleFileChange}
-                    multiple
-                  />
-                </Button>
-                <Typography>{info}</Typography>
+                <UploadMediaWidget
+                  fileIds={state.fileIds}
+                  setFileIds={useCallback(
+                    (fn: (fileIds: string[]) => string[]) =>
+                      setState((state) => ({
+                        ...state,
+                        fileIds: fn(state.fileIds),
+                      })),
+                    [setState],
+                  )}
+                  setUploadingLoadingParent={setUploadingMedia}
+                />
                 <TextField
                   name="body"
                   label="Body"
@@ -257,6 +388,7 @@ export default function NewPostRoute() {
                 >
                   Create post
                 </Button>
+                <Typography>{info}</Typography>
                 <ErrorWidget errors={[error]} />
               </Stack>
             </form>
@@ -271,7 +403,7 @@ export default function NewPostRoute() {
             key={"NewPost"}
             postId={null}
             refetch={useless}
-            postLikeCardProps={{ variant: "outlined" }}
+            cardProps={{ variant: "outlined" }}
           />
         </Box>
       </CustomTabPanel>

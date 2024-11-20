@@ -542,3 +542,11 @@ export function apiPostToTitle(post: ApiPost) {
     onLocked: (data) => data.title,
   });
 }
+
+export function arraySwap<T>(arr: T[], i: number, j: number) {
+  const newArr = [...arr];
+  const temp = newArr[i];
+  newArr[i] = newArr[j];
+  newArr[j] = temp;
+  return newArr;
+}

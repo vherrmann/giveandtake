@@ -23,18 +23,18 @@ import { DApi, ErrorWidget, handleApiErr, useApiState } from "../utils";
 import { Api, LockedHiddenPostData } from "../api";
 import { Link, useLocation } from "react-router-dom";
 import { PostCard } from "./PostCard";
-import { PostLikeCard } from "./PostLikeCard";
+import { StandardCard } from "./StandardCard";
 
 export const UnviewablePostWidget = ({
   post,
   postId,
   refetch,
-  postLikeCardProps,
+  cardProps,
 }: {
   post: LockedHiddenPostData;
   postId: string | null;
   refetch: () => void;
-  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
+  cardProps?: ComponentProps<typeof StandardCard>;
 }) => {
   const [unlockDOpen, setUnlockDOpen] = useState(false);
   const handleClose = (_: string) => {
@@ -125,7 +125,7 @@ export const UnviewablePostWidget = ({
                   state={{ path: location.pathname }}
                   disableGutters
                 >
-                  <PostLikeCard>
+                  <StandardCard>
                     <CardHeader
                       avatar={<CreateIcon />}
                       action={
@@ -140,7 +140,7 @@ export const UnviewablePostWidget = ({
                         </Typography>
                       }
                     />
-                  </PostLikeCard>
+                  </StandardCard>
                 </ListItemButton>
               </ListItem>
               {tradeablePosts?.map((postW) => {
@@ -177,7 +177,7 @@ export const UnviewablePostWidget = ({
         </>
       }
       content={<></>}
-      postLikeCardProps={postLikeCardProps}
+      cardProps={cardProps}
     />
   );
 };

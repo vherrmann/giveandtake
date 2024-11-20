@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { ReactNode, useRef, useState } from "react";
 
 import { Navigation, Pagination, Keyboard, Zoom } from "swiper/modules";
 import "swiper/css";
@@ -69,10 +69,18 @@ const UncontrolledVideoPlayer = ({
   );
 };
 
+export type SwiperActions = (
+  i: number,
+  fullscreenp: boolean,
+  slideTo: (index: number) => void,
+) => ReactNode;
+
 export const SwiperGallery = ({
   files,
+  actions,
 }: {
   files: { id: string; apiResState: ApiResultState<File> }[];
+  actions?: SwiperActions;
 }) => {
   const paginationRef = useRef<HTMLDivElement>(null);
   const paginationFSRef = useRef<HTMLDivElement>(null);
@@ -140,23 +148,38 @@ export const SwiperGallery = ({
           >
             {slide}
           </Box>
+          {actions && actions(i, fullscreenp, swiperBothSlideTo)}
         </SwiperSlide>
       ));
   };
 
-  const closeModal = () => {
-    if (swiperRef.current?.swiper && !swiperRef.current.swiper.destroyed) {
-      swiperRef.current.swiper.slideTo(curSlide.current);
+  const swiperSlideTo = (ref: React.RefObject<SwiperRef>, index: number) => {
+    if (ref.current?.swiper && !ref.current.swiper.destroyed) {
+      ref.current.swiper.slideTo(index);
     }
+  };
+
+  const swiperBothSlideTo = (index: number) => {
+    swiperSlideTo(swiperRef, index);
+    swiperSlideTo(swiperFSRef, index);
+  };
+
+  const closeModal = () => {
+    swiperSlideTo(swiperRef, curSlide.current);
     setSwiperFSOpen(false);
   };
 
   const openModal = () => {
-    if (swiperFSRef.current?.swiper && !swiperFSRef.current.swiper.destroyed) {
-      swiperFSRef.current.swiper.slideTo(curSlide.current);
-    }
+    swiperSlideTo(swiperFSRef, curSlide.current);
     setSwiperFSOpen(true);
   };
+
+  const clickedOnMedia = (event: MouseEvent | TouchEvent | PointerEvent) => {
+    const target = event.target as HTMLElement | null;
+    const mediaEls = ["VIDEO", "IMG", "PICTURE", "CANVAS", "AUDIO"];
+    return target && mediaEls.includes(target.tagName);
+  };
+  // close modal on click outside of media
 
   return (
     <>
@@ -175,7 +198,11 @@ export const SwiperGallery = ({
           aspectRatio: 1, //square
           userSelect: "none",
         }}
-        onClick={(_s, _e) => openModal()}
+        onClick={(_s, event) => {
+          if (clickedOnMedia(event) === true) {
+            openModal();
+          }
+        }}
         onSlideChange={(s) => {
           curSlide.current = s.realIndex;
         }}
@@ -257,9 +284,7 @@ export const SwiperGallery = ({
               onClick={(_s, event) => {
                 // close modal on click outside of media
                 // FIXME: use https://mui.com/base-ui/react-click-away-listener/ instead
-                const target = event.target as HTMLElement | null;
-                const mediaEls = ["VIDEO", "IMG", "PICTURE", "CANVAS", "AUDIO"];
-                if (target && !mediaEls.includes(target.tagName)) {
+                if (clickedOnMedia(event) === false) {
                   closeModal();
                 }
               }}

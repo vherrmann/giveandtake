@@ -36,7 +36,7 @@ import Blobhaj from "../assets/Blobhaj.svg";
 import BlobhajHeart from "../assets/BlobhajHeart.svg";
 import Blobhaj_Party from "../assets/Blobhaj_Party.gif";
 import { ComponentProps, CSSProperties, useEffect, useState } from "react";
-import { PostLikeCard } from "./PostLikeCard";
+import { StandardCard } from "./StandardCard";
 
 // Custom styled Button with the GIF as an icon
 
@@ -113,7 +113,7 @@ export const ViewablePostWidget = ({
   onDelete,
   unlockedWithPost,
   usedToUnlock,
-  postLikeCardProps,
+  cardProps,
 }: {
   vpost: ViewablePostData;
   postId: string | null;
@@ -121,7 +121,7 @@ export const ViewablePostWidget = ({
   onDelete?: (postId: string) => void;
   unlockedWithPost?: WithUUIDPost;
   usedToUnlock?: WithUUIDPost[];
-  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
+  cardProps?: ComponentProps<typeof StandardCard>;
 }) => {
   const { userId } = useAuthedState();
   const confirm = useConfirm();
@@ -258,7 +258,7 @@ export const ViewablePostWidget = ({
           </CardActions>
         </>
       }
-      postLikeCardProps={postLikeCardProps}
+      cardProps={cardProps}
     />
   );
 };

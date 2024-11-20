@@ -4,7 +4,7 @@ import { ComponentProps, ReactNode } from "react";
 // import styles
 import { formatDate } from "../utils";
 import { UserAvatarWidget } from "./UserAvatarWidget";
-import { PostLikeCard } from "./PostLikeCard";
+import { StandardCard } from "./StandardCard";
 
 export const PostCard = ({
   userId,
@@ -12,17 +12,17 @@ export const PostCard = ({
   createdAt,
   headerActions,
   content,
-  postLikeCardProps,
+  cardProps,
 }: {
   userId: string;
   title: ReactNode;
   createdAt: string;
   headerActions?: ReactNode;
   content?: ReactNode;
-  postLikeCardProps?: ComponentProps<typeof PostLikeCard>;
+  cardProps?: ComponentProps<typeof StandardCard>;
 }) => {
   return (
-    <PostLikeCard {...postLikeCardProps}>
+    <StandardCard {...cardProps}>
       <CardHeader
         avatar={<UserAvatarWidget userId={userId} />}
         action={headerActions}
@@ -30,6 +30,6 @@ export const PostCard = ({
         subheader={formatDate(createdAt)}
       />
       {content}
-    </PostLikeCard>
+    </StandardCard>
   );
 };
