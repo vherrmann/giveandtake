@@ -24,7 +24,7 @@ import Text.RSS.Syntax qualified as RSS
 postToAtomEntry :: UConfig -> P.Entity DB.Post -> User -> Atom.Entry
 postToAtomEntry uconfig postEnt user =
   let post = postEnt.val
-      url = authUrl uconfig ["post", show postEnt.key]
+      url = authUrl uconfig ["post", [fmt|{postEnt.key}|]]
       date = T.pack $ C.iso8601Show post.createdAt
    in -- FIXME: add source
       ( Atom.nullEntry
@@ -38,7 +38,7 @@ postToAtomEntry uconfig postEnt user =
         }
 
 fUrl :: UConfig -> UserId -> Text -> Text
-fUrl uconfig userId token = authUrl uconfig ["api", "feed", show userId.unUserKey, token]
+fUrl uconfig userId token = authUrl uconfig ["api", "feed", [fmt|{userId}|], token]
 
 generateAtomFeed :: (HasHandler m) => WithKey' User -> Text -> [P.Entity DB.Post] -> m Atom.Feed
 generateAtomFeed user token posts = do
@@ -66,7 +66,7 @@ toRSSDate = T.pack . C.formatTime C.defaultTimeLocale C.rfc822DateFormat
 postToRSSItem :: UConfig -> P.Entity DB.Post -> User -> RSSItem
 postToRSSItem uconfig postEnt user =
   let post = postEnt.val
-      url = authUrl uconfig ["post", show postEnt.key]
+      url = authUrl uconfig ["post", [fmt|{postEnt.key}|]]
       date = toRSSDate post.createdAt
    in (RSS.nullItem post.title)
         { rssItemLink = Just url

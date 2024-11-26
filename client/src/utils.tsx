@@ -371,6 +371,7 @@ export const useApiState: IntersectionToRenderedIntersectionApiState<
   const onSuccess = extraParams?.onSuccess;
   const sendReq: () => void = () => {
     if (requestParameters === null) {
+      setData(null);
       return;
     }
     cb(

@@ -56,7 +56,7 @@ docsUrl :: UConfig -> [Text] -> Text
 docsUrl uconfig path = [fmt|http://{uconfig.docsBaseUrl}/{T.intercalate "/" path}|]
 
 type instance PyFClassify (P.Key _a) = 'PyFString
-instance (Coercible (P.Key a) UUID) => PyFToString (P.Key a) where
+instance {-# OVERLAPPING #-} (Coercible (P.Key a) UUID) => PyFToString (P.Key a) where
   pyfToString = U.toString . coerce @(P.Key a) @UUID
 
 type Doc (str :: Symbol) (a :: Type) = a
