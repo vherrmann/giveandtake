@@ -79,7 +79,13 @@ app = do
   --   -- CookieSettings, JWTSettings (for signing), so everything is just as before
   let jwtCfg = SA.defaultJWTSettings sconfig.cookieKey
       -- We don't need XSRF with SameSite set
-      cookieCfg = (def @SA.CookieSettings){cookieSameSite = SA.SameSiteLax, cookieXsrfSetting = Nothing}
+      cookieCfg =
+        (def @SA.CookieSettings)
+          { cookieSameSite = SA.SameSiteLax
+          , cookieXsrfSetting = Nothing
+          , cookieMaxAge = Just (60 * 60 * 24 * 7 * 4) -- 1 month
+          , cookieDomain = Just (T.encodeUtf8 uconfig.baseUrl)
+          }
       multipartCfg =
         S.MultipartOptions @S.Tmp
           (defaultParseRequestBodyOptions & W.clearMaxRequestNumFiles)
@@ -93,8 +99,7 @@ app = do
       webServer =
         liftIO $
           W.runSettings settings $
-            W.logStdoutDev $ -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev -- FIXME: remove logStdoutDev
-            -- FIXME: remove logStdoutDev
+            W.logStdoutDev $ -- FIXME: remove logStdoutDev
               W.timeout uconfig.timeout $
                 S.serveWithContextT
                   (Proxy @Api)
