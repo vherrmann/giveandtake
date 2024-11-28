@@ -450,8 +450,9 @@ export const useMediaUploadJob = ({
             setInfo("Finished compressing files.");
             onJobFinished && onJobFinished(jobId);
           } else if (JobStatus.JobFailed === jobStatus) {
+            // FIXME: add error information
             clearInterval(uploadPollId.current);
-            setError("File upload failed.");
+            setError("File compression failed.");
             onJobFailed && onJobFailed(jobId);
           } else if (JobStatus.JobRunning === jobStatus) {
             setInfo("Compressing files...");

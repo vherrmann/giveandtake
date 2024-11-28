@@ -21,6 +21,7 @@ Hello {msg.name}!
 
 Welcome to {uconfig.serviceName}! Your individual feed can be accessed as an rss feed under the url:
 {msg.url}
+You can use this link with feed readers. For further information see https://docsgat.valentin-herrmann.de/feed/.
 |]
 
 dbNotify :: (HasHandler m) => [UserId] -> NewNotif -> m ()
