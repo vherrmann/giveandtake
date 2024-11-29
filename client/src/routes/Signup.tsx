@@ -27,7 +27,13 @@ export const Signup = (): JSX.Element => {
   const [succeeded, setSucceeded] = useState<boolean>(false);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const secret = searchParams.get("secret");
+
+  // HACK: the equal sign at the end of the secret is sometimes not recognized as part of the link
+  const secretFromParam = searchParams.get("secret");
+  const secret =
+    secretFromParam && !secretFromParam.endsWith("=")
+      ? secretFromParam + "="
+      : secretFromParam;
 
   const handleChangeSD = (e: React.ChangeEvent<HTMLInputElement>) => {
     // limit size of username to 20 characters
@@ -63,7 +69,7 @@ export const Signup = (): JSX.Element => {
     // https://react-hook-form.com/
     // https://www.npmjs.com/package/yup
     try {
-      setInfo("Sending signup request.... Sending verification email....");
+      setInfo("Sending signup request....");
       setLoading(true);
       const _jobId = await Api.apiAuthSignupPost({
         signupData: { ...signupData, secret },
