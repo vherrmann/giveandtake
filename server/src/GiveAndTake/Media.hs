@@ -87,6 +87,7 @@ compressAndConvertVideo tmpPath newTmpPath =
         , "-preset", "medium" -- Speed/Quality
         , "-vf", "scale='min(1280, iw)':-1, scale=-1:'min(720, ih)'" -- Scale down
         , "-b:a", "128k" -- Set audio bitrate
+        , "-pix_fmt", "yuv420p"
         , newTmpPath -- result
         ]
     )
