@@ -72,10 +72,15 @@ compressAndConvertVideo tmpPath newTmpPath =
 {- FOURMOLU_DISABLE -}
     ( P.proc
         "ffmpeg"
-        [ "-i" , tmpPath  -- Inputfile
-        , "-y" -- Accept all options
+        ["-y" -- Accept all options
         , "-nostdin" -- Don't wait for stdin (blocks all threads)
         , "-v", "warning" -- Don't spam stderr
+        -- Input file options
+        -- We don't want ffmpeg to use the rotation metadata to rotate the video,
+        -- since then the scaling doesn't work as intended on 16:9 videos
+        , "-noautorotate"
+        , "-i" , tmpPath  -- Inputfile
+        -- Output file options
         -- Replace metadata
         , "-map_metadata", "-1"
         , "-metadata", "title=''"

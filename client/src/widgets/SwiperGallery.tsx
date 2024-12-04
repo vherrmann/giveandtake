@@ -1,4 +1,4 @@
-import { ReactNode, useRef, useState } from "react";
+import { Fragment, ReactNode, useRef, useState } from "react";
 
 import { Navigation, Pagination, Keyboard, Zoom } from "swiper/modules";
 import "swiper/css";
@@ -23,6 +23,10 @@ import "./react-player.css"; /* https://stackoverflow.com/questions/26979003/spa
 import { Img } from "./Img";
 import { ApiResultState, ErrorWidget } from "../utils";
 
+const IgnoreParamsFragment = (props: { children: ReactNode }) => {
+  return <Fragment>{props.children}</Fragment>;
+};
+
 const UncontrolledVideoPlayer = ({
   file,
   ...props
@@ -33,10 +37,11 @@ const UncontrolledVideoPlayer = ({
   const [progress, setProgress] = useState(0);
   return (
     <Box
+      className="ReactPlayer"
       sx={{
         position: "relative",
-        width: "fit-content",
-        height: "fit-content",
+        width: "100%",
+        height: "100%",
       }}
     >
       <ReactPlayer
@@ -50,8 +55,15 @@ const UncontrolledVideoPlayer = ({
           setProgress(state.played);
         }}
         progressInterval={100}
-        width="auto"
-        height="auto"
+        wrapper={IgnoreParamsFragment} // Hack to remove the wrapper to get better control over ReactPlayer
+        // width & height of video tag itself
+        config={{
+          file: {
+            attributes: {
+              style: { width: "auto", height: "auto" },
+            },
+          },
+        }}
         {...props}
       />
       <LinearProgress
@@ -111,8 +123,17 @@ export const SwiperGallery = ({
                 url={localFileUrl}
                 className="ReactPlayer"
                 controls
-                width="auto"
-                height="auto"
+                // width & height of wrapper
+                width="100%"
+                height="100%"
+                // width & height of video tag itself
+                config={{
+                  file: {
+                    attributes: {
+                      style: { width: "auto", height: "auto" },
+                    },
+                  },
+                }}
               />
             ) : (
               <UncontrolledVideoPlayer file={file} playing={!swiperFSOpen} />
@@ -140,10 +161,10 @@ export const SwiperGallery = ({
             key={files[i].id}
             className={fullscreenp ? "swiper-zoom-container" : undefined}
             style={{
-              width: "100%",
-              height: "100%",
               alignItems: "center",
               display: "flex",
+              width: "100%",
+              height: "100%",
             }}
           >
             {slide}
