@@ -7,6 +7,7 @@ import Control.Monad.IO.Unlift (MonadUnliftIO)
 import Control.Monad.Trans.Resource (ResourceT, runResourceT)
 import Data.Coerce (Coercible, coerce)
 import Data.Data (Typeable)
+import Data.Pool (Pool)
 import Data.Typeable (typeRep)
 import Data.UUID (UUID)
 import Database.Persist qualified as P
@@ -23,10 +24,11 @@ import Servant.Server (err404)
 -- This minimises usage of IO operations in other functions
 runDB :: (HasDBPool m, MonadIO m) => PS.SqlPersistT (ResourceT (LoggingT IO)) a -> m a
 runDB a = do
-  pool <- askM
+  pool <- askM @(Pool _)
+  verbosity <- askM @Verbosity
 
   liftIO $
-    runCTStderrLoggingT $
+    runCTStderrLoggingT verbosity $
       runResourceT $ -- FIXME: use global logger
 
         -- FIXME: replace retryOnBusy by a proper locking mechanism
@@ -34,9 +36,10 @@ runDB a = do
 
 doMigration :: (HasDBPool m, MonadUnliftIO m) => m ()
 doMigration = do
-  pool <- askM
+  pool <- askM @(Pool _)
+  verbosity <- askM @Verbosity
 
-  runCTStderrLoggingT $
+  runCTStderrLoggingT verbosity $
     runResourceT $ -- FIXME: use global logger
       PS.runSqlPool (PS.runMigration migrateAll) pool
 

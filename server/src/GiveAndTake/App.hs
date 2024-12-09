@@ -24,6 +24,8 @@ import GiveAndTake.Job.Run (jobRunner)
 import GiveAndTake.Logging
 import GiveAndTake.Prelude
 import GiveAndTake.Types
+import Network.HTTP.Types qualified as HT
+import Network.Wai qualified as W
 import Network.Wai.Handler.Warp qualified as W
 import Network.Wai.Middleware.RequestLogger qualified as W
 import Network.Wai.Middleware.Timeout qualified as W
@@ -75,6 +77,16 @@ app = do
   jobCon <- createJobCon
 
   pool :: Pool PS.SqlBackend <- askM
+  let logErrorsConf =
+        W.ApacheWithSettings $
+          W.defaultApacheSettings
+            & W.setApacheRequestFilter
+              ( \req resp ->
+                  req.pathInfo /= ["api", "auth", "check"]
+                    && let status = W.responseStatus resp
+                        in HT.statusIsClientError status || HT.statusIsServerError status
+              )
+  logErrorsStdout <- liftIO $ W.mkRequestLogger def{W.outputFormat = logErrorsConf}
   --   -- Adding some configurations. 'Cookie' requires, in addition to
   --   -- CookieSettings, JWTSettings (for signing), so everything is just as before
   let jwtCfg = SA.defaultJWTSettings sconfig.cookieKey
@@ -96,16 +108,21 @@ app = do
           & W.setOnException (\_ e -> TIO.hPutStrLn stderr $ show e)
           & W.setPort uconfig.port
           & W.setHost (fromString $ T.unpack uconfig.host)
+      logMw = case uconfig.verbosity of
+        VDebug -> W.logStdoutDev
+        VInfo -> W.logStdout
+        _ -> logErrorsStdout
       webServer =
         liftIO $
           W.runSettings settings $
-            W.logStdoutDev $ -- FIXME: remove logStdoutDev
+            logMw $
               W.timeout uconfig.timeout $
                 S.serveWithContextT
                   (Proxy @Api)
                   servantContext
                   ( runStderrLoggingT
                       . flip runReaderT uconfig
+                      . flip runReaderT uconfig.verbosity
                       . flip runReaderT dynuconfig
                       . flip runReaderT jobCon
                       . flip runReaderT pool
@@ -120,10 +137,11 @@ runSomeApp uconfigPath m = do
   dynuconfig <- getDynUConfig uconfig
   -- FIXME: fix user in connection string
   let conStr = T.encodeUtf8 uconfig.dbConfig.connectionString
-  runCTStderrLoggingT $
+  runCTStderrLoggingT uconfig.verbosity $
     PS.withPostgresqlPool conStr uconfig.dbConfig.connections \pool ->
       flip runReaderT uconfig $
-        flip runReaderT dynuconfig $
-          flip runReaderT pool do
-            doMigration
-            m
+        flip runReaderT uconfig.verbosity $
+          flip runReaderT dynuconfig $
+            flip runReaderT pool do
+              doMigration
+              m

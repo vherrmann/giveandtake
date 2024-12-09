@@ -68,6 +68,15 @@ in
         connections = mkOption { type = types.int; };
         connectionString = mkOption { type = types.str; };
       };
+      verbosity = mkOption {
+        type = types.enum [
+          "Debug"
+          "Info"
+          "Warning"
+          "Error"
+        ];
+        default = "Warning";
+      };
       emailConfig = {
         smtpHost = mkOption { type = types.str; };
         smtpPort = mkOption {
@@ -107,6 +116,7 @@ in
             serviceName
             emailConfig
             timeout
+            verbosity
             ;
           inherit (cfg) docsBaseUrl baseUrl;
         };

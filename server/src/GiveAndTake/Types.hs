@@ -18,16 +18,14 @@ import Servant
 import System.IO (FilePath)
 import Text.Show (Show (show))
 import Text.Show qualified as TS
+import Prelude (Enum (fromEnum))
 
 data SmtpMethod = SmtpStartTLS | SmtpSSL | SmtpPlain
   deriving stock (Show, Generic)
 
--- remove smtp prefix
-smtpAesonOptions :: A.Options
-smtpAesonOptions = A.defaultOptions{A.constructorTagModifier = drop 4}
-
 instance FromJSON SmtpMethod where
-  parseJSON = A.genericParseJSON smtpAesonOptions
+  -- remove smtp prefix
+  parseJSON = A.genericParseJSON A.defaultOptions{A.constructorTagModifier = drop 4}
 
 data EmailConfig = EmailConfig
   { smtpHost :: Text
@@ -47,6 +45,13 @@ data DBConfig = DBConfig
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
 
+data Verbosity = VDebug | VInfo | VWarning | VError
+  deriving stock (Show, Generic, Eq, Ord)
+
+instance FromJSON Verbosity where
+  -- remove V prefix
+  parseJSON = A.genericParseJSON A.defaultOptions{A.constructorTagModifier = drop 1}
+
 -- UserConfig
 data UConfig = UConfig
   { mediaDir :: Text
@@ -58,6 +63,7 @@ data UConfig = UConfig
   , emailConfig :: EmailConfig
   , dbConfig :: DBConfig
   , timeout :: Int -- Timeout of requests in seconds
+  , verbosity :: Verbosity
   }
   deriving stock (Show, Generic)
   deriving anyclass (FromJSON)
@@ -83,7 +89,7 @@ instance (ToJSON (P.Key a), ToJSON b) => ToJSON (WithKey a b) where
 type WithKey' a = WithKey a a
 
 type HasUConfig m = (MonadReaderM UConfig m, MonadReaderM DynUConfig m)
-type HasDBPool m = (MonadReaderM (Pool PS.SqlBackend) m)
+type HasDBPool m = (MonadReaderM (Pool PS.SqlBackend) m, MonadReaderM Verbosity m)
 
 type HasHandler m =
   ( HasCallStack
@@ -127,6 +133,11 @@ instance MonadReaderM JobCon (RHandler m) where
   readerM g = RHandler $ readerM g
 
 instance MonadReaderM (Pool PS.SqlBackend) (RHandler m) where
+  askM = RHandler askM
+  localM f r = RHandler $ localM f $ unRHandler r
+  readerM g = RHandler $ readerM g
+
+instance MonadReaderM Verbosity (RHandler m) where
   askM = RHandler askM
   localM f r = RHandler $ localM f $ unRHandler r
   readerM g = RHandler $ readerM g
