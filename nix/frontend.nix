@@ -11,7 +11,7 @@ in
 (pkgs.buildNpmPackage {
   name = "giveandtake";
   src = gitignoreSource ../client/.;
-  npmDepsHash = "sha256-8QsBuqeVjAAhnOt6nnweAXY4SLqAvEeLRXleI/QHock="; # lib.fakeHash
+  npmDepsHash = "sha256-u7D8NaSAPdEXGSB+Vg4x2mqnhQP80kibWGCBbJ3J/N0="; # lib.fakeHash
 }).overrideAttrs
   (oldAttrs: {
     postConfigure = ''

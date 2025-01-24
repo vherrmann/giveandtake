@@ -9,6 +9,7 @@ export const MediaPostWidget = ({
   actions,
 }: {
   fileIds: string[];
+  // actions should be memoized to prevent unnecessary re-rendering of SwiperGallery
   actions?: SwiperActions;
 }) => {
   type FileResType = { id: string; apiResState: ApiResultState<File> };
