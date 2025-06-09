@@ -4,7 +4,8 @@ module GiveAndTake.Utils where
 
 import Crypto.KDF.BCrypt (hashPassword, validatePassword, validatePasswordEither)
 import Crypto.Random (getRandomBytes)
-import Data.ByteString.Base64.URL as U (encodeBase64)
+import Data.ByteString.Base64.URL (encodeBase64)
+import Data.Base64.Types (extractBase64)
 import Data.Text qualified as T
 import Data.Text.Encoding qualified as T
 import Data.Time (UTCTime, getCurrentTime)
@@ -40,7 +41,7 @@ validateTokenEither tok hash = validatePasswordEither (T.encodeUtf8 tok) (T.enco
 randomUrlToken :: (MonadIO m) => m Text
 randomUrlToken = do
   randomBytes <- liftIO $ getRandomBytes 50
-  pure $ U.encodeBase64 randomBytes
+  pure $ extractBase64 . encodeBase64 $ randomBytes
 
 randomUUID :: (MonadIO m) => m UUID
 randomUUID = liftIO U.nextRandom
